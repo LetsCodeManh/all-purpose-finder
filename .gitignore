@@ -3,3 +3,6 @@
 .codex/
 .cursor/
 CLAUDE.local.md
+
+# sessions hold personal data (your hunt, a client's tenders). Local only until you say otherwise.
+sessions/
