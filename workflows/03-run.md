@@ -11,19 +11,38 @@ In: `sources.md` + an approved `criteria.md`. Out: `sessions/<slug>/listings.md`
 ## 1. Pre-filter — script only, no LLM
 
 ```
-python3 prefilter.py <slug> --title 'REGEX' --location 'REGEX'
+python3 sessions/tools/prefilter.py <slug> [--refetch]
 ```
 
-Derive the two regexes from the **`must`** lines in `criteria.md`, nothing else. `must` is the only kind that drops, and this script is a drop. A `nice` or a `range` must never reach these regexes.
+No regexes on the command line. They live in the `## prefilter` block at the bottom of `criteria.md`, written when criteria are approved, and loaded by `sessions/tools/regex.py`:
 
 ```
-must: role is frontend or full-stack   → --title 'front.?end|full.?stack'
-must: EU or remote                     → --location 'remote|europe|berlin|paris|amsterdam|...'
+## prefilter
+
+```
+title    = front.?end|full.?stack
+location = remote|europe|berlin|paris|amsterdam
+exclude  = \bsenior\b|\bstaff\b|\bprincipal\b|\blead\b
+```
 ```
 
-Keep both regexes **loose**. A row wrongly dropped here is never seen again — there is no LLM behind it to catch the mistake. A row wrongly kept costs one line of scoring. The asymmetry is the whole reason the script is dumb: cheap, wide, and stupid on purpose.
+Derive all three from the **`must`** lines in `criteria.md`, nothing else. `must` is the only kind that drops, and this script is a drop. A `nice` or a `range` must never reach these patterns.
 
-Stdlib only, no install step. Print `--selfcheck` if you have touched the script.
+```
+must: role is frontend or full-stack        → title
+must: EU or remote                          → location
+must: not explicitly senior/staff/lead      → exclude
+```
+
+`exclude` drops on a title match. It exists because "not explicitly senior" is the one `must` that is cheaper to enforce as a rejection than a selection.
+
+An argument passed on the command line is an argument nobody wrote down, and a run nobody can repeat tomorrow. That is why the block lives in the session.
+
+Keep all three regexes **loose**. A row wrongly dropped here is never seen again — there is no LLM behind it to catch the mistake. A row wrongly kept costs one line of scoring. The asymmetry is the whole reason the script is dumb: cheap, wide, and stupid on purpose.
+
+Stdlib only, no install step. Run `--selfcheck` if you have touched either script — `prefilter.py` and `regex.py` both have one.
+
+The script is shared by every session and holds nothing topic-specific. If you find yourself wanting to add a topic-specific branch to it, the thing you actually want belongs in `sources.md` or `criteria.md`.
 
 What it does:
 
@@ -38,10 +57,16 @@ What it does:
 
 The script only handles feeds. After it runs:
 
-- **`page`** — you read those yourself, apply the same title/location narrowing by eye, and append the survivors to `listings.md` by hand.
+- **`page`** — you read those yourself, apply the same title/location narrowing by eye, and append the survivors to `listings.md` under a `## page sources` heading. The script preserves everything below that marker across runs and does not treat it as cache, so hand-added rows survive a `--refetch`. Keep the same seven-column table shape.
 - **`blocked`** — do not fetch. List them in the run output with their hand-open URL. Every run, not just the first. A blocked source that stops being mentioned quietly becomes a source nobody checks.
 
 ---
+
+### Before a source goes in sources.md
+
+`sessions/tools/probe.py <url>` establishes the method rather than guessing it, and prints the field names the feed actually uses. `--ats <company>` sweeps Greenhouse, Ashby, Lever, Workable and Personio for a company slug.
+
+Read the location line it prints. When a feed offers several location-ish fields, `prefilter.py` takes the first alias that matches, and the first one is not always the useful one — a Lever feed carries `categories.location` as "London, United Kingdom" and a bare `country` as "GB". Guess wrong and every row lands in the wrong place with no error at all.
 
 ## 2. The cache
 

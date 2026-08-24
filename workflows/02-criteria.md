@@ -104,6 +104,31 @@ Approved: YYYY-MM-DD
 - <thing> — judging on: ...
 ```
 
+### The `## prefilter` block
+
+Append it to the same file. It is the machine-readable half of the `must` lines, and `sessions/tools/prefilter.py` reads nothing else:
+
+```markdown
+## prefilter
+
+```
+title    = front.?end|full.?stack
+location = remote|europe|berlin|amsterdam
+exclude  = \bsenior\b|\bstaff\b|\bprincipal\b|\blead\b
+```
+```
+
+- one pattern per `must` line that can be checked by a regex, and **nothing from `nice` or `range`** — only a `must` drops a row
+- `exclude` drops on a title match; the others keep
+- keep them loose. A row wrongly dropped here is never seen again; a row wrongly kept costs one line of scoring
+- omit a key entirely if that check should not run
+
+Check it before moving on:
+
+```
+python3 sessions/tools/regex.py <slug>
+```
+
 Then `MEMORY.md` → `status: run`, `next: first run`.
 
 ---
@@ -115,3 +140,5 @@ Criteria change constantly once real results land — that is the system working
 The fetch cache in `listings.md` means **re-scoring after an edit is free**: no refetch, same day or not, unless the human asks for `--refetch`. Say this out loud when they hesitate to change something. Cheap edits are the point.
 
 Re-approve only the changed lines. Then re-score and diff `results.md` as normal.
+
+If the edit touched a `must`, update the `## prefilter` block to match. A `must` line and its pattern drifting apart is the one inconsistency in this file nobody notices, because the run still succeeds — it just quietly filters on the old rule.

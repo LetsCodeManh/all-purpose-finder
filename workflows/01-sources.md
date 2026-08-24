@@ -23,6 +23,11 @@ Cast wider than the obvious. For any topic, sweep at least:
 
 ## 2. Establish the read method
 
+```
+python3 sessions/tools/probe.py <url> [<url> ...]
+python3 sessions/tools/probe.py --ats <company-slug>
+```
+
 For every candidate, **check the method before proposing it**. A proposed source with a guessed method is worthless — the human prunes on the method as much as the name.
 
 Try in order:
@@ -32,6 +37,10 @@ Try in order:
 3. **`blocked`** — auth wall, aggressive bot protection, or listings only rendered by JavaScript.
 
 **Never write a per-site scraper.** A site needing one is `blocked`. That is the definition.
+
+`probe.py` also prints the field names a feed actually uses, and warns when several could be the location. Read that line. `prefilter.py` takes the first alias that matches and the first is not always right — a Lever feed carries `categories.location` as "London, United Kingdom" next to a bare `country` of "GB". The wrong pick misplaces every row from that source and raises no error.
+
+A feed too large to read in one request is `blocked`, not `ok`. A row marked `ok` that fails on every run is worse than a row that says what it is.
 
 If a fetch fails, say how it failed — `403`, `timeout`, `empty` — not just "blocked". The human may know the site works from their own machine, and that is the difference between a dead source and a manual one.
 

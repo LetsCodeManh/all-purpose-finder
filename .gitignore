@@ -4,5 +4,8 @@
 .cursor/
 CLAUDE.local.md
 
-# sessions hold personal data (your hunt, a client's tenders). Local only until you say otherwise.
-sessions/
+# sessions hold personal data (your hunt, a client's tenders), and sessions/tools/
+# holds the scripts. Local only until you say otherwise.
+sessions/*
+__pycache__/
+*.pyc

@@ -48,6 +48,11 @@ Entry procedure for every session: `workflows/00-session.md`.
 
 **Only inside `sessions/<slug>/`.**
 
+Two exceptions, both shared and both topic-neutral:
+
+- `sessions/tools/` — scripts every session uses. Nothing topic-specific goes in here; the topic lives in `sources.md` and `criteria.md`. One copy, not one per session, so a fix lands everywhere at once.
+- `learning/YYYY-MM-DD.md` — what a session taught you about the engine itself. Written when the human asks for it, never automatically. Not session data: no listings, no results, no criteria.
+
 - No global memory. No user-level memory. No project memory outside the session folder.
 - No cross-session notes. Two sessions never learn from each other.
 - Do not write to `AGENTS.md`, `CLAUDE.md`, or `workflows/` unless the human asks for a change to the procedure itself.
@@ -97,7 +102,7 @@ Never quietly improve a list by shortening it.
 
 ## Cost
 
-- The pre-filter on title and location is a script. **No LLM in the pre-filter.** One source can return 200+ listings; scoring all of them ends the run early.
+- The pre-filter on title and location is `sessions/tools/prefilter.py`. **No LLM in the pre-filter.** Its regexes come from the `## prefilter` block in `criteria.md`, never from the command line — an argument nobody wrote down is a run nobody can repeat. One source can return 200+ listings; scoring all of them ends the run early.
 - Only survivors get scored.
 - Fetched listings are cached in `listings.md` and not refetched the same day, so re-scoring after a criteria edit is free. `--refetch` forces fresh.
 - Contact lookup runs on ticked rows only, once per company.
@@ -114,5 +119,7 @@ Never quietly improve a list by shortening it.
 | `results.md` | one file, diffed. Not per-site files |
 | `listings.md` | raw fetch cache |
 | `contacts.md` | looked-up contacts, cached per company |
+
+`criteria.md` also carries a `## prefilter` block — the regexes the pre-filter runs, each traceable to a `must` line. Written at GATE 3, read by `sessions/tools/regex.py`. Keeping them in the session is what makes a run reproducible tomorrow.
 
 One file each. No folders inside a session.
