@@ -1,0 +1,5 @@
+.DS_Store
+.claude/settings.local.json
+.codex/
+.cursor/
+CLAUDE.local.md
