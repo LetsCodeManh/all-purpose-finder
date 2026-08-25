@@ -6,6 +6,8 @@ Rules: `AGENTS.md`. Entry: `00-session.md`.
 
 In: a direction line. Out: `sessions/<slug>/sources.md`, `status: criteria`.
 
+Worked example: `examples/<shape>.md` → *01 — sources*, for the shape named in this session's `shape:` field. No example yet for this shape? Run the step from here anyway, say so, and write that section afterwards from what happened.
+
 ---
 
 ## 1. Search live
@@ -16,7 +18,7 @@ Cast wider than the obvious. For any topic, sweep at least:
 
 - the big aggregators for that domain
 - the small or regional ones — the ones with less competition on them
-- **the primary sources**: the organisations themselves. For jobs that is company career feeds; for tenders it is the buyer's own portal. These are the highest-value and the most often missed.
+- **the primary sources**: whoever originates the thing, publishing it themselves. Downstream aggregators lag them and drop fields. These are the highest-value and the most often missed. Name what the primary source is for this topic before you start searching — if you cannot, you do not understand the topic yet.
 - anything the human named in their direction line, even if you think it is weak
 
 ---
@@ -24,8 +26,7 @@ Cast wider than the obvious. For any topic, sweep at least:
 ## 2. Establish the read method
 
 ```
-python3 sessions/tools/probe.py <url> [<url> ...]
-python3 sessions/tools/probe.py --ats <company-slug>
+python3 sessions/<slug>/tools/probe.py <url> [<url> ...]
 ```
 
 For every candidate, **check the method before proposing it**. A proposed source with a guessed method is worthless — the human prunes on the method as much as the name.
@@ -33,12 +34,12 @@ For every candidate, **check the method before proposing it**. A proposed source
 Try in order:
 
 1. **`feed`** — is there RSS, JSON, or a public API? Fetch it once and confirm it returns real items. Note the count.
-2. **`page`** — does a plain HTML read return the listings? Confirm the listings are actually in the HTML, not injected by JavaScript.
-3. **`blocked`** — auth wall, aggressive bot protection, or listings only rendered by JavaScript.
+2. **`page`** — does a plain HTML read return the items? Confirm they are actually in the HTML, not injected by JavaScript.
+3. **`blocked`** — auth wall, aggressive bot protection, or content only rendered by JavaScript.
 
 **Never write a per-site scraper.** A site needing one is `blocked`. That is the definition.
 
-`probe.py` also prints the field names a feed actually uses, and warns when several could be the location. Read that line. `prefilter.py` takes the first alias that matches and the first is not always right — a Lever feed carries `categories.location` as "London, United Kingdom" next to a bare `country` of "GB". The wrong pick misplaces every row from that source and raises no error.
+`probe.py` also prints the field names a feed actually uses, and warns when several could carry the same meaning. Read that line. `prefilter.py` takes the first alias that matches and the first is not always right — one feed can carry the same concept twice at different precision, and the wrong pick mislabels every row from that source and raises no error. The shape example names the trap for its own domain.
 
 A feed too large to read in one request is `blocked`, not `ok`. A row marked `ok` that fails on every run is worse than a row that says what it is.
 
@@ -52,13 +53,11 @@ One table. Every row gets a **why-line** — one clause on what this source give
 
 Order: `feed` first, then `page`, then `blocked`. Best-read first.
 
-```
 | name | type | url | method | why |
 |------|------|-----|--------|-----|
-| GitLab careers | company | boards-api.greenhouse.io/v1/boards/gitlab/jobs | feed (207 items) | all-remote, posts everything, clean JSON |
-| Karriere.at | aggregator | ... | page | DACH coverage the global boards miss |
-| LinkedIn Jobs | aggregator | ... | blocked (auth) | biggest volume, open by hand |
-```
+| <primary source> | <type> | <url> | feed (N items) | <what only this one gives> |
+| <regional aggregator> | <type> | <url> | page | <coverage the others miss> |
+| <big walled platform> | <type> | <url> | blocked (auth) | <volume — open by hand> |
 
 State the gaps out loud in the same message:
 
@@ -83,21 +82,14 @@ Expect additions — the human knows sources you cannot search your way to. Add 
 
 ## 5. Write
 
-Create `sessions/<slug>/` now, and write `sources.md`:
+Copy `sessions/_template/` to `sessions/<slug>/` now, and fill `sources.md`:
 
-```markdown
-# sources — <slug>
-
-Last updated: YYYY-MM-DD
-
-| name | type | url | method | status | last checked | why |
-|------|------|-----|--------|--------|--------------|-----|
-```
-
-- `type` is a **column** — `aggregator`, `company`, `portal`, `board`. Not a folder, not separate files.
+- `type` is a **column** — whatever kinds this topic has. Not a folder, not separate files.
 - `status`: `ok` · `blocked` · `error` · `untested`
 - `last checked`: the date you actually fetched it. This is what catches a source silently skipped for a month.
 - Blocked rows **stay in the file**, with the URL to open by hand.
+
+Delete the skeleton files this session has not reached yet, and `tools/` if it needs no scripts. Anything left in `tools/` is this session's own — copy from a neighbouring session and diverge, never import across sessions. Rules: `sessions/_template/tools/README.md`.
 
 Then update `MEMORY.md` → `status: criteria`, `next: write criteria`.
 
@@ -110,12 +102,11 @@ The human comes back later and wants more sources. **Report the delta, never the
 Three buckets, in this order:
 
 ```
-already have (4)   — GitLab, Karriere.at, LinkedIn, Personio
-new, not on your list (2)
-  - Ashby job board API — feed, 40 items — covers startups the aggregators skip
-  - StepStone DE — blocked (bot protection) — big DACH volume, open by hand
-not checked (1)
-  - Bundesagentur API — 403 from here, unverified. May work from your machine.
+already have (N)   — <names, one line>
+new, not on your list (N)
+  - <name> — <method, item count> — <why-line>
+not checked (N)
+  - <name> — <how the check failed>, unverified
 ```
 
 Then GATE 2 again on the new rows only. Never re-litigate rows the human already pruned.

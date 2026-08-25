@@ -9,3 +9,6 @@ CLAUDE.local.md
 sessions/*
 __pycache__/
 *.pyc
+
+# _template is the shape of a session, not a session. Keep it tracked.
+!sessions/_template/

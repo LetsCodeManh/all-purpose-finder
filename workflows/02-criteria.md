@@ -6,22 +6,24 @@ Rules: `AGENTS.md`. Entry: `00-session.md`.
 
 In: `sources.md` exists. Out: `sessions/<slug>/criteria.md`, `status: run`.
 
+Worked example: `examples/<shape>.md` → *02 — criteria*, for the shape named in this session's `shape:` field. No example yet for this shape? Run the step from here anyway, say so, and write that section afterwards from what happened.
+
 ---
 
 ## 1. Nudge, do not interview
 
 A few short prompts. Not a form, not twenty questions. The human writes plain messy text back — full sentences, fragments, contradictions, whatever comes out. That is the input, and it is correct as-is.
 
-Four or five prompts, adapted to the topic:
+Four or five prompts, **written for this topic**, not copied from another one. The pattern under them is always the same:
 
 ```
 Rough shape of what you want:
 
   - what makes something an instant no?
   - what would make you actually open it?
-  - money — target, and the floor you would not go under?
+  - the number that matters here — target, and the limit you would not cross?
   - where, and how flexible is that?
-  - anything you have said no to before, and why?
+  - anything you have rejected before, and why?
 
 Write it however it comes out. Messy is fine.
 ```
@@ -38,35 +40,17 @@ Convert their text into the four kinds. This is the step that matters — you ar
 |------|---------|--------|
 | `must` | hard requirement | **drops the row** |
 | `nice` | preference | shown, ranked lower |
-| `range` | target + floor | **flagged, never dropped** |
-| `open` | a judgment call — "small team", "good culture", "serious about the problem" | you judge it, flag when unclear |
+| `range` | target + limit | **flagged, never dropped** |
+| `open` | a judgment call — a quality you can read but not measure | you judge it, flag when unclear |
+
+Some shapes read these as **questions to answer** rather than filters to score. The four kinds still hold: a `must` is then a question you refuse to walk in without an answer to, and its miss is a stated gap, not a dropped row. The shape example says which reading applies.
 
 Rules while converting:
 
-- **Be stingy with `must`.** It is the only kind that deletes results. When the human says "I really want remote", that is `nice` or `range`, not `must`. Ask if you are unsure — it is cheaper than a run that returns four rows.
-- **Money is `range`, always.** Target plus floor. Never a `must`, because most listings do not publish a number and a `must` would drop every one of them.
+- **Be stingy with `must`.** It is the only kind that deletes results. An emphatic wish — "I really want X" — is `nice` or `range`, not `must`. Ask if you are unsure; it is cheaper than a run that returns four rows.
+- **Any number the sources often do not publish is `range`.** Target plus limit. Never a `must` — a `must` on an unpublished field drops every row that simply stayed quiet.
 - **`open` is legitimate** — do not force a vague wish into a hard rule to make it measurable. Write it as `open` and say how you will judge it.
-- **Surface what you inferred.** If they said "no agencies" and you turned that into a `must`, show it. If you dropped something because you could not make it checkable, say so.
-
-```markdown
-must
-  - role is frontend or full-stack        (from "not backend, not devops")
-  - not an agency or a consultancy        (from "no agencies")
-
-range
-  - salary — target 75k, floor 65k        will flag, not drop, when unpublished
-  - team size — target under 50           will flag when not stated
-
-nice
-  - remote-first, or Berlin
-  - product company over services
-
-open
-  - "serious about the craft"             judging on: engineering blog, open source, how the posting is written
-
-not carried over
-  - "somewhere I would stay 3 years" — nothing on a posting tells me this. Say more and I will make it open.
-```
+- **Surface what you inferred.** If you turned an offhand line into a `must`, show it. If you dropped something because you could not make it checkable, say so under `not carried over`.
 
 ---
 
@@ -84,49 +68,29 @@ Expect a rewrite. `must` → `nice` is the most common correction, and the human
 
 ## 4. Write
 
-`sessions/<slug>/criteria.md`:
-
-```markdown
-# criteria — <slug>
-
-Approved: YYYY-MM-DD
-
-## must
-- ...
-
-## range
-- <thing> — target X, floor Y
-
-## nice
-- ...
-
-## open
-- <thing> — judging on: ...
-```
+`sessions/<slug>/criteria.md`. Skeleton: `sessions/_template/criteria.md`.
 
 ### The `## prefilter` block
 
-Append it to the same file. It is the machine-readable half of the `must` lines, and `sessions/tools/prefilter.py` reads nothing else:
-
-```markdown
-## prefilter
+Append it to the same file. It is the machine-readable half of the `must` lines, and `sessions/<slug>/tools/prefilter.py` reads nothing else:
 
 ```
-title    = front.?end|full.?stack
-location = remote|europe|berlin|amsterdam
-exclude  = \bsenior\b|\bstaff\b|\bprincipal\b|\blead\b
-```
+<field> = <regex>
+<field> = <regex>
+exclude = <regex>
 ```
 
-- one pattern per `must` line that can be checked by a regex, and **nothing from `nice` or `range`** — only a `must` drops a row
-- `exclude` drops on a title match; the others keep
+- fields are the ones the item rows actually carry — the pre-filter matches on those names, so a field no source publishes is a filter that never fires
+- one pattern per `must` line that a regex can check, and **nothing from `nice` or `range`** — only a `must` drops a row
+- `exclude` drops on a match; the others keep
 - keep them loose. A row wrongly dropped here is never seen again; a row wrongly kept costs one line of scoring
 - omit a key entirely if that check should not run
+- **omit the whole block** when the shape reads every item anyway. The pre-filter exists to stop a run drowning in hundreds of rows; where there is nothing to drown in, a regex that filters nothing is a rule that can only cause harm. Say it is omitted and why, so the next run does not think it went missing
 
-Check it before moving on:
+Check it before moving on, when there is one:
 
 ```
-python3 sessions/tools/regex.py <slug>
+python3 sessions/<slug>/tools/regex.py <slug>
 ```
 
 Then `MEMORY.md` → `status: run`, `next: first run`.

@@ -6,39 +6,25 @@ Rules: `AGENTS.md`. Entry: `00-session.md`.
 
 In: `sources.md` + an approved `criteria.md`. Out: `sessions/<slug>/listings.md` + `results.md`.
 
+Worked example: `examples/<shape>.md` → *03 — run*, for the shape named in this session's `shape:` field. No example yet for this shape? Run the step from here anyway, say so, and write that section afterwards from what happened.
+
 ---
 
 ## 1. Pre-filter — script only, no LLM
 
 ```
-python3 sessions/tools/prefilter.py <slug> [--refetch]
+python3 sessions/<slug>/tools/prefilter.py <slug> [--refetch]
 ```
 
-No regexes on the command line. They live in the `## prefilter` block at the bottom of `criteria.md`, written when criteria are approved, and loaded by `sessions/tools/regex.py`:
+No regexes on the command line. They live in the `## prefilter` block at the bottom of `criteria.md`, written when criteria are approved, and loaded by `sessions/<slug>/tools/regex.py`.
 
-```
-## prefilter
+Derive every pattern from the **`must`** lines in `criteria.md`, nothing else. `must` is the only kind that drops, and this script is a drop. A `nice` or a `range` must never reach these patterns.
 
-```
-title    = front.?end|full.?stack
-location = remote|europe|berlin|paris|amsterdam
-exclude  = \bsenior\b|\bstaff\b|\bprincipal\b|\blead\b
-```
-```
-
-Derive all three from the **`must`** lines in `criteria.md`, nothing else. `must` is the only kind that drops, and this script is a drop. A `nice` or a `range` must never reach these patterns.
-
-```
-must: role is frontend or full-stack        → title
-must: EU or remote                          → location
-must: not explicitly senior/staff/lead      → exclude
-```
-
-`exclude` drops on a title match. It exists because "not explicitly senior" is the one `must` that is cheaper to enforce as a rejection than a selection.
+`exclude` drops on a match. It exists for the `must` lines that are cheaper to enforce as a rejection than a selection — a short list of disqualifying words beats trying to name everything acceptable.
 
 An argument passed on the command line is an argument nobody wrote down, and a run nobody can repeat tomorrow. That is why the block lives in the session.
 
-Keep all three regexes **loose**. A row wrongly dropped here is never seen again — there is no LLM behind it to catch the mistake. A row wrongly kept costs one line of scoring. The asymmetry is the whole reason the script is dumb: cheap, wide, and stupid on purpose.
+Keep the regexes **loose**. A row wrongly dropped here is never seen again — there is no LLM behind it to catch the mistake. A row wrongly kept costs one line of scoring. The asymmetry is the whole reason the script is dumb: cheap, wide, and stupid on purpose.
 
 Stdlib only, no install step. Run `--selfcheck` if you have touched either script — `prefilter.py` and `regex.py` both have one.
 
@@ -47,26 +33,24 @@ The script is shared by every session and holds nothing topic-specific. If you f
 What it does:
 
 - reads `sources.md`, takes rows where method is `feed` **and** status is `ok`
-- normalises every feed shape into `company · title · location · url · date`
-- **dedupes on company + title** — same job on three sites is one row
+- normalises every feed's own field names into one common row — who published it, what it is, where it applies, its url, its date
+- **dedupes on issuer + item** — the same thing on three sites is one row
 - marks each row `kept` / not, writes them all to `listings.md`
 - a source that fails is **reported by name with its error, never silently skipped**
-- a blank location **passes** — remote roles often name no city
+- **a blank field passes.** An absent value is not a mismatch, and the pre-filter has no way to tell "does not apply" from "not stated"
 
 ### `page` and `blocked` sources
 
 The script only handles feeds. After it runs:
 
-- **`page`** — you read those yourself, apply the same title/location narrowing by eye, and append the survivors to `listings.md` under a `## page sources` heading. The script preserves everything below that marker across runs and does not treat it as cache, so hand-added rows survive a `--refetch`. Keep the same seven-column table shape.
+- **`page`** — you read those yourself, apply the same narrowing by eye, and append the survivors to `listings.md` under a `## page sources` heading. The script preserves everything below that marker across runs and does not treat it as cache, so hand-added rows survive a `--refetch`. Keep the same column shape.
 - **`blocked`** — do not fetch. List them in the run output with their hand-open URL. Every run, not just the first. A blocked source that stops being mentioned quietly becomes a source nobody checks.
-
----
 
 ### Before a source goes in sources.md
 
-`sessions/tools/probe.py <url>` establishes the method rather than guessing it, and prints the field names the feed actually uses. `--ats <company>` sweeps Greenhouse, Ashby, Lever, Workable and Personio for a company slug.
+`sessions/<slug>/tools/probe.py <url>` establishes the method rather than guessing it, and prints the field names the feed actually uses. Read the alias line it prints: when a feed offers several fields carrying the same concept, `prefilter.py` takes the first that matches, and the first is not always the useful one. Guess wrong and every row from that source is mislabelled with no error at all. Each shape example names the alias trap for its own domain.
 
-Read the location line it prints. When a feed offers several location-ish fields, `prefilter.py` takes the first alias that matches, and the first one is not always the useful one — a Lever feed carries `categories.location` as "London, United Kingdom" and a bare `country` as "GB". Guess wrong and every row lands in the wrong place with no error at all.
+---
 
 ## 2. The cache
 
@@ -76,7 +60,22 @@ This is what makes criteria cheap to change. Say it out loud when the human hesi
 
 ---
 
-## 3. Score the survivors
+## 3. Result form — ledger or brief
+
+Two forms, and the shape decides which. Read `examples/<shape>.md` before writing anything.
+
+| form | what it is | when |
+|------|-----------|------|
+| **ledger** | scored rows, one card each, diffed against the last run | many items, each one a candidate the human accepts or rejects |
+| **brief** | prose sections, every claim attributed to its source | one subject, and the question is *what is true about it*, not *which of these* |
+
+Sections 4 and 5 below are the **ledger** form. For a **brief**, they are replaced by what the shape example lays out: no score line, no `4/6`, no `gone`. What carries over unchanged is the part that matters: **attribution, and gaps stated as their own section.**
+
+Do not produce a ledger for a topic that wants a brief. Rows that each say "here is a fact" are a table pretending to be an answer.
+
+---
+
+## 4. Score the survivors — ledger form
 
 Only rows marked `kept`. Against `criteria.md`, and only against `criteria.md`.
 
@@ -87,70 +86,71 @@ Only rows marked `kept`. Against `criteria.md`, and only against `criteria.md`.
 | `nice` | keep, rank lower |
 | `open` | judge, and say what you judged on |
 
-- **No compensation math.** Never decide remote makes up for 8k less. Show both misses and let the human weigh them.
-- **Missing data is not a miss.** No published salary is `unknown`, flagged — not a failed range.
+- **No compensation math.** Never decide one strength makes up for another's shortfall. Show both misses and let the human weigh them.
+- **Missing data is not a miss.** An unpublished value is `unknown`, flagged — not a failed range.
 - **Do not invent a number.** No "82% match". The score is how many criteria hit, written as what it is: `4/6 · 1 range miss · 1 unknown`.
 
 ### The card
 
-```markdown
-### Langfuse — Full-Stack Engineer
-Berlin / remote-EU · [posting](url) · posted 2026-08-11
-source: Langfuse (feed) · also seen: RemoteOK
+One per surviving row. Same layout whatever the topic:
 
-must   ✓ frontend or full-stack
-must   ✓ not an agency
-range  ⚠ salary — not published (target 75k, floor 65k)
-range  ✓ team size ~30 (target under 50)
-nice   ✓ remote-first
-open   ✓ serious about the craft — public docs, active OSS repo, posting written by an engineer
+```markdown
+### <issuer> — <item>
+<where> · [<link>](<url>) · posted <date>
+source: <which source> · also seen: <other sources>
+
+must   ✓ <criterion>
+must   ✓ <criterion>
+range  ⚠ <criterion> — not published (target X, limit Y)
+range  ✓ <criterion> — <value found>
+nice   ✓ <criterion>
+open   ✓ <criterion> — <what you judged on>
 
 4/6 · 1 unknown · 0 must misses
-LLM observability tooling, small team, the stack you already build on.
+<one line on why this is worth the human's attention>
 ```
 
 `also seen:` is the dedupe made visible — three sightings, one card.
 
 ---
 
-## 4. Diff against the last run
+## 5. Diff against the last run — ledger form
 
-`results.md` is **one file, rewritten each run**, in four sections:
+`results.md` is **one file, rewritten each run**, in four sections. Skeleton: `sessions/_template/results.md`. A shape may rename or drop a section when it does not apply — a shape where nothing expires has no `gone` — but it never adds a fifth silently. Say what you changed and why.
 
-```markdown
-# results — <slug>
-Run 2026-08-24 · 6 new · 2 changed · 31 unchanged · 3 gone
-
+```
 ## new
-## changed          ← say what changed: salary added, location moved, title edited
+## changed          ← say what changed: a number appeared, the location moved, the title was edited
 ## unchanged        ← collapsed to one line each, not full cards
 ## gone             ← was in the last run, not in this one. Keep the card, mark it
 ```
 
-`gone` is not a deletion. A posting that vanishes is information — it filled, or it was pulled. Keep the row for one run, then let it drop.
+`gone` is not a deletion. Something that vanishes is information — it was taken, or it was pulled. Keep the row for one run, then let it drop.
 
 Never re-print the whole list as if it were new. **New-since-last-run is the reason anyone runs this twice.**
 
 ---
 
-## 5. Report the gaps in the same message
+## 6. Report the gaps in the same message
 
 Every run ends with what it did not do:
 
 ```
-blocked, open by hand: Indeed DE · Wellfound · Welcome to the Jungle · EURES
-failed this run:       Helsing (429)
-not checked since:     JustJoin.it — 2026-08-11
+blocked, open by hand: <names>
+failed this run:       <name> (<error>)
+not checked since:     <name> — <date>
 ```
 
 Then update `MEMORY.md` → `last run: <date>`, `status: contacts`, `next: tick the rows worth chasing`.
 
 ---
 
-## 6. GATE 4
+## 7. GATE 4
 
 ```
 Tick the rows worth chasing in results.md. Contact lookup runs on those only.
 ```
 
-Wait. Contact lookup is the expensive step and it runs once per company — do not pre-run it on everything to be helpful.
+Wait. Contact lookup is the expensive step and it runs once per organisation — do not pre-run it on everything to be helpful.
+
+When the shape has no contacts step, GATE 4 is still a stop: say the result is final, say what the human does with it, and point `next:` back at the rerun rather than forward at a step that does not apply.
