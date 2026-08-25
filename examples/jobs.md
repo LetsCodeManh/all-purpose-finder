@@ -121,6 +121,16 @@ one card with three sightings.
 
 **Blank location passes.** Remote roles often name no city.
 
+**Age is this shape's date handling.** A job has no deadline — it has a posted
+date that quietly stops meaning anything. Flag a row `stale` past <N> days
+(30 is the usual line) and say so on the card. It is a flag, never a drop: a
+four-month-old posting is often still open, and an employer who reposts weekly
+looks fresh while hiring nobody. A missing posted date is `unknown`, flagged —
+several boards publish none.
+
+Contrast with `tenders`, where the date is a hard closing date and sorts the
+whole file. Here it only ranks.
+
 A scored card:
 
 ```markdown
@@ -135,7 +145,7 @@ range  ✓ experience — "<what the posting says>" (target <band>)
 nice   ✓ remote-first
 open   ✓ somewhere I can learn — <what you read to decide>
 
-4/6 · 1 unknown · 0 must misses
+4/6 · 1 unknown · 0 must misses · posted <N> days ago
 <one line on why this one is worth opening>
 ```
 

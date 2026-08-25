@@ -42,6 +42,8 @@ The current step is the `status` field in `sessions/<slug>/MEMORY.md`. Read it, 
 
 Entry procedure for every session: `workflows/00-session.md`.
 
+**One skill, not six.** A skill is a shortcut, not a capability. Only `session` is triggered by a human; the other four steps are walked by you, driven by `status`. Do not turn a workflow into a skill — that is five files only ever called by another file.
+
 **Contacts is optional, and the shape decides.** A topic with nobody to look up ends at `run`: say the result is final, leave `status: run`, and point `next:` at the rerun. Skipping the step out loud is correct; quietly inventing someone to contact is not.
 
 ---
