@@ -42,6 +42,8 @@ The current step is the `status` field in `sessions/<slug>/MEMORY.md`. Read it, 
 
 Entry procedure for every session: `workflows/00-session.md`.
 
+**Contacts is optional, and the shape decides.** A topic with nobody to look up ends at `run`: say the result is final, leave `status: run`, and point `next:` at the rerun. Skipping the step out loud is correct; quietly inventing someone to contact is not.
+
 ---
 
 ## Where you may write
@@ -139,36 +141,28 @@ Rules for anything in there: `sessions/_template/tools/README.md`.
 
 Two words, kept apart, because they are easy to confuse:
 
-- **shape** — a kind of topic: `jobs`, `prices`, `company-research`. Named in
-  `MEMORY.md`, worked through in `examples/<shape>.md`.
+- **shape** — a kind of topic: `jobs`, `prices`, `tenders`, `company-research`.
+  Named in `MEMORY.md`, worked through in `examples/<shape>.md`.
 - **skeleton** — an empty file with the headings and nothing in them:
   `sessions/_template/`, `examples/_template.md`.
 
 A shape is a way of running. A skeleton is a blank page.
 
-The engine is one procedure. A **shape** is what a topic makes of it — jobs are
-posted by employers and expire; a price hunt has no one to contact and every row
-carries an expiry window; company research produces a written brief, not rows.
-
-Shapes live in `examples/`, one file each, headed by the same workflow steps.
-When a step reads oddly for a new topic, the fix is a new `examples/<shape>.md`
-that says how that step lands for this domain. **Do not put the topic in the
-workflow.** A workflow that names a domain is a workflow that has stopped being
-the engine.
+The engine is one procedure; a shape is what a topic makes of it. Shapes live in
+`examples/`, one file each, headed by the same workflow steps. When a step reads
+oddly for a new topic, the fix is a new `examples/<shape>.md` saying how that step
+lands here. **Never put the topic in the workflow** — a workflow that names a
+domain has stopped being the engine.
 
 Every session names its shape in `MEMORY.md`, decided at GATE 1 and never after.
 Whether a topic is a new shape is the human's call, not yours — propose, wait.
 A topic forced into a shape that nearly fits produces a run that nearly works.
 
-A new shape's example is written **from what the session actually did**, step by
-step as it happens, not guessed in advance — starting from `examples/_template.md`.
-
-**A shape with no example yet is normal, not a blocker.** The workflow is the
-procedure and it stands on its own; the example only shows how a step landed for
-one domain. Run the step from the workflow, say out loud that you are running
-without an example, and write that step's section afterwards from what happened.
-Never postpone a step waiting for an example, and never bend the topic toward a
-shape that has one.
+**A shape with no example yet is normal, not a blocker.** Run the step from the
+workflow, say out loud that you are running without one, and write that section
+afterwards from what happened — started from `examples/_template.md`, never
+guessed up front. Never postpone a step waiting for an example, and never bend a
+topic toward a shape that has one.
 
 Two result forms:
 
@@ -176,11 +170,6 @@ Two result forms:
 |------|-----------|
 | `ledger` | scored rows, cards, diffed each run — many candidates, accept or reject |
 | `brief` | prose sections, every claim attributed — one subject, and the question is what is true about it |
-
-`python3 check.py` is the guard on all of this: it fails when a workflow names a
-shape, when a public file carries a URL or a vendor name, when a documented path
-does not exist, or when a shape file skips a step. Stdlib, no network. Run it
-after editing anything in `workflows/`, `examples/` or this file.
 
 `examples/` is **public**. Placeholders only: no URLs, no vendor names, no real
 criteria, no real results, nothing about who the human is or what they are

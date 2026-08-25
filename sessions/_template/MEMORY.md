@@ -1,6 +1,6 @@
 ---
 slug: <slug>
-shape: <jobs | prices | research | the new one>
+shape: <jobs | prices | tenders | company-research | the new one>
 status: sources
 last run: —
 ---

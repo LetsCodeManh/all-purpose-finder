@@ -28,7 +28,7 @@ Keep the regexes **loose**. A row wrongly dropped here is never seen again — t
 
 Stdlib only, no install step. Run `--selfcheck` if you have touched either script — `prefilter.py` and `regex.py` both have one.
 
-The script is shared by every session and holds nothing topic-specific. If you find yourself wanting to add a topic-specific branch to it, the thing you actually want belongs in `sources.md` or `criteria.md`.
+The script belongs to this session and is tailored to it. That is the point — but it stays a dumb regex drop. If you find yourself wanting to add a branch that reasons about the topic, the thing you actually want belongs in `sources.md` or `criteria.md`.
 
 What it does:
 
@@ -141,7 +141,7 @@ failed this run:       <name> (<error>)
 not checked since:     <name> — <date>
 ```
 
-Then update `MEMORY.md` → `last run: <date>`, `status: contacts`, `next: tick the rows worth chasing`.
+Then update `MEMORY.md` → `last run: <date>`. If the shape has a contacts step, `status: contacts`, `next: tick the rows worth chasing`. If it has none, `status: run` and `next:` points at the rerun — the shape example says which.
 
 ---
 

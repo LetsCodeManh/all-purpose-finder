@@ -34,8 +34,10 @@ Nothing is fetched before gate 3. Nobody is looked up before gate 4.
 
 - an AI coding agent that reads `AGENTS.md` or `CLAUDE.md` — this repo was
   built with one, and any equivalent works
-- `python3`, for the small scripts a session may write. Standard library only,
-  no install step
+- `python3`, for the small scripts a session writes for itself. Standard library
+  only, no install step. There is no shared engine script to install or update:
+  each session writes what its own sources need, from the spec in
+  `sessions/_template/tools/README.md`
 
 ---
 
@@ -89,6 +91,7 @@ The procedure is one procedure. A **shape** is what a kind of topic makes of it:
 | shape | result | recurs | contacts |
 |-------|--------|--------|----------|
 | `jobs` | scored rows, diffed each run | yes | yes, per organisation |
+| `tenders` | scored rows, each with a closing date that sorts them | yes | yes, per authority |
 | `prices` | rows per seller, each with a from–to window | weekly | no |
 | `company-research` | a written brief, sourced | one-shot, before a meeting | no |
 
@@ -119,7 +122,10 @@ By design, not by omission:
 ## Layout
 
 ```
-AGENTS.md              the rules. The only rules file — CLAUDE.md points here
+AGENTS.md              the rules. The only rules file
+CLAUDE.md              one line, pointing at AGENTS.md
+.claude/skills/        the /session shortcut. Holds no logic — delete it and
+                       everything still works, you just type the sentence instead
 workflows/             one file per step, procedure only, no topic
 examples/              one worked walkthrough per shape. Public, placeholders only
 sessions/_template/    the skeleton of a session
@@ -128,3 +134,9 @@ sessions/<slug>/       your sessions. Gitignored
 
 Changing how it behaves means editing `AGENTS.md` or `workflows/`. Adding a new
 kind of topic means adding a file to `examples/` — never editing a workflow.
+
+---
+
+## License
+
+MIT. See [LICENSE](LICENSE).

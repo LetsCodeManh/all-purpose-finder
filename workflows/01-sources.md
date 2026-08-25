@@ -29,6 +29,18 @@ Cast wider than the obvious. For any topic, sweep at least:
 python3 sessions/<slug>/tools/probe.py <url> [<url> ...]
 ```
 
+**This session may not have that script yet.** On a session's first pass it
+usually does not, and there is no shared copy to fall back on — `tools/` is per
+session on purpose. Write it before you probe anything: spec in
+`sessions/_template/tools/README.md`, and a neighbouring session's copy is a
+starting point when one exists. Creating `sessions/<slug>/tools/` for it is
+fine — a script is something real to write, which is the test the no-empty-folder
+rule actually applies. The rest of the folder still waits for step 5.
+
+Tailor it to this topic. What a probe reports is not the same everywhere — one
+shape needs the deadline field named, another needs the price and the window
+separated. A probe that reports the wrong fields hides the trap it exists to find.
+
 For every candidate, **check the method before proposing it**. A proposed source with a guessed method is worthless — the human prunes on the method as much as the name.
 
 Try in order:
