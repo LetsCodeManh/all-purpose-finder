@@ -119,6 +119,16 @@ Row mapping: issuer = employer · item = role title · where = location · date 
 posted date. Dedupe on employer + role title — the same job on three boards is
 one card with three sightings.
 
+Diff key: `identity = url`, because a board edits a title far more often than it
+moves a posting. Keying on employer + title would report an edited title as a
+job that vanished and a different one that appeared.
+
+```
+identity = url
+compare  = title, location, date
+```
+
+
 **Blank location passes.** Remote roles often name no city.
 
 **Age is this shape's date handling.** A job has no deadline — it has a posted

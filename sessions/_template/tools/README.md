@@ -24,7 +24,7 @@ A jobs session tends to end up with three:
 |--------|------|
 | `probe.py` | fetch one URL, report `feed` / `page` / `blocked` with the reason, print the field names a feed actually carries. Run before a source is proposed |
 | `regex.py` | read the `## prefilter` block out of `criteria.md` and hand back the patterns |
-| `prefilter.py` | fetch every `feed`+`ok` source, normalise, dedupe, apply the patterns, write `listings.md` |
+| `prefilter.py` | fetch every `feed`+`ok` source, normalise, dedupe, apply the patterns, diff against `listings.prev.md`, write `listings.md` |
 
 Rules that hold whatever the script does:
 
@@ -36,6 +36,15 @@ Rules that hold whatever the script does:
 - **locate the repo by searching upward for `AGENTS.md`**, never by counting
   `parent` levels — the count breaks the moment a file moves.
 - **no LLM in the pre-filter.** It is a dumb, cheap, deliberately wide drop.
+- **anything countable or comparable is a script.** Counting and set comparison are
+  where an LLM is both the most expensive tool and the only one whose mistakes
+  nobody can spot — a miscounted tally and a missed `gone` row both look like
+  nothing. Reading meaning stays with the agent; that is the whole split.
+- **a deterministic step that drops something ships with a way to see what it
+  dropped.** Deterministic means repeatable, not correct — a wrong script is
+  wrong identically every run, and consistency reads as confidence. `probe.py`
+  exists for the fetch guess; `listings.md` keeps dropped rows marked `—` rather
+  than deleting them.
 - **fail loudly.** A source that errors is reported by name with its error. A
   heuristic that guesses (which field is the location, which date is the
   deadline) ships with a way to see the guess — that is what `probe.py` is for.

@@ -36,6 +36,7 @@ What it does:
 - normalises every feed's own field names into one common row — who published it, what it is, where it applies, its url, its date
 - **dedupes on issuer + item** — the same thing on three sites is one row
 - marks each row `kept` / not, writes them all to `listings.md`
+- **diffs this run against the last** and writes a `state` column — see section 5
 - a source that fails is **reported by name with its error, never silently skipped**
 - **a blank field passes.** An absent value is not a mismatch, and the pre-filter has no way to tell "does not apply" from "not stated"
 
@@ -52,11 +53,15 @@ The script only handles feeds. After it runs:
 
 ---
 
-## 2. The cache
+## 2. The cache and the previous run
 
 `listings.md` carries the date it was fetched. Same day and no `--refetch` → **nothing hits the network**, the script re-applies the regexes to what is already there.
 
 This is what makes criteria cheap to change. Say it out loud when the human hesitates over an edit: re-scoring costs a run of the script and no fetches. `--refetch` forces fresh.
+
+On a **new day** the script rotates the old `listings.md` to `listings.prev.md` before writing, so there is always exactly one previous run to compare against. One run of memory is exactly what `gone` needs — a row is shown gone once, then it drops.
+
+A `--refetch` on the **same day** does not rotate. Monday is still in `listings.prev.md` after the second Tuesday run, which is the point: the guard exists so a rerun cannot destroy the only history there is.
 
 ---
 
@@ -77,7 +82,11 @@ Do not produce a ledger for a topic that wants a brief. Rows that each say "here
 
 ## 4. Score the survivors — ledger form
 
-Only rows marked `kept`. Against `criteria.md`, and only against `criteria.md`.
+Only rows marked `kept` **whose `state` is `new` or `changed`**. Against `criteria.md`, and only against `criteria.md`.
+
+An `unchanged` row was already scored last run — carry its card over, do not read it again. That is what makes run two cheap, and it is most of the reason the diff is a script.
+
+Score everything `kept` when there is no previous run, or after a criteria edit — new rules mean every card is stale, `state` or not. Say which of the two you are doing.
 
 | kind | miss |
 |------|------|
@@ -116,16 +125,31 @@ open   ✓ <criterion> — <what you judged on>
 
 ## 5. Diff against the last run — ledger form
 
-`results.md` is **one file, rewritten each run**, in four sections. Skeleton: `sessions/_template/results.md`. A shape may rename or drop a section when it does not apply — a shape where nothing expires has no `gone` — but it never adds a fifth silently. Say what you changed and why.
+**Read the `state` column. Do not work it out.** The script already compared this run against `listings.prev.md` and wrote the answer per row:
+
+```
+new                  ← not in the previous run
+changed: title,date  ← same row, and these columns moved
+unchanged            ← identical on every watched column
+gone                 ← was in the previous run, is not in this fetch
+```
+
+Comparing two files by eye is the one step in this pipeline nobody can check your work on — a missed `gone` row looks exactly like nothing. It is a set comparison, so it is a script, and `state` is what it returns.
+
+The key and the watched columns come from `identity` and `compare` in `criteria.md`. **If `state` looks like noise — everything `new` and everything `gone` on a run where the sources barely moved — the key is wrong, not the sources.** Almost always a date crept into `identity`. Say so and fix the block; do not write the file up as if hundreds of things changed overnight.
+
+`results.md` is **one file, rewritten each run**, in four sections mapping straight onto the four states. Skeleton: `sessions/_template/results.md`. A shape may rename or drop a section when it does not apply — a shape where nothing expires has no `gone` — but it never adds a fifth silently. Say what you changed and why.
 
 ```
 ## new
-## changed          ← say what changed: a number appeared, the location moved, the title was edited
+## changed          ← name the columns the state gave you, in words: the deadline moved, the price dropped
 ## unchanged        ← collapsed to one line each, not full cards
-## gone             ← was in the last run, not in this one. Keep the card, mark it
+## gone             ← keep the card, mark it
 ```
 
-`gone` is not a deletion. Something that vanishes is information — it was taken, or it was pulled. Keep the row for one run, then let it drop.
+`gone` is not a deletion. Something that vanishes is information — it was taken, or it was pulled. The script shows it for one run and then drops it, so this file is the only place it is ever written up.
+
+`page` rows are appended by hand below `## page sources` and the script does not diff them. Their state is yours to state in words.
 
 Never re-print the whole list as if it were new. **New-since-last-run is the reason anyone runs this twice.**
 

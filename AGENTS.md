@@ -111,6 +111,7 @@ Never quietly improve a list by shortening it.
 - The pre-filter is `sessions/<slug>/tools/prefilter.py`, and it belongs to that session. **No LLM in it.** Its patterns come from the `## prefilter` block in `criteria.md`, never from the command line — an argument nobody wrote down is a run nobody can repeat. One source can return 200+ items; scoring all of them ends the run early.
 - Only survivors get scored.
 - Fetched listings are cached in `listings.md` and not refetched the same day, so re-scoring after a criteria edit is free. `--refetch` forces fresh.
+- **The diff is a script, not a judgment.** `prefilter.py` rotates the last run to `listings.prev.md` and writes a `state` column — `new` / `changed:<cols>` / `unchanged` / `gone`. Comparing two files by eye is the one step an LLM cannot be checked on, and it makes every rerun cost a full re-score. Only `new` and `changed` rows are scored.
 - Contact lookup runs on ticked rows only, once per organisation.
 
 ---
@@ -123,11 +124,14 @@ Never quietly improve a list by shortening it.
 | `sources.md` | one table, `type` is a column |
 | `criteria.md` | the approved checklist |
 | `results.md` | one file, diffed. Not per-site files |
-| `listings.md` | raw fetch cache |
+| `listings.md` | raw fetch cache + the `state` column from the diff |
+| `listings.prev.md` | the previous run, rotated in on a new day. One run of memory, which is what `gone` needs |
 | `contacts.md` | looked-up contacts, cached per organisation |
 | `tools/` | this session's scripts. **Per session, not shared** |
 
 `criteria.md` also carries a `## prefilter` block — the regexes the pre-filter runs, each traceable to a `must` line. Written at GATE 3, read by `sessions/<slug>/tools/regex.py`. Keeping them in the session is what makes a run reproducible tomorrow.
+
+The same block carries `identity` and `compare`, which drop nothing and drive the diff instead. `identity` is the columns that make a row the same row next week — the url for jobs and tenders, `company+title` for a flyer where 200 products share one url, the published reference where the shape has a real one. **A date never belongs in `identity`**: identity is what must hold still so you can tell it is the same thing, and a key that moves every week reports the same row as `new` plus `gone` forever while hiding the change itself.
 
 One file each, and `tools/` is the only folder. Skeletons: `sessions/_template/`.
 

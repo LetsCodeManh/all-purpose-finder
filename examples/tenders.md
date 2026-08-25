@@ -166,6 +166,16 @@ Row mapping: issuer = contracting authority · item = notice reference and title
 where = place of performance · date = **the closing date**. Dedupe on the notice
 reference.
 
+The only shape with a real published ID, so the diff key is that ID and nothing
+else. `changed` matters more here than anywhere: authorities extend deadlines
+and revise documents after publication, and a moved closing date is the single
+most actionable thing this shape produces.
+
+```
+identity = ref
+compare  = title, closing, place
+```
+
 **Date handling is the whole shape.** Every row gets a computed `days left`, and
 the file is sorted by it, ascending. Two flags:
 

@@ -77,7 +77,9 @@ Append it to the same file. It is the machine-readable half of the `must` lines,
 ```
 <field> = <regex>
 <field> = <regex>
-exclude = <regex>
+exclude  = <regex>
+identity = <column>[+<column>]
+compare  = <column>, <column>
 ```
 
 - fields are the ones the item rows actually carry — the pre-filter matches on those names, so a field no source publishes is a filter that never fires
@@ -85,6 +87,8 @@ exclude = <regex>
 - `exclude` drops on a match; the others keep
 - keep them loose. A row wrongly dropped here is never seen again; a row wrongly kept costs one line of scoring
 - omit a key entirely if that check should not run
+- `identity` and `compare` are **not filters and drop nothing** — they are the diff's key and its watched columns, and they are the only keys here that do not trace to a `must`. Defaults: `identity = url`, `compare` = every column the rows carry. Set them when the shape says otherwise — a flyer keys on `company+title` because its products share one url, a tender keys on its published reference, and prices watch the price and the window rather than the title
+- **never put a date in `identity`.** It is the one mistake that silently produces a diff of pure noise: every row reads `new` and `gone` each run, and the thing that actually moved is never reported at all
 - **omit the whole block** when the shape reads every item anyway. The pre-filter exists to stop a run drowning in hundreds of rows; where there is nothing to drown in, a regex that filters nothing is a rule that can only cause harm. Say it is omitted and why, so the next run does not think it went missing
 
 Check it before moving on, when there is one:

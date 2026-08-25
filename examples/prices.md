@@ -128,6 +128,25 @@ systematically.
 Row mapping: issuer = seller · item = product · where = branch or region · date
 = **the window**, not one date. Dedupe on seller + product.
 
+★ **This is the shape where `identity = url` is wrong.** One flyer page carries
+two hundred products, so every row shares a url and the whole flyer collapses
+into one row. Key on the product instead:
+
+```
+identity = company+title
+compare  = price, window_end
+```
+
+And the reason the date is in `compare` and never in `identity`: milk at 2.19
+last week and 2.49 this week is **one row that changed**, which is the entire
+news. Put the week in the key and it becomes a new row plus a vanished one, the
+price move is never reported, and every run reads 100% new and 100% gone.
+
+Note `price` has to be a **column this session's `prefilter.py` normalises** —
+the jobs columns do not carry one. A `compare` naming a column nobody fetches is
+a comparison that never fires, so the script rejects it rather than running
+quietly.
+
 **A window is two fields.** A row whose end date is missing is `unknown` and
 flagged, not dropped — but say it clearly, because an unbounded sale is usually
 a parsing failure, not a generous seller.
