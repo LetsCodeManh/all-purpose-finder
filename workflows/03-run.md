@@ -4,7 +4,8 @@ Fetch, narrow with a script, score the survivors, diff against last time.
 
 Rules: `AGENTS.md`. Entry: `00-session.md`.
 
-In: `sources.md` + an approved `criteria.md`. Out: `sessions/<slug>/listings.md` + `results.md`.
+In: `sources.md` + an approved `criteria.md`. Out: `results.md`, plus
+`listings.md` for ledger shapes.
 
 Worked example: `examples/<shape>.md` → *03 — run*, for the shape named in this session's `shape:` field. No example yet for this shape? Run the step from here anyway, say so, and write that section afterwards from what happened.
 
@@ -161,19 +162,34 @@ Every run ends with what it did not do:
 
 ```
 blocked, open by hand: <names>
+manually checked:      <name> (<checked|partial|unavailable>, <date>)
 failed this run:       <name> (<error>)
 not checked since:     <name> — <date>
 ```
 
 Then update `MEMORY.md` → `last run: <date>`. If the shape has a contacts step, `status: contacts`, `next: tick the rows worth chasing`. If it has none, `status: run` and `next:` points at the rerun — the shape example says which.
 
+Before handoff, run the topic-neutral consistency check:
+
+```
+python3 tools/session_audit.py <slug>
+```
+
+Fix errors before GATE 4. Warnings remain visible in the gap report when they
+represent a real limitation rather than a malformed file.
+
 ---
 
 ## 7. GATE 4
 
+For a ledger:
+
 ```
 Tick the rows worth chasing in results.md. Contact lookup runs on those only.
 ```
+
+For a brief, ask the human to review the stated next action—read it before the
+occasion, make the decision, or request a refresh.
 
 Wait. Contact lookup is the expensive step and it runs once per organisation — do not pre-run it on everything to be helpful.
 

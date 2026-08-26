@@ -24,9 +24,12 @@ Four gates. At each one the agent stops and waits for you:
 | 1 | session created | confirm the slug and the shape |
 | 2 | sources proposed | cut what is noise, add what it missed |
 | 3 | criteria written back | approve what it will search against |
-| 4 | results scored | tick the rows worth chasing |
+| 4 | results ready | review the result; for a ledger, tick the rows worth chasing |
 
-Nothing is fetched before gate 3. Nobody is looked up before gate 4.
+Before gate 3, candidate sources are searched and lightly probed only to
+establish whether and how they can be read. Full retrieval, filtering, scoring,
+and brief-writing begin after criteria approval. Nobody is looked up for contact
+purposes before gate 4.
 
 ---
 
@@ -51,6 +54,11 @@ start a finder session — weekly discounts on groceries near me
 
 Or, if your agent supports slash commands, `/session`. With no topic it lists
 what already exists and asks which one.
+
+The included `.claude/skills/session/` shortcut is for agents that discover
+Claude-style repository skills. Other agents need no installation: use the
+natural-language command above, and they follow `AGENTS.md` plus
+`workflows/00-session.md`.
 
 The agent proposes a slug and a shape, then waits. Approve, and it walks the
 four steps in order:
@@ -77,6 +85,11 @@ Each session is one folder, one file per thing:
 | `listings.md` | the raw fetch cache |
 | `contacts.md` | who to talk to, cached so it is never looked up twice |
 | `tools/` | that session's own scripts, if it needs any |
+
+Run `python3 tools/session_audit.py <slug>` before relying on a finished session.
+The validator is read-only and topic-neutral: it checks structure, source
+accounting, dates, and whether cited web domains are represented in the source
+table. It does not fetch or score anything.
 
 **Sessions are yours and stay local.** `sessions/*` is gitignored. Your job
 hunt, your shopping list and your meeting prep never leave your machine, and
@@ -126,6 +139,7 @@ AGENTS.md              the rules. The only rules file
 CLAUDE.md              one line, pointing at AGENTS.md
 .claude/skills/        the /session shortcut. Holds no logic — delete it and
                        everything still works, you just type the sentence instead
+tools/session_audit.py read-only, topic-neutral session consistency check
 workflows/             one file per step, procedure only, no topic
 examples/              one worked walkthrough per shape. Public, placeholders only
 sessions/_template/    the skeleton of a session

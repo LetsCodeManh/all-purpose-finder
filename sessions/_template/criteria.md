@@ -1,6 +1,7 @@
 # criteria — <slug>
 
 Approved: YYYY-MM-DD
+Last amended: —
 
 ## must
 - <hard requirement — a miss drops the row>

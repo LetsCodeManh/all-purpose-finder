@@ -56,7 +56,10 @@ The human described a topic instead of naming one.
 
 1. **Propose the slug yourself.** Short, readable, lowercase, hyphens. Never a hash, never a date. The human does not invent it — they approve or rename it.
 2. **Name the shape.** Read the files in `examples/`. Either this topic is one of them, or it is not — say which, and say why in one clause. This is part of GATE 1, not a decision you make quietly.
-3. Say back, in two lines, what you understood the topic to be.
+3. Say back, in two lines, what you understood the topic to be. For a one-shot
+   shape driven by a meeting, decision, or deadline, include the occasion and
+   date. If the human did not supply them, write `occasion not supplied` rather
+   than inventing one; they can fill it in while approving GATE 1.
 4. **GATE 1.** Wait.
 
 ```
@@ -107,6 +110,19 @@ The signals that a topic is a new shape:
 | `contacts` | `workflows/04-contacts.md` |
 
 Never skip forward because a later step looks more useful. If the human explicitly asks for a different step, say which step the session is on, then do what they asked.
+
+### Amendments to a completed step
+
+If the human adds a source, criterion, occasion, or question after the session
+has moved past that step, follow the delta procedure in `AGENTS.md`:
+
+- keep the current `status`
+- show only the proposed source and criteria changes
+- repeat GATE 2 and/or GATE 3 only for that delta
+- after approval, update the stored files and rerun only the affected result sections
+
+Do not make `results.md` broader than its approved sources and criteria merely
+because the new request arrived during `run`.
 
 ---
 

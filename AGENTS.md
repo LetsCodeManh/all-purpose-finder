@@ -14,10 +14,10 @@ Four gates. Each one stops you until the human answers. There is no "obviously t
 
 | # | Gate | You stop until |
 |---|------|----------------|
-| 1 | Session creation | the human confirms the slug |
+| 1 | Session creation | the human confirms the slug and shape |
 | 2 | Sources list | the human prunes and adds |
 | 3 | Criteria checklist | the human approves |
-| 4 | Results → shortlist | the human ticks rows |
+| 4 | Results → next action | the human reviews the result; for a ledger, they tick rows |
 
 Passing a gate without an answer is the single worst failure mode in this repo. If you are unsure whether you are at a gate, you are at a gate.
 
@@ -42,6 +42,22 @@ The current step is the `status` field in `sessions/<slug>/MEMORY.md`. Read it, 
 
 Entry procedure for every session: `workflows/00-session.md`.
 
+### Scope amendments after a gate
+
+The human may add a source, question, occasion, or criterion after a session has
+already moved on. Do not silently widen the approved run and do not restart the
+whole session. Show only the delta:
+
+1. new sources → run the source-method check and repeat GATE 2 for those rows
+2. new or changed criteria → read back those lines and repeat GATE 3 for them
+3. rerun only the sections affected by the approved delta
+
+Keep `status` at the furthest completed step while the amendment is being
+approved. Update `sources.md` and `criteria.md` only after their delta gate, add
+the amendment date, then update `results.md`. An explicit request to add a fact
+to the result is permission to propose the amendment, not permission to make the
+stored source and criteria state disagree with the result.
+
 **One skill, not six.** A skill is a shortcut, not a capability. Only `session` is triggered by a human; the other four steps are walked by you, driven by `status`. Do not turn a workflow into a skill — that is five files only ever called by another file.
 
 **Contacts is optional, and the shape decides.** A topic with nobody to look up ends at `run`: say the result is final, leave `status: run`, and point `next:` at the rerun. Skipping the step out loud is correct; quietly inventing someone to contact is not.
@@ -52,10 +68,13 @@ Entry procedure for every session: `workflows/00-session.md`.
 
 **Only inside `sessions/<slug>/`.**
 
-Two exceptions, both public and both topic-neutral:
+Three exceptions, all public and topic-neutral:
 
-- `sessions/_template/` — the **skeleton** of a session: empty files, no data. Not a session — never a slug, never listed as one. Copy it at step 1.
+- `sessions/_template/` — the **skeleton** of a session: empty files, no data. Not a session — never a slug, never listed as one. Copy its contents after GATE 2, as `workflows/01-sources.md` specifies.
 - `examples/<shape>.md` — one worked walkthrough per **shape**, keyed by workflow step. Illustration only, never procedure. No URLs and no vendor names, so the repo stays standalone. A new shape is a new file here, not an edit to a workflow. Skeleton: `examples/_template.md`.
+- `tools/session_audit.py` — a read-only structural validator. It may count,
+  compare dates, and check that result-link domains appear in `sources.md`. It
+  never fetches, filters, scores, or knows a topic.
 
 - No global memory. No user-level memory. No project memory outside the session folder.
 - No cross-session notes. Two sessions never learn from each other.
@@ -78,6 +97,12 @@ Every source gets one of three methods, tried in this order:
 
 A `blocked` source stays in `sources.md` with its status and a URL the human can open by hand. **Never delete a blocked source.** A gap you can see is worth more than a list that looks clean.
 
+When the human authorizes a browser or opens a blocked source by hand, the
+method and status remain `blocked`: a generic rerun still cannot fetch it.
+Record `manual status` (`checked`, `partial`, or `unavailable`) and `manual
+checked` in the same source row. This distinguishes "automatically readable"
+from "publicly inspected once" without pretending the latter is reproducible.
+
 **Only what is publicly published, for the purpose it was published for.** This binds hardest on shapes that read about people: a public professional profile, a talk, a byline — yes. Assembling scattered personal details into a dossier, anything behind a privacy setting, home address, family — no, whatever the topic. Say what you excluded, so the gap is visible rather than silently skipped.
 
 ---
@@ -87,6 +112,7 @@ A `blocked` source stays in `sources.md` with its status and a URL the human can
 The human has to be able to tell what you did not do. Always surface:
 
 - blocked sources, with status
+- manual browser/hand checks, with status and date
 - what is new since the last run
 - `gone` for hits that vanished
 - missing data — **flag it, never drop the row**
@@ -128,6 +154,10 @@ Never quietly improve a list by shortening it.
 | `listings.prev.md` | the previous run, rotated in on a new day. One run of memory, which is what `gone` needs |
 | `contacts.md` | looked-up contacts, cached per organisation |
 | `tools/` | this session's scripts. **Per session, not shared** |
+
+The root `tools/session_audit.py` is not a session engine script. It is the
+topic-neutral, read-only validator named in **Where you may write**; it must not
+grow fetching, parsing, filtering, scoring, or shape-specific branches.
 
 `criteria.md` also carries a `## prefilter` block — the regexes the pre-filter runs, each traceable to a `must` line. Written at GATE 3, read by `sessions/<slug>/tools/regex.py`. Keeping them in the session is what makes a run reproducible tomorrow.
 

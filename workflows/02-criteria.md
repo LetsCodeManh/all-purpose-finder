@@ -60,7 +60,11 @@ Rules while converting:
 This is what I will search against. Change anything before I run.
 ```
 
-**Wait. Nothing searches before approval.** A run against wrong criteria is not merely useless — it burns the fetch cache and the quota, and it teaches the human that the results are noise.
+**Wait. No full retrieval, filtering, scoring, or brief-writing happens before
+approval.** The light source discovery and method probes from step 01 are the
+only earlier fetches. A run against wrong criteria is not merely useless — it
+burns the fetch cache and the quota, and it teaches the human that the results
+are noise.
 
 Expect a rewrite. `must` → `nice` is the most common correction, and the human is right every time they make it.
 
@@ -107,6 +111,9 @@ Criteria change constantly once real results land — that is the system working
 
 The fetch cache in `listings.md` means **re-scoring after an edit is free**: no refetch, same day or not, unless the human asks for `--refetch`. Say this out loud when they hesitate to change something. Cheap edits are the point.
 
-Re-approve only the changed lines. Then re-score and diff `results.md` as normal.
+Show and re-approve only the changed lines. After approval, update `Last
+amended` in `criteria.md`, then re-score only the affected result sections. If a
+new question needs a new source, its GATE 2 delta comes first. Keep the session's
+current `status`; an amendment does not rewind completed work.
 
 If the edit touched a `must`, update the `## prefilter` block to match. A `must` line and its pattern drifting apart is the one inconsistency in this file nobody notices, because the run still succeeds — it just quietly filters on the old rule.

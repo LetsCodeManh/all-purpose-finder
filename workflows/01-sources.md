@@ -14,6 +14,10 @@ Worked example: `examples/<shape>.md` → *01 — sources*, for the shape named 
 
 Do not answer from memory. Sites move, feeds die, aggregators shut down. Search now.
 
+This is the limited pre-GATE-3 fetch: discover candidates and read only enough
+to establish their method, fields, and usefulness. Do not retrieve the complete
+candidate set, score results, or write the final brief yet.
+
 Cast wider than the obvious. For any topic, sweep at least:
 
 - the big aggregators for that domain
@@ -86,7 +90,9 @@ Ask plainly:
 Cut what is noise, add what I missed. Then I write the file.
 ```
 
-**Wait.** Do not write `sources.md` before the answer. Do not create the session folder before the answer.
+**Wait.** Do not write `sources.md` or copy the session skeleton before the
+answer. A tools-only folder may already exist because the probe is real work;
+that is the narrow exception described in section 2, not a created session.
 
 Expect additions — the human knows sources you cannot search your way to. Add them with the same method check as everything else: verify before writing the row, do not take a URL on faith.
 
@@ -94,12 +100,24 @@ Expect additions — the human knows sources you cannot search your way to. Add 
 
 ## 5. Write
 
-Copy `sessions/_template/` to `sessions/<slug>/` now, and fill `sources.md`:
+Copy the skeleton contents into `sessions/<slug>/` now, and fill `sources.md`:
+
+```
+mkdir -p sessions/<slug>
+cp -R sessions/_template/. sessions/<slug>/
+```
+
+The `/.` matters when a tools-only folder already exists: it merges the
+skeleton contents instead of creating `sessions/<slug>/_template/` inside it.
 
 - `type` is a **column** — whatever kinds this topic has. Not a folder, not separate files.
 - `status`: `ok` · `blocked` · `error` · `untested`
 - `last checked`: the date you actually fetched it. This is what catches a source silently skipped for a month.
 - Blocked rows **stay in the file**, with the URL to open by hand.
+- `manual status`: `checked` · `partial` · `unavailable` · `—`. Use it only to
+  record a human-authorized browser or hand check; it never changes `method` or
+  `status` from `blocked`.
+- `manual checked`: the date of that browser or hand check, or `—`.
 
 Delete the skeleton files this session has not reached yet, and `tools/` if it needs no scripts. Anything left in `tools/` is this session's own — copy from a neighbouring session and diverge, never import across sessions. Rules: `sessions/_template/tools/README.md`.
 
@@ -122,3 +140,8 @@ not checked (N)
 ```
 
 Then GATE 2 again on the new rows only. Never re-litigate rows the human already pruned.
+
+After approval, append the new rows to the existing table, update `Last
+updated`, and leave the session's current `status` unchanged. If the new source
+answers a question the criteria did not ask, propose that criteria delta at
+GATE 3 before changing the result.

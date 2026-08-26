@@ -41,6 +41,10 @@ Good? Rename it if the slug is wrong.
 The deadline belongs in the topic line. It is what decides how deep to go, and
 it is the only thing in this shape that expires.
 
+When the occasion or date is not supplied, write `occasion not supplied` at
+GATE 1. Do not guess it and do not postpone the session; the visible gap prompts
+the human to add it before approving or as a later scope amendment.
+
 ---
 
 ## 01 — sources
@@ -136,10 +140,25 @@ Fetch, read, and **write a brief**. No cards, no score line, no `4/6`.
 
 ```markdown
 # brief — <slug>
-Prepared <date> · for <the occasion> on <date> · <N> sources read, <N> unreachable
+Prepared <date> · for <the occasion> on <date> · <N> sources checked ·
+<B> blocked to automation (<M> manually checked) · <U> unreachable
 
 ## in one line
 <what the organisation does, as someone there would put it>
+
+## meeting card
+
+### five things to remember
+<the smallest set of verified facts needed in the room>
+
+### three questions to ask
+<questions tied to the human's objective, not generic due diligence>
+
+### claims not to repeat as facts
+<subject claims, estimates, or unresolved disagreements likely to sound factual>
+
+### objective
+<what the human wants from this occasion; `not supplied` is visible>
 
 ## the organisation
 <what they do, how they earn, size, age, ownership — each claim sourced>
@@ -166,6 +185,9 @@ proud of, a term they use for their own work>
 
 Rerun before a later meeting: the diff is **what changed since the last brief**,
 not a rewrite. Keep the previous brief's date line.
+
+The meeting card is the operational view, not a second result file. Refresh it
+whenever the occasion, objective, or underlying brief changes.
 
 ---
 
