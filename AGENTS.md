@@ -17,7 +17,7 @@ Four gates. Each one stops you until the human answers. There is no "obviously t
 | 1 | Session creation | the human confirms the slug and shape |
 | 2 | Sources list | the human prunes and adds |
 | 3 | Criteria checklist | the human approves |
-| 4 | Results → next action | the human reviews the result; for a ledger, they tick rows |
+| 4 | Results → next action | the human reviews the result; for a ledger, they tick rows — `- [x]`, see **Ticks** |
 
 Passing a gate without an answer is the single worst failure mode in this repo. If you are unsure whether you are at a gate, you are at a gate.
 
@@ -61,6 +61,12 @@ stored source and criteria state disagree with the result.
 **One skill, not six.** A skill is a shortcut, not a capability. Only `session` is triggered by a human; the other four steps are walked by you, driven by `status`. Do not turn a workflow into a skill — that is five files only ever called by another file.
 
 **Contacts is optional, and the shape decides.** A topic with nobody to look up ends at `run`: say the result is final, leave `status: run`, and point `next:` at the rerun. Skipping the step out loud is correct; quietly inventing someone to contact is not.
+
+Said out loud is said in the terminal, and the terminal is gone tomorrow. Put it on
+disk too: the optional `MEMORY.md` key `contacts: n/a — <reason>` records that this
+session ends at `run` and why. Present means the step is closed by decision; absent
+means it is still ahead or already done. Never write it to skip a lookup the shape
+does have.
 
 ---
 
@@ -132,13 +138,40 @@ Never quietly improve a list by shortening it.
 
 ---
 
+## Ticks
+
+A tick is a **task-list checkbox**: `- [ ]` unticked, `- [x]` ticked. Nothing else is
+a tick — not bold, not an emoji, not a `yes` column. It is clickable as-is in GitHub,
+Obsidian, VS Code and Cursor, so ticking needs no tooling and no script.
+
+Where it goes in `results.md`: one line directly under a card's heading, and the whole
+line for a collapsed `unchanged` row. Skeleton: `sessions/_template/results.md`.
+
+- **An untick is an answer.** A row left `- [ ]` is a rejection. Do not look something
+  up because it scored well.
+- **A tick survives the run.** An `unchanged` row keeps the tick it had, so nothing is
+  re-decided and contacts does not re-look-up. A `changed` row keeps its tick too, and
+  shows `changed: <cols>` so a date move and a location move do not read alike — the
+  human re-decides only when it matters. Only `new` rows arrive unticked.
+  **Never auto-untick.** Unticking makes people redo settled work.
+- **Zero ticks among the rows that needed a decision is a stop.** Not a green light,
+  and never "then all of them". Ask. This is *rows that needed a decision this run* —
+  `new` rows, and `changed` rows put back in front of the human — not "no rows ticked
+  at all": a run whose rows all carry their ticks forward produces zero new ticks
+  legitimately, and that gate is satisfied.
+
+A skipped step is visible. A gate written up as satisfied is not, which is why an
+empty one stops.
+
+---
+
 ## Cost
 
 - The pre-filter is `sessions/<slug>/tools/prefilter.py`, and it belongs to that session. **No LLM in it.** Its patterns come from the `## prefilter` block in `criteria.md`, never from the command line — an argument nobody wrote down is a run nobody can repeat. One source can return 200+ items; scoring all of them ends the run early.
 - Only survivors get scored.
 - Fetched listings are cached in `listings.md` and not refetched the same day, so re-scoring after a criteria edit is free. `--refetch` forces fresh.
 - **The diff is a script, not a judgment.** `prefilter.py` rotates the last run to `listings.prev.md` and writes a `state` column — `new` / `changed:<cols>` / `unchanged` / `gone`. Comparing two files by eye is the one step an LLM cannot be checked on, and it makes every rerun cost a full re-score. Only `new` and `changed` rows are scored.
-- Contact lookup runs on ticked rows only, once per organisation.
+- Contact lookup runs on ticked rows only, once per organisation. Ticks carry across runs, so a rerun re-looks-up nothing — see **Ticks**.
 
 ---
 
@@ -146,7 +179,7 @@ Never quietly improve a list by shortening it.
 
 | file | holds |
 |------|-------|
-| `MEMORY.md` | status + next step. **Pointer only — no data** |
+| `MEMORY.md` | status + next step, plus optional `contacts: n/a — <reason>`. **Pointer only — no data** |
 | `sources.md` | one table, `type` is a column |
 | `criteria.md` | the approved checklist |
 | `results.md` | one file, diffed. Not per-site files |

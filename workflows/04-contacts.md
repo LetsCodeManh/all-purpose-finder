@@ -4,18 +4,27 @@ Find a human to talk to, for the rows the human ticked. Nothing else.
 
 Rules: `AGENTS.md`. Entry: `00-session.md`.
 
-In: ticked rows in `results.md`. Out: `sessions/<slug>/contacts.md`.
+In: ticked rows in `results.md` — rows marked `- [x]`. Out: `sessions/<slug>/contacts.md`.
 
 Worked example: `examples/<shape>.md` → *04 — contacts*, for the shape named in this session's `shape:` field. No example yet for this shape? Run the step from here anyway, say so, and write that section afterwards from what happened.
 
 Some shapes have no one to contact — a price hunt ends at the result. Then this
-step is one line: "nothing to look up here", `MEMORY.md` updated, done.
+step is one line: "nothing to look up here", `MEMORY.md` updated with
+`contacts: n/a — <reason>`, done. Saying it in the terminal alone loses it; the key
+keeps it on disk.
 
 ---
 
 ## 1. Read the ticks
 
-Only rows the human marked in `results.md`. An untick is an answer — do not look up an organisation because it scored well.
+Only rows the human marked `- [x]` in `results.md`. A `- [ ]` is an answer — do not
+look up an organisation because it scored well.
+
+**Zero ticks among the rows that needed a decision stops this step.** If nothing that
+arrived `new` or came back `changed` carries a tick, do not proceed and never resolve
+it as "then all of them": say what you found and ask. Ticks carried forward from
+earlier runs are not an empty gate — those organisations are already in `contacts.md`
+and need no lookup at all. Full rule: `AGENTS.md` → **Ticks**.
 
 **Once per organisation, not once per row.** Two ticked rows from the same org is one lookup.
 

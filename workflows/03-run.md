@@ -106,6 +106,7 @@ One per surviving row. Same layout whatever the topic:
 
 ```markdown
 ### <issuer> — <item>
+- [ ] chase
 <where> · [<link>](<url>) · posted <date>
 source: <which source> · also seen: <other sources>
 
@@ -121,6 +122,10 @@ open   ✓ <criterion> — <what you judged on>
 ```
 
 `also seen:` is the dedupe made visible — three sightings, one card.
+
+The `- [ ]` line is the tick. It is written unticked on a `new` card only; a card
+carried over keeps whatever the human left there. Syntax and the rules that bind it:
+`AGENTS.md` → **Ticks**.
 
 ---
 
@@ -142,11 +147,26 @@ The key and the watched columns come from `identity` and `compare` in `criteria.
 `results.md` is **one file, rewritten each run**, in four sections mapping straight onto the four states. Skeleton: `sessions/_template/results.md`. A shape may rename or drop a section when it does not apply — a shape where nothing expires has no `gone` — but it never adds a fifth silently. Say what you changed and why.
 
 ```
-## new
+## new              ← full cards, each written `- [ ]`
 ## changed          ← name the columns the state gave you, in words: the deadline moved, the price dropped
-## unchanged        ← collapsed to one line each, not full cards
+## unchanged        ← collapsed to one line each, not full cards: `- [x] <issuer> — <item> · 4/6`
 ## gone             ← keep the card, mark it
 ```
+
+**Ticks carry over. Never auto-untick.** `results.md` is rewritten each run, so copy
+each row's tick out of the previous one before you overwrite it:
+
+- `unchanged` → keeps its tick, stays collapsed to one line, is not re-scored and is
+  not re-looked-up
+- `changed` → keeps its tick too, and says `changed: <cols>` in words. A ticked
+  `changed` card sorts to the top of its section: the human already decided on it once,
+  and this is the row where the decision might now be wrong
+- `new` → the only rows written `- [ ]`
+- `gone` → keeps its tick; the card is marked gone and drops next run
+
+Rewriting the file is not permission to reset the human's decisions. Unticking makes
+them redo settled work, and a run where everything came back unticked is exactly the
+empty gate `AGENTS.md` → **Ticks** tells you to stop on.
 
 `gone` is not a deletion. Something that vanishes is information — it was taken, or it was pulled. The script shows it for one run and then drops it, so this file is the only place it is ever written up.
 
@@ -185,8 +205,14 @@ represent a real limitation rather than a malformed file.
 For a ledger:
 
 ```
-Tick the rows worth chasing in results.md. Contact lookup runs on those only.
+Tick the rows worth chasing in results.md — `- [ ]` → `- [x]`.
+Contact lookup runs on those only.
 ```
+
+Rows that came in already ticked stay ticked and are already looked up; untick one to
+drop it. Say how many rows actually need a decision this run — the `new` ones plus the
+`changed` ones — so the human knows what they are looking at. If none of them ends up
+ticked, that is an empty gate: stop and ask, never read it as all of them.
 
 For a brief, ask the human to review the stated next action—read it before the
 occasion, make the decision, or request a refresh.
