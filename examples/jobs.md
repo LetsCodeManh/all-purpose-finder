@@ -145,6 +145,7 @@ A scored card:
 
 ```markdown
 ### <employer> — <role title>
+- [ ] chase
 <location> · [posting](<url>) · posted <date>
 source: employer careers feed · also seen: one aggregator, one regional board
 

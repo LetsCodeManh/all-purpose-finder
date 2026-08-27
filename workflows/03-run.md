@@ -149,7 +149,7 @@ The key and the watched columns come from `identity` and `compare` in `criteria.
 ```
 ## new              ← full cards, each written `- [ ]`
 ## changed          ← name the columns the state gave you, in words: the deadline moved, the price dropped
-## unchanged        ← collapsed to one line each, not full cards: `- [x] <issuer> — <item> · 4/6`
+## unchanged        ← collapsed to one line each, not full cards: `- [x] <issuer> — <item> · <score>`
 ## gone             ← keep the card, mark it
 ```
 

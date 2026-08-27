@@ -144,8 +144,17 @@ A tick is a **task-list checkbox**: `- [ ]` unticked, `- [x]` ticked. Nothing el
 a tick — not bold, not an emoji, not a `yes` column. It is clickable as-is in GitHub,
 Obsidian, VS Code and Cursor, so ticking needs no tooling and no script.
 
-Where it goes in `results.md`: one line directly under a card's heading, and the whole
-line for a collapsed `unchanged` row. Skeleton: `sessions/_template/results.md`.
+Exactly two forms, and no third. Both start a line and both match `^- \[[ x]\] `:
+
+```
+- [ ] chase                        ← card tick: the line directly under a card's ### heading
+- [x] <issuer> — <item> · <score>  ← collapsed-row tick: an unchanged row, whole
+```
+
+`<score>` is whatever the card's own score line said — the shape decides how that
+reads, this line does not. Nothing else in `results.md` may begin with a checkbox, so
+ticks stay countable by a script rather than by eye. Skeleton:
+`sessions/_template/results.md`; per-shape card layout: `examples/<shape>.md`.
 
 - **An untick is an answer.** A row left `- [ ]` is a rejection. Do not look something
   up because it scored well.

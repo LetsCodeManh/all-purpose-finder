@@ -19,6 +19,15 @@ VALID_MANUAL = {"checked", "partial", "unavailable", "—", "-", ""}
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 LINK_RE = re.compile(r"\[[^\]]+\]\((https?://[^)]+)\)")
 
+# ponytail: filed, not built — tick counting.
+# A tick is `^- \[[ x]\] ` at the start of a line in results.md (AGENTS.md -> Ticks),
+# so ticked-vs-total is a count, and anything countable belongs in a script rather
+# than in a claim an agent makes about a file. This is the deterministic check on the
+# exact failure that produced the rule: a contacts run reporting "all 38 orgs ticked"
+# against a results.md holding zero `- [x]`.
+# Shape when built: count ticked and total rows per section, print them in the report,
+# and error when status is `contacts` and results.md holds no tick at all.
+
 
 @dataclass
 class Audit:

@@ -191,6 +191,7 @@ A scored card:
 
 ```markdown
 ### <authority> — <notice title>
+- [ ] chase
 ref <notice reference> · <place of performance> · [notice](<url>)
 published <date> · **closes <date> — <N> days left**
 source: central register · also seen: one regional portal
@@ -218,7 +219,7 @@ The diff, this shape:
 ## new
 ## changed          ← deadline extended, documents revised, scope clarified,
                        value corrected. Say which. People act on this section
-## unchanged        ← one line each
+## unchanged        ← one line each: `- [x] <authority> — <notice title> · <score>`
 ## gone             ← split it:
                        awarded    — and to whom, if the award notice says
                        withdrawn  — cancelled or pulled
