@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>finder</title>
+<style>
+:root{
+  --bg:#12141a; --pane:#171a21; --line:#252a34; --ink:#d6dae3; --dim:#7f8797; --dimmer:#5a616f;
+  --ok:#5ec27a; --warn:#d8a441; --blocked:#e2705c; --amber:#d9a441; --acc:#6ea8fe;
+  --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  background:var(--bg);color:var(--ink);
+  font:13px/1.55 var(--mono);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+
+/* ---- tabs ---- */
+#tabs{display:flex;gap:0;background:var(--pane);border-bottom:1px solid var(--line);flex:0 0 auto;overflow-x:auto}
+.tab{
+  background:none;border:0;border-right:1px solid var(--line);color:var(--dim);
+  font:inherit;padding:9px 16px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:8px;
+}
+.tab:hover{color:var(--ink);background:#1c202a}
+.tab.on{color:var(--ink);background:var(--bg);box-shadow:inset 0 2px 0 var(--acc)}
+.tab .dot{width:6px;height:6px;border-radius:50%;background:var(--dimmer)}
+.tab.on .dot{background:var(--ok)}
+.tab .badge{color:var(--dimmer);font-size:11px}
+.tab.on .badge{color:var(--amber)}
+.tab.add{color:var(--dimmer);padding:9px 14px}
+
+/* ---- chips ---- */
+#chips{display:flex;align-items:center;gap:4px;padding:7px 12px;border-bottom:1px solid var(--line);flex:0 0 auto;background:var(--pane)}
+.chip{
+  background:none;border:0;color:var(--dim);font:inherit;padding:4px 10px;border-radius:4px;
+  cursor:pointer;display:flex;align-items:center;gap:6px;
+}
+.chip:hover{background:#1c202a;color:var(--ink)}
+.chip.on{background:#222836;color:var(--ink)}
+.chip .num{color:var(--dimmer)}
+.chip .mk{font-size:11px}
+.chip.na{opacity:.5;cursor:help}
+.chip.absent .mk{color:var(--dimmer)}
+.shape{margin-left:auto;color:var(--dimmer);font-size:11px}
+
+/* ---- panes ---- */
+#panes{flex:1 1 auto;display:flex;min-height:0}
+#left{flex:1 1 58%;overflow-y:auto;padding:14px 20px 60px;min-width:0}
+#term{flex:1 1 42%;border-left:1px solid var(--line);background:#0d0f13;min-width:0;display:flex}
+#term iframe{width:100%;height:100%;border:0}
+.noterm{padding:22px;color:var(--dim);max-width:420px}
+.noterm b{color:var(--ink)}
+.noterm pre{background:#14171d;border:1px solid var(--line);padding:10px 12px;border-radius:4px;color:var(--ok);white-space:pre-wrap}
+
+/* ---- doc chrome ---- */
+.dochead{display:flex;gap:14px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:14px;flex-wrap:wrap}
+.dochead .fn{color:var(--ink)}
+.dochead .when,.dochead #count{color:var(--dimmer);font-size:11px}
+.dochead #count{margin-left:auto}
+.empty{color:var(--dimmer);padding:24px 0}
+
+/* ---- markdown blocks ---- */
+#doc h1,#doc h2,#doc h3,#doc h4{font-weight:600;line-height:1.35}
+#doc .h1{font-size:15px;margin:0 0 6px}
+#doc .h2{font-size:13px;color:var(--amber);margin:22px 0 8px;text-transform:lowercase;
+  border-bottom:1px solid var(--line);padding-bottom:5px;display:flex;align-items:baseline;gap:10px}
+#doc .h3{font-size:13px;margin:14px 0 4px}
+#doc .h4{font-size:12px;color:var(--dim);margin:10px 0 4px}
+#doc .ro{margin-left:auto;color:var(--dimmer);font-size:10px;text-transform:none;font-weight:400}
+#doc p{margin:6px 0;color:var(--ink);white-space:pre-wrap}
+#doc hr{border:0;border-top:1px solid var(--line);margin:16px 0}
+#doc ul{margin:6px 0;padding-left:18px}
+#doc li{margin:3px 0}
+#doc li.sub{color:var(--dim);list-style:none}
+#doc a{color:var(--acc);text-decoration:none}
+#doc a:hover{text-decoration:underline}
+#doc code{background:#1d222c;padding:1px 4px;border-radius:3px;color:#c3cbdb;font-size:12px}
+#doc pre.code{
+  background:#14171d;border:1px solid var(--line);border-radius:4px;padding:10px 12px;
+  overflow-x:auto;color:#aeb7c7;font-size:12px;margin:8px 0;white-space:pre-wrap;word-break:break-word;
+}
+#doc pre.ro-block{border-style:dashed;opacity:.85}
+
+/* ---- source rows ---- */
+.table{margin:10px 0}
+.row{padding:7px 10px;border-left:2px solid var(--line);margin-bottom:6px;background:#161920}
+.row .r1{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.row .ic{width:14px;color:var(--dim)}
+.row .nm{color:var(--ink);min-width:150px}
+.row .ty,.row .me,.row .lc{color:var(--dim);font-size:11px}
+.row .lc{margin-left:auto}
+.row .r2{color:var(--dim);font-size:12px;padding-left:24px;margin-top:2px}
+.row .r3{padding-left:24px;margin-top:3px;font-size:11px}
+.row.st-ok{border-left-color:var(--ok)}
+.row.st-ok .ic{color:var(--ok)}
+.row.st-blocked{border-left-color:var(--blocked);background:#1e1618}
+.row.st-blocked .nm{color:#f0a595}
+.row.st-unchecked{border-left-color:var(--amber)}
+.row.plain{display:flex;flex-wrap:wrap;gap:14px;border-left-color:var(--dimmer)}
+.row.plain .c{color:var(--dim);font-size:12px}
+.row.plain .c b{color:var(--dimmer);font-weight:400;font-size:10px}
+
+/* ---- cards + ticks ---- */
+.card{border-left:2px solid var(--line);padding:8px 12px;margin:10px 0;background:#161920;border-radius:0 4px 4px 0}
+.card.ticked{border-left-color:var(--ok);background:#161c19}
+.card h3{margin:0 0 4px;font-size:13px}
+.card p{font-size:12px;color:var(--dim)}
+.card pre.code{margin:6px 0}
+.tick{display:flex;gap:8px;align-items:flex-start;cursor:pointer;margin:4px 0;user-select:none}
+.tick input{margin:3px 0 0;accent-color:var(--ok);cursor:pointer;width:14px;height:14px}
+.tick input:disabled{cursor:default;opacity:.4}
+.tick-label{color:var(--dim);font-size:12px}
+.card .tick-label{color:var(--dimmer)}
+.tick input:checked ~ .tick-label{color:var(--ok)}
+
+/* ---- run stat box ---- */
+.stats{border:1px solid var(--line);border-radius:4px;padding:12px 14px;margin-bottom:16px;background:#14171d}
+.stat-line{color:var(--ink);margin-bottom:10px;font-size:12px}
+.bar{display:flex;align-items:center;gap:10px;margin:3px 0;font-size:11px}
+.bar .bl{width:82px;color:var(--dim)}
+.bar .bn{width:52px;text-align:right;color:var(--ink)}
+.bar .bb{height:8px;background:#2f4a6b;border-radius:2px;min-width:2px}
+.blocked{margin-top:10px;padding-top:9px;border-top:1px solid var(--line);color:var(--blocked);font-size:11px}
+
+/* ---- toast ---- */
+#note{
+  position:fixed;left:16px;bottom:14px;background:#222836;border:1px solid var(--line);
+  color:var(--ink);padding:7px 12px;border-radius:4px;font-size:11px;max-width:52vw;
+  opacity:0;transform:translateY(6px);transition:.16s;pointer-events:none;
+}
+#note.show{opacity:1;transform:none}
+</style>
+</head>
+<body>
+  <nav id="tabs"></nav>
+  <nav id="chips"></nav>
+  <div id="panes">
+    <main id="left"><div id="doc"></div></main>
+    <aside id="term"></aside>
+  </div>
+  <div id="note"></div>
+  <script src="/app.js"></script>
+</body>
+</html>
