@@ -169,6 +169,12 @@ ticks stay countable by a script rather than by eye. Skeleton:
   at all": a run whose rows all carry their ticks forward produces zero new ticks
   legitimately, and that gate is satisfied.
 
+**A tick is the input to contacts.** A shape that ends at `run` has neither: no tick
+column, no tick line, and its GATE 4 asks the human to review the result rather than to
+tick it. There is nothing to carry forward and nothing to count, so the empty-gate rule
+never fires there — it fires on shapes that ask for a decision and get none. Such a
+shape says so on disk with `contacts: n/a — <reason>`.
+
 A skipped step is visible. A gate written up as satisfied is not, which is why an
 empty one stops.
 
