@@ -26,18 +26,28 @@ pane updates as the agent writes the file.
 - **Session switcher** — `ls sessions/` minus `_template`, available from the header or
   with `⌘K`. The active shape and its output form remain visible beside it; the form is
   the `form:` in `examples/<shape>.md`, never a guess from which files exist.
-- **Stage track** — `sources · criteria · run`, then one stage per entry in that shape's
-  `fillers:`. A shape with `fillers: []` ends at the run and grows no fourth stage; a
-  filler this page has never heard of still gets a stage, because filler names are an
-  open set. `✓` has output on disk · `●` where `status` says you are · `○` nothing
-  written yet.
-- **Source gaps** — blocked rows stay visible in a dedicated rail on the sources view;
-  every other view gives the document the full width.
-- **Ticking** writes `- [ ]` → `- [x]` on one line of `shortlist.md`, and that is the
-  only file the server will write. Same edit you would make by hand in Obsidian or VS
-  Code, where these checkboxes are also clickable. `results.md` renders read-only and
-  offers no checkbox at all: the ticks left it, and a dead checkbox on screen is worse
-  than none.
+- **Stage track** — `sources · criteria · run`, and then **the slot**. Step 4 is one
+  chip, not one per filler: it reads `Step 4` and lists what the shape offers until the
+  human picks at GATE 4, and takes the filler's name once `status` says which one. An
+  unfilled slot opens a read-only explanation of the offered fillers; the choice still
+  happens in the terminal. `✓` has output on disk · `●` where `status` says you are ·
+  `○` nothing written yet.
+- **The stage track does not reflow.** Its action column has a fixed width, so changing
+  the stage note never moves the chips. Sources uses its two equal columns; Criteria and
+  Results deliberately use the full width.
+- **Source gaps** — every row that is not `ok` stays visible in a dedicated rail on the
+  sources view. `blocked` and `error` are different problems and the rail says which.
+  Each one carries the **computer-use prompt** for that link — copy it, hand it to an
+  agent or run it yourself — and a control that records the answer in that row's
+  `manual status` / `manual checked` columns. A sources.md without those columns gets
+  the prompt and no control: there would be nowhere to put the answer.
+- **Ticking** writes `- [ ]` → `- [x]` on one line of `shortlist.md`. Same edit you would
+  make by hand in Obsidian or VS Code, where these checkboxes are also clickable.
+  `results.md` renders read-only and offers no checkbox: the ticks left it, and a dead
+  checkbox on screen is worse than none.
+- **Two writes, two files.** A tick may write `shortlist.md` and nothing else; a hand
+  check may write `sources.md` and nothing else. Each endpoint carries its own writable
+  set, so widening one never widens the other.
 - **Live reload** — SSE. Edit a file in the terminal, the pane follows.
 - **Terminal drawer** — optional and detached at the bottom. Nothing in the dashboard
   approves a gate: each stage says what it is waiting for, and you confirm it in the
@@ -71,6 +81,6 @@ block, auto-rerun, locking, a framework.
 ## Tests
 
 ```
-python3 ui/test_server.py    # the tick write path, incl. refusing a moved line
+python3 ui/test_server.py    # both write paths, incl. refusing a moved line
 node ui/test_parse.mjs       # the addressing constraint, against the real sessions
 ```

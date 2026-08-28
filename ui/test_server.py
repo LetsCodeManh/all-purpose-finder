@@ -2,6 +2,7 @@
 """The smallest check that fails if the tick write breaks.  python3 ui/test_server.py"""
 
 import tempfile
+import time
 from pathlib import Path
 
 import server
@@ -15,8 +16,19 @@ Kept because it is the only one in Berlin
 """
 
 
-def tmp(text):
-    p = Path(tempfile.mkdtemp()) / "shortlist.md"
+SOURCES = """# sources — t
+
+| name | type | url | method | status | last checked | manual status | manual checked | why |
+|------|------|-----|--------|--------|--------------|---------------|----------------|-----|
+| Mistral | organisation | https://jobs.example/mistral | blocked (js) | blocked | 2026-08-28 | — | — | open by hand |
+| Acme | organisation | https://jobs.example/acme | feed | ok | 2026-08-28 | — | — | fine |
+"""
+
+OLD_SOURCES = SOURCES.replace(" manual status | manual checked |", " ").replace(" — | — |", " ")
+
+
+def tmp(text, name="shortlist.md"):
+    p = Path(tempfile.mkdtemp()) / name
     p.write_text(text, encoding="utf-8")
     return p
 
@@ -59,14 +71,59 @@ def test_label_survives_the_flip():
     assert ok and line == "- [ ] Gamma — Thing · 4/6", line
 
 
+def test_manual_check_lands_in_the_row():
+    p = tmp(SOURCES, "sources.md")
+    row = SOURCES.split("\n")[4]
+    ok, line = server.set_manual(p, 5, row, "checked")
+    assert ok, line
+    cells = [c.strip() for c in line.strip().strip("|").split("|")]
+    assert cells[6] == "checked" and cells[7] == time.strftime("%Y-%m-%d"), cells
+    assert cells[0] == "Mistral" and cells[8] == "open by hand", "the rest of the row is untouched"
+    assert p.read_text().split("\n")[5] == SOURCES.split("\n")[5], "no other row moved"
+
+
+def test_manual_check_is_reversible():
+    p = tmp(SOURCES, "sources.md")
+    ok, line = server.set_manual(p, 5, SOURCES.split("\n")[4], "checked")
+    ok, line = server.set_manual(p, 5, line, "—")
+    cells = [c.strip() for c in line.strip().strip("|").split("|")]
+    assert ok and cells[6] == "—" and cells[7] == "—", cells
+
+
+def test_manual_check_refuses_what_it_cannot_record():
+    p = tmp(SOURCES, "sources.md")
+    row = SOURCES.split("\n")[4]
+    ok, why = server.set_manual(p, 5, row, "definitely")
+    assert not ok and "not a manual status" in why
+    ok, why = server.set_manual(p, 5, "| some other row |", "checked")
+    assert not ok and "changed under us" in why
+    ok, why = server.set_manual(p, 1, "# sources — t", "checked")
+    assert not ok and "not a table row" in why
+    assert p.read_text() == SOURCES, "a refused hand check must not touch the file"
+    # a sources.md from before the columns existed has nowhere to put the answer
+    old = tmp(OLD_SOURCES, "sources.md")
+    ok, why = server.set_manual(old, 5, OLD_SOURCES.split("\n")[4], "checked")
+    assert not ok and "no manual status columns" in why
+
+
+def test_each_endpoint_has_its_own_writable_set():
+    """Widening the write surface widened it by exactly one file, for exactly one write."""
+    assert server.WRITABLE == {"shortlist.md"}
+    assert server.MANUAL_WRITABLE == {"sources.md"}
+    assert "results.md" not in server.WRITABLE | server.MANUAL_WRITABLE
+
+
 def test_path_traversal_is_refused():
     w = server.WRITABLE.__contains__
     assert server.safe("../../etc", "passwd", server.readable) is None
     assert server.safe("eu-ai-jobs", "../../AGENTS.md", server.readable) is None
     assert server.safe("eu-ai-jobs", "listings.md", server.readable) is None, "3718 rows are never served"
-    assert server.safe("eu-ai-jobs", "sources.md", w) is None, "v1 writes only the tick"
+    assert server.safe("eu-ai-jobs", "sources.md", w) is None, "the tick endpoint writes only the tick"
     assert server.safe("eu-ai-jobs", "results.md", w) is None, "results.md is a step-3 artifact, never written by a later step"
-    assert server.safe("eu-ai-jobs", "shortlist.md", w) is None, "and only where it exists"
+    assert server.safe("eu-ai-jobs", "shortlist.md", w) is not None, "the tick's own file, where it exists"
+    m = server.MANUAL_WRITABLE.__contains__
+    assert server.safe("eu-ai-jobs", "shortlist.md", m) is None, "the hand check writes only sources.md"
+    assert server.safe("eu-ai-jobs", "no-such-session", m) is None
 
 
 def test_readable_is_a_shape_not_a_list():

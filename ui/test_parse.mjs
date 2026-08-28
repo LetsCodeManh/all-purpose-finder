@@ -39,12 +39,16 @@ everyBlockPointsAtItsOwnLine(results, "eu-ai-jobs/results.md");
 
 const blocks = parse(results);
 const cards = blocks.filter((b) => b.type === "heading" && b.level === 3);
-const ticks = blocks.filter((b) => b.type === "tick");
 assert.strictEqual(cards.length, 33, "33 result cards");
-assert.strictEqual(ticks.length, 33, "one tick per card");
-assert.ok(ticks.every((t) => t.kind === "card"), "all 33 are card ticks, told apart by the ### above");
-assert.ok(ticks.every((t, i) => t.cardLine === cards[i].line), "each tick knows its card");
-console.log("ok  results.md — 33 cards, 33 addressed card ticks");
+// The ticks left results.md: it is a step-3 artifact no later step writes (AGENTS.md ->
+// Ticks). The decision lives in shortlist.md, and that is where the checkboxes are parsed.
+assert.strictEqual(blocks.filter((b) => b.type === "tick").length, 0, "results.md carries no decision");
+const shortlist = read("eu-ai-jobs", "shortlist.md");
+everyBlockPointsAtItsOwnLine(shortlist, "eu-ai-jobs/shortlist.md");
+const ticks = parse(shortlist).filter((b) => b.type === "tick");
+assert.ok(ticks.length, "shortlist.md holds the ticks");
+assert.ok(ticks.every((t) => t.raw.startsWith("- [")), "every tick knows the line it must match");
+console.log(`ok  results.md — 33 cards, 0 ticks · shortlist.md — ${ticks.length} addressed ticks`);
 
 const sources = read("eu-ai-jobs", "sources.md");
 everyBlockPointsAtItsOwnLine(sources, "eu-ai-jobs/sources.md");
@@ -52,6 +56,8 @@ const table = parse(sources).find((b) => b.type === "table");
 assert.strictEqual(table.rows.length, 37, "37 sources");
 assert.strictEqual(table.rows.filter((r) => r.cells[4] === "blocked").length, 9, "9 blocked");
 assert.ok(table.rows.every((r) => r.url), "every source row is addressable by url");
+// A cell edit needs the same `expect` guard a tick has, so a row carries its own raw line.
+assert.ok(table.rows.every((r) => r.raw === sources.split("\n")[r.line - 1]), "every row carries its raw line");
 // The prose after the table is the point: a table widget would drop it silently.
 assert.ok(parse(sources).some((b) => b.type === "heading" && b.text === "Not checked"),
   "## Not checked survives — the whole file is rendered, not just its table");

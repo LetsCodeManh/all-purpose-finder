@@ -35,6 +35,11 @@ NEVER_SERVED = {"listings.md"}
 # results.md, which is now a pure step-3 artifact no later step edits, so the server must
 # refuse to write it at all. The write surface stays one file; it is a different file.
 WRITABLE = {"shortlist.md"}
+# The second write, and the last one: a hand check of a source is a fact about the world
+# that only the human has, so the page records it in the row it belongs to. Same shape as
+# a tick — one line, read-modify-write, `expect` guarding the line number.
+MANUAL_WRITABLE = {"sources.md"}
+MANUAL_VALUES = {"checked", "partial", "unavailable", "\u2014"}
 SLUG = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 TICK = re.compile(r"^- \[[ x]\] ")
 
@@ -199,6 +204,45 @@ def safe(slug, name, ok):
     return p
 
 
+def table_head(lines):
+    """The header cells of the first markdown table in the file, lowercased, with its index."""
+    for i, ln in enumerate(lines):
+        if ln.startswith("|"):
+            return i, [c.strip().lower() for c in ln.strip().strip("|").split("|")]
+    return None, []
+
+
+def set_manual(path, line_no, expect, value):
+    """Write `manual status` / `manual checked` on one source row.
+
+    The columns are found by name in the table header, never by a hardcoded index: a
+    sources.md without those columns is not a file this can write, and says so.
+    """
+    if value not in MANUAL_VALUES:
+        return False, "%r is not a manual status" % value
+    lines = path.read_text(encoding="utf-8").split("\n")
+    i = line_no - 1
+    if not (0 <= i < len(lines)):
+        return False, "line %d is past the end of the file" % line_no
+    if lines[i] != expect:
+        return False, "line %d changed under us \u2014 reloading" % line_no
+    _, head = table_head(lines)
+    if "manual status" not in head or "manual checked" not in head:
+        return False, "this sources.md has no manual status columns"
+    if not lines[i].startswith("|"):
+        return False, "line %d is not a table row" % line_no
+    cells = [c.strip() for c in lines[i].strip().strip("|").split("|")]
+    if len(cells) != len(head):
+        return False, "line %d has %d cells, the header has %d" % (line_no, len(cells), len(head))
+    cells[head.index("manual status")] = value
+    cells[head.index("manual checked")] = time.strftime("%Y-%m-%d") if value != "\u2014" else "\u2014"
+    lines[i] = "| " + " | ".join(cells) + " |"
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text("\n".join(lines), encoding="utf-8")
+    os.replace(tmp, path)
+    return True, lines[i]
+
+
 def snapshot():
     out = {}
     for d in SESSIONS.iterdir() if SESSIONS.is_dir() else []:
@@ -325,19 +369,26 @@ class Handler(BaseHTTPRequestHandler):
             return
 
     def do_POST(self):
-        if urlparse(self.path).path != "/api/tick":
+        path = urlparse(self.path).path
+        if path not in ("/api/tick", "/api/manual"):
             return self.send_json({"error": "no such endpoint"}, 404)
         try:
             n = int(self.headers.get("Content-Length", "0"))
             req = json.loads(self.rfile.read(n) or b"{}")
         except (ValueError, json.JSONDecodeError):
             return self.send_json({"error": "bad request"}, 400)
-        f = safe(req.get("slug"), req.get("file"), WRITABLE.__contains__)
+        # Each endpoint carries its own writable set: the hand check may write sources.md
+        # and nothing else, the tick may write shortlist.md and nothing else.
+        allowed = WRITABLE if path == "/api/tick" else MANUAL_WRITABLE
+        f = safe(req.get("slug"), req.get("file"), allowed.__contains__)
         if not f:
             return self.send_json({"error": "not writable"}, 400)
         if not isinstance(req.get("line"), int) or not isinstance(req.get("expect"), str):
             return self.send_json({"error": "bad request"}, 400)
-        ok, detail = flip_tick(f, req["line"], req["expect"], bool(req.get("checked")))
+        if path == "/api/tick":
+            ok, detail = flip_tick(f, req["line"], req["expect"], bool(req.get("checked")))
+        else:
+            ok, detail = set_manual(f, req["line"], req["expect"], req.get("value"))
         return self.send_json({"ok": ok, "detail": detail}, 200 if ok else 409)
 
 
