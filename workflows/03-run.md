@@ -4,8 +4,8 @@ Fetch, narrow with a script, score the survivors, diff against last time.
 
 Rules: `AGENTS.md`. Entry: `00-session.md`.
 
-In: `sources.md` + an approved `criteria.md`. Out: `results.md`, plus
-`listings.md` for ledger shapes.
+In: `sources.md` + an approved `criteria.md`. Out: `results.md` and
+`shortlist.md`, plus `listings.md` for ledger shapes.
 
 Worked example: `examples/<shape>.md` → *03 — run*, for the shape named in this session's `shape:` field. No example yet for this shape? Run the step from here anyway, say so, and write that section afterwards from what happened.
 
@@ -106,7 +106,6 @@ One per surviving row. Same layout whatever the topic:
 
 ```markdown
 ### <issuer> — <item>
-- [ ] chase
 <where> · [<link>](<url>) · posted <date>
 source: <which source> · also seen: <other sources>
 
@@ -123,9 +122,9 @@ open   ✓ <criterion> — <what you judged on>
 
 `also seen:` is the dedupe made visible — three sightings, one card.
 
-The `- [ ]` line is the tick. It is written unticked on a `new` card only; a card
-carried over keeps whatever the human left there. Syntax and the rules that bind it:
-`AGENTS.md` → **Ticks**.
+**No card carries a checkbox.** The decision is taken in `shortlist.md`, written in
+section 6 below; `results.md` only records what was found. Syntax and the rules that
+bind a tick: `AGENTS.md` → **Ticks**.
 
 ---
 
@@ -147,26 +146,17 @@ The key and the watched columns come from `identity` and `compare` in `criteria.
 `results.md` is **one file, rewritten each run**, in four sections mapping straight onto the four states. Skeleton: `sessions/_template/results.md`. A shape may rename or drop a section when it does not apply — a shape where nothing expires has no `gone` — but it never adds a fifth silently. Say what you changed and why.
 
 ```
-## new              ← full cards, each written `- [ ]`
+## new              ← full cards
 ## changed          ← name the columns the state gave you, in words: the deadline moved, the price dropped
-## unchanged        ← collapsed to one line each, not full cards: `- [x] <issuer> — <item> · <score>`
+## unchanged        ← collapsed to one line each, not full cards: `<issuer> — <item> · <score>`
 ## gone             ← keep the card, mark it
 ```
 
-**Ticks carry over. Never auto-untick.** `results.md` is rewritten each run, so copy
-each row's tick out of the previous one before you overwrite it:
-
-- `unchanged` → keeps its tick, stays collapsed to one line, is not re-scored and is
-  not re-looked-up
-- `changed` → keeps its tick too, and says `changed: <cols>` in words. A ticked
-  `changed` card sorts to the top of its section: the human already decided on it once,
+- `unchanged` → stays collapsed to one line, is not re-scored and is not re-looked-up
+- `changed` → says `changed: <cols>` in words. A `changed` card whose row is ticked in
+  `shortlist.md` sorts to the top of its section: the human already decided on it once,
   and this is the row where the decision might now be wrong
-- `new` → the only rows written `- [ ]`
-- `gone` → keeps its tick; the card is marked gone and drops next run
-
-Rewriting the file is not permission to reset the human's decisions. Unticking makes
-them redo settled work, and a run where everything came back unticked is exactly the
-empty gate `AGENTS.md` → **Ticks** tells you to stop on.
+- `gone` → the card is marked gone and drops next run
 
 `gone` is not a deletion. Something that vanishes is information — it was taken, or it was pulled. The script shows it for one run and then drops it, so this file is the only place it is ever written up.
 
@@ -176,7 +166,27 @@ Never re-print the whole list as if it were new. **New-since-last-run is the rea
 
 ---
 
-## 6. Report the gaps in the same message
+## 6. Write the shortlist — ledger form
+
+`sessions/<slug>/shortlist.md`, one line per row kept in `results.md`, in the same
+order. Skeleton: `sessions/_template/shortlist.md`.
+
+```
+- [ ] <issuer> — <item> · <score>
+```
+
+**Regenerate it whole, and carry the ticks forward by `identity`** — the same key the
+diff used above. Read the previous shortlist before you overwrite it: a row that was
+already there keeps the tick it had, only a row new to this run is written `- [ ]`, and
+a `gone` row drops off. **Never auto-untick.** Rewriting the file is not permission to
+reset the human's decisions, and a run where everything came back unticked is exactly
+the empty gate `AGENTS.md` → **Ticks** tells you to stop on.
+
+A shape with no ledger, or no step-4 decision to make, writes no shortlist and says so.
+
+---
+
+## 7. Report the gaps in the same message
 
 Every run ends with what it did not do:
 
@@ -200,12 +210,12 @@ represent a real limitation rather than a malformed file.
 
 ---
 
-## 7. GATE 4
+## 8. GATE 4
 
 For a ledger:
 
 ```
-Tick the rows worth chasing in results.md — `- [ ]` → `- [x]`.
+Tick the rows worth chasing in shortlist.md — `- [ ]` → `- [x]`.
 Contact lookup runs on those only.
 ```
 

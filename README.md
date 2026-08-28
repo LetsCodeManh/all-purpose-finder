@@ -24,7 +24,7 @@ Four gates. At each one the agent stops and waits for you:
 | 1 | session created | confirm the slug and the shape |
 | 2 | sources proposed | cut what is noise, add what it missed |
 | 3 | criteria written back | approve what it will search against |
-| 4 | results ready | review the result; for a ledger, tick the rows worth chasing |
+| 4 | results ready | review the result; for a ledger, tick the rows worth chasing in `shortlist.md` |
 
 Before gate 3, candidate sources are searched and lightly probed only to
 establish whether and how they can be read. Full retrieval, filtering, scoring,
@@ -82,6 +82,7 @@ Each session is one folder, one file per thing:
 | `sources.md` | where it looks, how each one reads, when it was last checked |
 | `criteria.md` | the approved checklist, plus the regexes the pre-filter runs |
 | `results.md` | this run, diffed against the last one |
+| `shortlist.md` | one line per kept row, and the only file you tick |
 | `listings.md` | the raw fetch cache |
 | `contacts.md` | who to talk to, cached so it is never looked up twice |
 | `tools/` | that session's own scripts, if it needs any |

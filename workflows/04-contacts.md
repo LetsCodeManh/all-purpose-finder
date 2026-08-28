@@ -4,7 +4,7 @@ Find a human to talk to, for the rows the human ticked. Nothing else.
 
 Rules: `AGENTS.md`. Entry: `00-session.md`.
 
-In: ticked rows in `results.md` — rows marked `- [x]`. Out: `sessions/<slug>/contacts.md`.
+In: ticked rows in `shortlist.md` — rows marked `- [x]`. Out: `sessions/<slug>/contacts.md`.
 
 Worked example: `examples/<shape>.md` → *04 — contacts*, for the shape named in this session's `shape:` field. No example yet for this shape? Run the step from here anyway, say so, and write that section afterwards from what happened.
 
@@ -17,8 +17,9 @@ keeps it on disk.
 
 ## 1. Read the ticks
 
-Only rows the human marked `- [x]` in `results.md`. A `- [ ]` is an answer — do not
-look up an organisation because it scored well.
+Only rows the human marked `- [x]` in `shortlist.md`. A `- [ ]` is an answer — do not
+look up an organisation because it scored well. `results.md` holds the cards behind
+those rows; it holds no ticks and this step never writes to it.
 
 **Zero ticks among the rows that needed a decision stops this step.** If nothing that
 arrived `new` or came back `changed` carries a tick, do not proceed and never resolve

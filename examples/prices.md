@@ -12,7 +12,7 @@ standalone — no live links, and no real session's content.
 - **Contacts?** **No.** Step 04 is one line: nothing to look up. The result is
   the end of the road.
 - **Ticks?** **No.** The tick is what feeds contacts, and this shape has no
-  contacts step, so the table below carries no tick column and no `- [ ]` line.
+  contacts step, so this shape writes no `shortlist.md` at all.
   GATE 4 here asks for a review, not a tick.
 
 The one structural difference from jobs: **every row carries a from–to window**,
@@ -200,7 +200,7 @@ MEMORY.md → contacts: n/a — a price hunt has nobody to look up.
 
 That key is the whole reason this is not a hole: said in the terminal it is gone
 tomorrow, written to `MEMORY.md` it says next week why this session stops at `run`.
-No ticks anywhere in this shape's `results.md`, so a run that reports zero ticked
+No shortlist and no ticks anywhere in this shape, so a run that reports zero ticked
 rows here is correct rather than an empty gate.
 
 Note the loop: this shape does not finish, it cycles. `next:` points back at the

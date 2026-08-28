@@ -17,7 +17,7 @@ Four gates. Each one stops you until the human answers. There is no "obviously t
 | 1 | Session creation | the human confirms the slug and shape |
 | 2 | Sources list | the human prunes and adds |
 | 3 | Criteria checklist | the human approves |
-| 4 | Results → next action | the human reviews the result; for a ledger, they tick rows — `- [x]`, see **Ticks** |
+| 4 | Results → next action | the human reviews the result; for a ledger, they tick rows in `shortlist.md` — `- [x]`, see **Ticks** |
 
 Passing a gate without an answer is the single worst failure mode in this repo. If you are unsure whether you are at a gate, you are at a gate.
 
@@ -144,36 +144,36 @@ A tick is a **task-list checkbox**: `- [ ]` unticked, `- [x]` ticked. Nothing el
 a tick — not bold, not an emoji, not a `yes` column. It is clickable as-is in GitHub,
 Obsidian, VS Code and Cursor, so ticking needs no tooling and no script.
 
-Exactly two forms, and no third. Both start a line and both match `^- \[[ x]\] `:
+**Ticks live in `sessions/<slug>/shortlist.md`, and nowhere else.** One form, and no
+second:
 
 ```
-- [ ] chase                        ← card tick: the line directly under a card's ### heading
-- [x] <issuer> — <item> · <score>  ← collapsed-row tick: an unchanged row, whole
+- [x] <issuer> — <item> · <score>
 ```
 
 `<score>` is whatever the card's own score line said — the shape decides how that
-reads, this line does not. Nothing else in `results.md` may begin with a checkbox, so
-ticks stay countable by a script rather than by eye. Skeleton:
+reads, this line does not. `results.md` is a pure artifact of the run: it records what
+was found and never carries a decision, so nothing in it is ticked and no later step
+writes to it. Skeletons: `sessions/_template/shortlist.md`,
 `sessions/_template/results.md`; per-shape card layout: `examples/<shape>.md`.
+
+The shortlist is regenerated every run and **the ticks carry forward by `identity`** —
+how, and why unticking is forbidden, is written where the file is specified:
+`sessions/_template/shortlist.md`.
 
 - **An untick is an answer.** A row left `- [ ]` is a rejection. Do not look something
   up because it scored well.
-- **A tick survives the run.** An `unchanged` row keeps the tick it had, so nothing is
-  re-decided and contacts does not re-look-up. A `changed` row keeps its tick too, and
-  shows `changed: <cols>` so a date move and a location move do not read alike — the
-  human re-decides only when it matters. Only `new` rows arrive unticked.
-  **Never auto-untick.** Unticking makes people redo settled work.
 - **Zero ticks among the rows that needed a decision is a stop.** Not a green light,
   and never "then all of them". Ask. This is *rows that needed a decision this run* —
-  `new` rows, and `changed` rows put back in front of the human — not "no rows ticked
-  at all": a run whose rows all carry their ticks forward produces zero new ticks
-  legitimately, and that gate is satisfied.
+  rows new to this shortlist, and `changed` rows put back in front of the human — not
+  "no rows ticked at all": a run whose rows all carry their ticks forward produces zero
+  new ticks legitimately, and that gate is satisfied.
 
-**A tick is the input to contacts.** A shape that ends at `run` has neither: no tick
-column, no tick line, and its GATE 4 asks the human to review the result rather than to
-tick it. There is nothing to carry forward and nothing to count, so the empty-gate rule
-never fires there — it fires on shapes that ask for a decision and get none. Such a
-shape says so on disk with `contacts: n/a — <reason>`.
+**A tick is the input to step 4.** A shape that ends at `run` has neither: no
+shortlist, no tick line, and its GATE 4 asks the human to review the result rather than
+to tick it. There is nothing to carry forward and nothing to count, so the empty-gate
+rule never fires there — it fires on shapes that ask for a decision and get none. Such
+a shape says so on disk with `contacts: n/a — <reason>`.
 
 A skipped step is visible. A gate written up as satisfied is not, which is why an
 empty one stops.
@@ -186,7 +186,7 @@ empty one stops.
 - Only survivors get scored.
 - Fetched listings are cached in `listings.md` and not refetched the same day, so re-scoring after a criteria edit is free. `--refetch` forces fresh.
 - **The diff is a script, not a judgment.** `prefilter.py` rotates the last run to `listings.prev.md` and writes a `state` column — `new` / `changed:<cols>` / `unchanged` / `gone`. Comparing two files by eye is the one step an LLM cannot be checked on, and it makes every rerun cost a full re-score. Only `new` and `changed` rows are scored.
-- Contact lookup runs on ticked rows only, once per organisation. Ticks carry across runs, so a rerun re-looks-up nothing — see **Ticks**.
+- Contact lookup runs on ticked rows only, once per organisation. Ticks carry across runs in `shortlist.md`, so a rerun re-looks-up nothing — see **Ticks**.
 
 ---
 
@@ -197,7 +197,8 @@ empty one stops.
 | `MEMORY.md` | status + next step, plus optional `contacts: n/a — <reason>`. **Pointer only — no data** |
 | `sources.md` | one table, `type` is a column |
 | `criteria.md` | the approved checklist |
-| `results.md` | one file, diffed. Not per-site files |
+| `results.md` | one file, diffed. Not per-site files. Never ticked, never edited by a later step |
+| `shortlist.md` | one line per kept row, regenerated each run. **The only file that carries ticks** |
 | `listings.md` | raw fetch cache + the `state` column from the diff |
 | `listings.prev.md` | the previous run, rotated in on a new day. One run of memory, which is what `gone` needs |
 | `contacts.md` | looked-up contacts, cached per organisation |
