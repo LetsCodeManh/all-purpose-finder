@@ -26,20 +26,27 @@ TTYD_PORT = int(os.environ.get("FINDER_TTYD_PORT", "7681"))
 
 # listings.md is deliberately absent: 3718 rows nobody reads. Its stat line is served
 # by /api/listings instead, which reads only the file's head.
-READABLE = {"MEMORY.md", "sources.md", "criteria.md", "results.md", "contacts.md"}
+READABLE = {"MEMORY.md", "sources.md", "criteria.md", "results.md", "shortlist.md", "contacts.md"}
 WATCHED = READABLE | {"listings.md"}
-WRITABLE = {"results.md"}  # v1 writes exactly one thing: a tick
+# v1 still writes exactly one thing: a tick. Which file holds the tick changed — it left
+# results.md, which is now a pure step-3 artifact no later step edits, so the server must
+# refuse to write it at all. The write surface stays one file; it is a different file.
+WRITABLE = {"shortlist.md"}
 SLUG = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 TICK = re.compile(r"^- \[[ x]\] ")
 
-STAGES = ["sources", "criteria", "run", "contacts"]
+# Three fixed steps and one open slot. What fills the slot is per-shape, so the tail of
+# the track is read from examples/<shape>.md and never hardcoded here.
+FIXED_STAGES = ["sources", "criteria", "run"]
+EXAMPLES = REPO / "examples"
 
 
 def sessions():
     """Every session on disk, with the facts the chips are derived from.
 
-    Never a hardcoded four: which stages exist comes from `shape` plus which files are
-    there. A session that never fetched has no listings.md and says so.
+    Never a hardcoded four: which stages exist comes from `shape`, read out of that
+    shape's frontmatter, plus which files are there. A session that never fetched has no
+    listings.md and says so.
     """
     out = []
     if not SESSIONS.is_dir():
@@ -54,10 +61,7 @@ def sessions():
             "shape": meta.get("shape", ""),
             "status": meta.get("status", ""),
             "last_run": meta.get("last run", ""),
-            # `contacts: n/a — <reason>` is the only place a shape may declare it has
-            # nobody to look up. If the key is absent the UI must not guess from shape:
-            # that would be the UI knowing something the files do not.
-            "contacts_na": meta.get("contacts", "") if meta.get("contacts", "").startswith("n/a") else "",
+            "stages": stages_for(meta.get("shape", ""), meta.get("status", "")),
             "next": meta.get("_next", ""),
             "files": files,
         })
@@ -83,6 +87,37 @@ def frontmatter(path):
             meta["_next"] = ln[5:].strip()
             break
     return meta
+
+
+def fillers_for(shape):
+    """The `fillers:` menu from examples/<shape>.md — or None when there is none to read.
+
+    None is not []: `fillers: []` is a shape saying out loud that it ends at `run` and has
+    no step 4, while a missing file or a missing key is the UI simply not knowing. Neither
+    is a licence to guess a step 4 from the shape's name — that would be the UI knowing
+    something the files do not.
+    """
+    if not SLUG.match(shape or ""):
+        return None
+    raw = frontmatter(EXAMPLES / (shape + ".md")).get("fillers")
+    if raw is None:
+        return None
+    return [x.strip() for x in raw.strip("[]").split(",") if x.strip()]
+
+
+def stages_for(shape, status):
+    """`sources · criteria · run`, then one stage per filler the shape offers.
+
+    Filler names are an open set by design, and `fillers:` is a menu rather than a
+    constraint, so a session can legitimately sit at a filler this shape never listed. An
+    unrecognised status is appended instead of dropped: the track must still show where
+    you are. `output` is step 4 pending — the human has not picked yet — so it names no
+    stage of its own.
+    """
+    stages = FIXED_STAGES + (fillers_for(shape) or [])
+    if status and status != "output" and status not in stages:
+        stages.append(status)
+    return stages
 
 
 def listings_stats(slug):
