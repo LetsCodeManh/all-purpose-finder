@@ -16,11 +16,10 @@ standalone — no live links, and no real session's content.
 - **Identity:** issuer = the seller · item = the product.
 - **Recurs?** Yes, and faster than jobs — a weekly cycle, and every row expires
   on a stated date. The diff that matters is *new this week* and *ends tomorrow*.
-- **Contacts?** **No.** Step 04 is one line: nothing to look up. The result is
-  the end of the road.
-- **Ticks?** **No.** The tick is what feeds contacts, and this shape has no
-  contacts step, so this shape writes no `shortlist.md` at all.
-  GATE 4 here asks for a review, not a tick.
+- **Fillers?** **None.** `fillers: []` — nothing to make from a price list and
+  nobody to look up. Step 04 is one line, and the result is the end of the road.
+- **Ticks?** **No.** The tick is what feeds a filler, and this shape has none, so
+  it writes no `shortlist.md` at all. GATE 4 here asks for a review, not a tick.
 
 The one structural difference from jobs: **every row carries a from–to window**,
 and a row outside its window is not a result, it is history.
@@ -195,18 +194,19 @@ not checked since:     <name> — <date>
 
 ---
 
-## 04 — contacts
+## 04 — output
 
-Skipped. Nothing to look up.
+Skipped. `fillers: []` — nothing to make, nobody to look up.
 
 ```
-This shape has no contacts step — the result is the end of it.
+Nothing to make from this one — the result is the end of it.
 MEMORY.md → status: run, next: rerun when the new week's flyers land.
 ```
 
-This is not a hole: `fillers: []` in the frontmatter above says why this shape stops
-at `run`, once, for every session of it. No shortlist and no ticks anywhere in this shape, so a run that reports zero ticked
-rows here is correct rather than an empty gate.
+This is not a hole: `fillers: []` in the frontmatter above says why this shape
+stops at `run`, once, for every session of it. No shortlist and no ticks anywhere
+in this shape either, so a run that reports zero ticked rows here is correct
+rather than an empty gate.
 
 Note the loop: this shape does not finish, it cycles. `next:` points back at the
 run, not forward at a step that does not apply.

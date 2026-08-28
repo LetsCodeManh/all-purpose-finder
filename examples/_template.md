@@ -18,7 +18,8 @@ Delete this paragraph and the italic prompts as you fill them in.
 - **Result form:** ledger | brief
 - **Identity:** issuer = *what* · item = *what*. Or: no dedupe key worth having, because *why*.
 - **Recurs?** *weekly · one-shot with a deadline · open-ended — and what the diff means here*
-- **Contacts?** *yes, per organisation · no, step 04 is one line*
+- **Fillers?** *what can be made from this result — `contacts`, a report, a resume,
+  links to apply · or nothing, and step 04 is one line*
 
 *What this shape does not have, and why that is fine — a missing pre-filter, no
 `gone` section, no expiry. Naming the absence stops the next run treating it as
@@ -79,7 +80,7 @@ What the diff sections are called here, and which one the human actually acts on
 
 ---
 
-## 04 — contacts
+## 04 — output
 
 *Per organisation, or skipped. If skipped, say what `next:` points at instead —
 a rerun, a date, a decision.*

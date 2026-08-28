@@ -22,7 +22,8 @@ no live links, and no real session's content.
   sources are about the same one or two entities by definition.
 - **Recurs?** Barely. One-shot with a deadline — a meeting, a call, a decision.
   A rerun is a refresh before the next meeting, not a weekly diff.
-- **Contacts?** No. The contact *is* the subject. Step 04 is one line.
+- **Fillers?** **None.** `fillers: []` — the contact *is* the subject, and the
+  brief is what was to be made. Step 04 is one line.
 
 Two more things this shape does not have, and that is fine:
 
@@ -198,11 +199,12 @@ whenever the occasion, objective, or underlying brief changes.
 
 ---
 
-## 04 — contacts
+## 04 — output
 
-Skipped. The subject is the contact.
+Skipped. `fillers: []` — the subject is the contact, and the brief is the thing that
+was to be made.
 
 ```
-This shape has no contacts step.
+Nothing to make from this one; the brief is the result.
 MEMORY.md → next: read the brief before <the occasion>.
 ```

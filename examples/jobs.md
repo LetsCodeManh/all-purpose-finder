@@ -17,7 +17,7 @@ standalone — no live links to rot, and **no real session's content**. Read
 - **Result form:** ledger — rows, scored, diffed each run.
 - **Identity:** issuer = the organisation hiring · item = the role title.
 - **Recurs?** Yes. New-since-last-run is the point.
-- **Contacts?** Yes — someone to talk to per organisation.
+- **Fillers?** `contacts` — someone to talk to per organisation.
 
 ---
 
@@ -176,9 +176,9 @@ not checked since:     <name> — <date>
 
 ---
 
-## 04 — contacts
+## 04 — output · contacts
 
-**Once per employer**, not once per row — two ticked roles at one org is one lookup.
+The filler this shape offers is `contacts`. **Once per employer**, not once per row — two ticked roles at one org is one lookup.
 
 Lookup order: the posting itself (a named person, or a linked team page) → the
 employer's own site → a public search for whoever owns that team.

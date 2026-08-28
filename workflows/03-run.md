@@ -70,8 +70,8 @@ A `--refetch` on the **same day** does not rotate. Monday is still in `listings.
 
 Two forms, and the shape decides which: `form:` in the frontmatter of
 `examples/<shape>.md`. Do not work it out from what is on disk. Read the body too
-before writing anything — and `cardinality: one` is what makes sections 4 and 5
-below not apply at all.
+before writing anything — and `cardinality: one` is what makes the pre-filter, the
+score and the diff not apply at all: sections 1, 4 and 5.
 
 | form | what it is | when |
 |------|-----------|------|
@@ -200,7 +200,7 @@ failed this run:       <name> (<error>)
 not checked since:     <name> — <date>
 ```
 
-Then update `MEMORY.md` → `last run: <date>`. If the shape has a contacts step, `status: contacts`, `next: tick the rows worth chasing`. If it has none, `status: run` and `next:` points at the rerun — the shape example says which.
+Then update `MEMORY.md` → `last run: <date>`. If the shape has anything to make from the result — `fillers:` is not empty — `status:` stays `run` until the human picks one at GATE 4, and `next: tick the rows worth chasing`. If `fillers:` is empty, `status: run` and `next:` points at the rerun.
 
 Before handoff, run the topic-neutral consistency check:
 
@@ -219,17 +219,23 @@ For a ledger:
 
 ```
 Tick the rows worth chasing in shortlist.md — `- [ ]` → `- [x]`.
-Contact lookup runs on those only.
+What gets made from them is your call after that.
 ```
 
-Rows that came in already ticked stay ticked and are already looked up; untick one to
-drop it. Say how many rows actually need a decision this run — the `new` ones plus the
-`changed` ones — so the human knows what they are looking at. If none of them ends up
-ticked, that is an empty gate: stop and ask, never read it as all of them.
+Rows that came in already ticked stay ticked; untick one to drop it. Say how many rows
+actually need a decision this run — the `new` ones plus the `changed` ones — so the
+human knows what they are looking at. If none of them ends up ticked, that is an empty
+gate: stop and ask, never read it as all of them.
+
+Then offer what can be made from the ticked rows and wait — `workflows/04-output.md`
+is that step, and it is a slot, not a fixed task.
 
 For a brief, ask the human to review the stated next action—read it before the
 occasion, make the decision, or request a refresh.
 
-Wait. Contact lookup is the expensive step and it runs once per organisation — do not pre-run it on everything to be helpful.
+Wait. Making the thing is the expensive step — do not pre-run it on everything to be
+helpful.
 
-When the shape has no contacts step, GATE 4 is still a stop: say the result is final, say what the human does with it, and point `next:` back at the rerun rather than forward at a step that does not apply.
+When the shape has nothing to make from the result — `fillers: []` — GATE 4 is still a
+stop: say the result is final, say what the human does with it, and point `next:` back
+at the rerun rather than forward at a step that does not apply.

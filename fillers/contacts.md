@@ -1,17 +1,31 @@
-# 04 — contacts
+# filler — contacts
 
 Find a human to talk to, for the rows the human ticked. Nothing else.
 
-Rules: `AGENTS.md`. Entry: `00-session.md`.
+Rules: `AGENTS.md`. Reached from `workflows/04-output.md`, never on its own.
+Out: `sessions/<slug>/contacts.md`.
 
-In: ticked rows in `shortlist.md` — rows marked `- [x]`. Out: `sessions/<slug>/contacts.md`.
+## Precondition
 
-Worked example: `examples/<shape>.md` → *04 — contacts*, for the shape named in this session's `shape:` field. No example yet for this shape? Run the step from here anyway, say so, and write that section afterwards from what happened.
+Two, and both **refuse and point**. Never continue on a guess, and never fill the
+gap yourself.
 
-Some shapes have no one to contact — a price hunt ends at the result. The shape says
-so already: `fillers: []` in `examples/<shape>.md`. Then this step is one line,
-"nothing to look up here", `MEMORY.md` left at `status: run` with `next:` pointing at
-the rerun, done. Say it out loud; the reason is on disk in the shape, not copied here.
+No results yet:
+
+```
+No results yet — this session is at `criteria`.
+Fillers work on results. Continue the session first:  /session <slug>
+```
+
+Results, but nothing ticked:
+
+```
+Nothing ticked in shortlist.md — 12 rows, 0 of them chosen.
+Contacts runs on the rows you tick. Tick the ones worth chasing, then say go.
+```
+
+An unticked shortlist is an answer, not a blank to fill in. Do not look up "all of
+them", do not pick the high scorers, do not tick a row on the human's behalf.
 
 ---
 
@@ -20,12 +34,6 @@ the rerun, done. Say it out loud; the reason is on disk in the shape, not copied
 Only rows the human marked `- [x]` in `shortlist.md`. A `- [ ]` is an answer — do not
 look up an organisation because it scored well. `results.md` holds the cards behind
 those rows; it holds no ticks and this step never writes to it.
-
-**Zero ticks among the rows that needed a decision stops this step.** If nothing that
-arrived `new` or came back `changed` carries a tick, do not proceed and never resolve
-it as "then all of them": say what you found and ask. Ticks carried forward from
-earlier runs are not an empty gate — those organisations are already in `contacts.md`
-and need no lookup at all. Full rule: `AGENTS.md` → **Ticks**.
 
 **Once per organisation, not once per row.** Two ticked rows from the same org is one lookup.
 
@@ -67,4 +75,8 @@ Report per ticked organisation: found / not found / already cached. Then:
 MEMORY.md → next: <what the human does with these>
 ```
 
-**Stop there.** Writing the outreach is workflow 5, and workflow 5 does not exist in v1. Do not draft the message, the letter, or the bid — even when it seems obviously helpful. The human writes it, and that is the design, not an omission.
+**Stop at the contact.** This filler finds the human; it does not write to them.
+Drafting the message, the letter or the bid is a different thing to make, and the
+human names it — offer it back at GATE 4 if it is worth offering, and write nothing
+until they answer. Producing an unasked-for draft is the same failure as looking up
+an unticked row.

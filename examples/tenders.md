@@ -20,7 +20,7 @@ standalone — no live links to rot, and no real session's content.
   strips it.
 - **Recurs?** Yes, and on a clock. Every row carries a **closing date**, and that
   date is what sorts the file. The diff that matters is *new* and *closing soon*.
-- **Contacts?** Yes, per authority — and the notice itself usually names the
+- **Fillers?** `contacts`, per authority — and the notice itself usually names the
   contact point, so step 04 succeeds more often here than anywhere else.
 
 Closest shape is `jobs` — same rows, same cards, same scoring. Three things
@@ -244,10 +244,10 @@ not checked since:     <name> — <date>
 
 ---
 
-## 04 — contacts
+## 04 — output · contacts
 
-**Once per authority**, not once per notice — three ticked tenders from one
-authority is one lookup.
+The filler this shape offers is `contacts`. **Once per authority**, not once per
+notice — three ticked tenders from one authority is one lookup.
 
 Lookup order is the same as everywhere, but step 1 pays off far more often here:
 a notice names a contact point by law in most jurisdictions. Read the notice
@@ -264,5 +264,5 @@ A notice that names a department and no person is `not found`, written as what
 it is. Do not guess a person from the department name.
 
 **Questions to an authority are formal, and often published to every bidder.**
-Drafting one is workflow 5, and workflow 5 does not exist. Hand back the contact
-and stop.
+Drafting one is a different thing to make, and the human asks for it by name.
+`contacts` hands back the contact and stops.

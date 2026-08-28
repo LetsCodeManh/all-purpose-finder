@@ -28,8 +28,14 @@ Passing a gate without an answer is the single worst failure mode in this repo. 
 A session moves in one direction:
 
 ```
-sources → criteria → run → contacts
+sources → criteria → run → [ what the result is for ]
+  fixed     fixed    fixed          open
 ```
+
+**Three fixed steps and one open slot.** The first three are the same for every
+topic. The fourth is whatever the result was for — someone to talk to, a report, a
+resume, a proposal, links to apply with — and the procedure for each one is a
+**filler**: `fillers/<name>.md`. The step itself is the gate that offers them.
 
 The current step is the `status` field in `sessions/<slug>/MEMORY.md`. Read it, do that step, update it. Never run a later step because it seems more useful.
 
@@ -38,7 +44,7 @@ The current step is the `status` field in `sessions/<slug>/MEMORY.md`. Read it, 
 | `sources` | `workflows/01-sources.md` |
 | `criteria` | `workflows/02-criteria.md` |
 | `run` | `workflows/03-run.md` |
-| `contacts` | `workflows/04-contacts.md` |
+| a filler name, e.g. `contacts` | `workflows/04-output.md`, then `fillers/<name>.md` |
 
 Entry procedure for every session: `workflows/00-session.md`.
 
@@ -58,9 +64,9 @@ the amendment date, then update `results.md`. An explicit request to add a fact
 to the result is permission to propose the amendment, not permission to make the
 stored source and criteria state disagree with the result.
 
-**One skill, not six.** A skill is a shortcut, not a capability. Only `session` is triggered by a human; the other four steps are walked by you, driven by `status`. Do not turn a workflow into a skill — that is five files only ever called by another file.
+**A skill is a shortcut, not a capability, and it holds no logic.** One per thing a human types: `session` to start or continue one, and one per filler, because a filler is the one step the human names. The four workflow steps are walked by you, driven by `status` — do not turn a workflow into a skill, that is a file only ever called by another file. Every skill is a pointer at the real document, so the repo runs identically in an agent that has never heard of `.claude/`.
 
-**Contacts is optional, and the shape decides — in `examples/<shape>.md` → `fillers:`.** A shape with `fillers: []` has nobody to look up and nothing else to make: the session ends at `run`, so say the result is final, leave `status: run`, and point `next:` at the rerun. Skipping the step out loud is correct; quietly inventing someone to contact is not.
+**Step 4 is optional, and the shape decides — in `examples/<shape>.md` → `fillers:`.** A shape with `fillers: []` has nothing to make from its result and nobody to look up: the session ends at `run`, so say the result is final, leave `status: run`, and point `next:` at the rerun. Skipping the step out loud is correct; quietly inventing someone to contact, or a document nobody asked for, is not.
 
 That fact belongs to the shape, not to the session. It is on disk once, in the
 shape's frontmatter, and every session of that shape reads it there — never copied
@@ -80,6 +86,35 @@ Three exceptions, all public and topic-neutral:
 - `tools/session_audit.py` — a read-only structural validator. It may count,
   compare dates, and check that result-link domains appear in `sources.md`. It
   never fetches, filters, scores, or knows a topic.
+- `fillers/<name>.md` — one procedure per thing that can be made from a result,
+  tool-neutral. **The first executable exception in this list**, and the only one
+  guarded by a gate of its own, below.
+
+**Writing a filler is gated. Running one is not.** A session that invents a new
+thing to make runs it there and then, from what the human described — that run is
+theirs, it costs nothing, and asking permission for it would be the friction this
+repo is trying to remove. Writing it back into the repo is the different act:
+
+```
+That worked. Write it up as `fillers/<name>.md` so it is reusable?
+It goes in the public repo.
+```
+
+Then wait for the answer. **The reason is publication, not caution:** this is the
+first time an agent writes executable procedure that strangers will run, on their
+machines, against their own sessions. A wrong line in `fillers/` is wrong for
+everyone who clones this repo, and nobody reviews it because it arrived looking
+like part of the method.
+
+⚠ **This is not a fifth gate.** Gates 1–4 are per-session and every session hits
+all four. This one fires rarely, changes the repo rather than the session, and is
+the same class of rule as *do not write to `AGENTS.md` or `workflows/`*. The gates
+are four.
+
+**Scrub a filler exactly like `examples/`**: placeholders instead of names,
+numbers and URLs, no vendor names, nothing about who the human is or what they
+were looking for. The file records how the thing is made. It never records the
+search.
 
 - No global memory. No user-level memory. No project memory outside the session folder.
 - No cross-session notes. Two sessions never learn from each other.
@@ -269,6 +304,12 @@ fillers: [apply-links]
 | `form` | `ledger` · `brief` | **how the result reads.** `ledger` is scored rows and cards; `brief` is prose sections, every claim attributed |
 | `cardinality` | `one` · `many` | **whether pre-filter, diff and score apply at all.** `many` is candidates you accept or reject, so all three run. `one` is a single subject the sources are all about, so there is nothing to narrow, nothing to compare against last week, and nothing to rank |
 | `fillers` | a list, possibly empty | **what can be made from the result at step 4.** `[]` means the session ends at `run` |
+
+**`fillers:` is a menu, not a constraint.** It is what gets offered at GATE 4, drawn
+from the rows actually on screen rather than read out as a capability list. The human
+may always name something that is not in it — including one with no `fillers/` file
+yet. Refusing a request because the shape's list does not mention it is the shape
+telling the human what they are allowed to want, which is backwards.
 
 **Defaults: `one → brief`, `many → ledger`.** A shape that deviates says why in its
 body — the field still states what it is, and the prose carries the reason.

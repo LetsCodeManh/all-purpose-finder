@@ -107,7 +107,7 @@ The signals that a topic is a new shape:
 | `sources` | `workflows/01-sources.md` |
 | `criteria` | `workflows/02-criteria.md` |
 | `run` | `workflows/03-run.md` |
-| `contacts` | `workflows/04-contacts.md` |
+| a filler name, e.g. `contacts` | `workflows/04-output.md`, then `fillers/<name>.md` |
 
 Never skip forward because a later step looks more useful. If the human explicitly asks for a different step, say which step the session is on, then do what they asked.
 
