@@ -33,7 +33,8 @@ records the shape. It never records the search.
 
 ## 00 — session
 
-*Slug, shape and topic as they were said back at GATE 1.*
+*Slug, topic and the plan as they were printed at GATE 1 — long form or short,
+and the plain-language reading of one-subject vs many-candidates.*
 
 ---
 

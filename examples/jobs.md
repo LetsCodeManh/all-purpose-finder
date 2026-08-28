@@ -23,15 +23,22 @@ standalone — no live links to rot, and **no real session's content**. Read
 
 ## 00 — session
 
-Slug, shape and topic, said back before anything is created.
+Slug, topic and the plan, said back before anything is created. Short form here —
+the shape exists and the human has run one before; a first session gets the long
+form, `workflows/00-session.md` → *GATE 1 — print the plan*.
 
 ```
 Slug:  <topic>-<region>
-Shape: jobs — existing, examples/jobs.md
 Topic: <role family> roles in <region>, <work-mode preference>, <seniority band>.
+Reading this as many candidates to pick from.
+
+Same four stops as last time: sources, criteria, results, then your call on
+what to make of them. Approving this approves the plan only.
 
 Good? Rename it if the slug is wrong.
 ```
+
+`shape: jobs` goes in `MEMORY.md`. It is not a word the human is asked to approve.
 
 ---
 

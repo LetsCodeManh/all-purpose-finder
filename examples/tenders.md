@@ -40,9 +40,12 @@ with a deadline:
 
 ```
 Slug:  <sector>-tenders-<region>
-Shape: tenders — existing, examples/tenders.md
 Topic: public contracts for <kind of work> published by <authority level> in
        <region>, above <size> or any size.
+Reading this as many candidates to pick from.
+
+Same four stops as last time: sources, criteria, results, then your call on
+what to make of them. Approving this approves the plan only.
 
 Good? Rename it if the slug is wrong.
 ```

@@ -55,32 +55,120 @@ A typo that silently creates a folder gives the human two sessions and they noti
 The human described a topic instead of naming one.
 
 1. **Propose the slug yourself.** Short, readable, lowercase, hyphens. Never a hash, never a date. The human does not invent it — they approve or rename it.
-2. **Name the shape.** Read the files in `examples/`. Either this topic is one of them, or it is not — say which, and say why in one clause. This is part of GATE 1, not a decision you make quietly.
+2. **Name the shape — to yourself first.** Read the files in `examples/`. Either this topic is one of them, or it is not. The name goes in `MEMORY.md`; what the human hears is the plain-language question in the plan below, and — when the shape is new — one sentence on what makes it different. This is part of GATE 1, not a decision you make quietly, but it is not a word they should have to approve.
 3. Say back, in two lines, what you understood the topic to be. For a one-shot
    shape driven by a meeting, decision, or deadline, include the occasion and
    date. If the human did not supply them, write `occasion not supplied` rather
    than inventing one; they can fill it in while approving GATE 1.
-4. **GATE 1.** Wait.
+4. **GATE 1. Print the plan, then wait.** Below.
+
+### GATE 1 — print the plan
+
+Say what the whole session is going to do before the human agrees to start it.
+Not to be thorough: a human who can see where you stop can tell whether you
+stopped there. This is the same four stops the rest of this repo is built on,
+said once, in advance, out loud.
+
+Three rules, and they are what make it safe to print:
+
+- **Procedure, never findings.** You do not know the sources at GATE 1 — that is
+  what GATE 2 is for. The plan says what the steps are and where each one stops.
+  It never names a source, a criterion, or anything you expect to find. If you
+  catch yourself writing "I'll check the usual boards", delete it.
+- **It states what approving it does not approve.** A plan the human said yes to
+  is the easiest thing in this repo to misread as permission for what comes
+  after. It is not. The limit line is part of the plan and is never printed
+  without it, never softened, never moved to the end as a footnote.
+- **Rendered, never stored.** It holds no fact that is not already in
+  `workflows/`, so a stored copy only rots. GATE 1 approval is on disk already —
+  the `shape:` field and the folder existing are the record. Write nothing extra.
+
+**Plain language, never repo words.** A stranger cannot approve
+`Shape: company-research`; they can answer *one thing, or many candidates?* —
+which is `cardinality`, asked in human. Ask that one out loud, say which way you
+read it, and let them correct you. The shape name is yours to carry; the
+distinction behind it is theirs to confirm.
+
+**Step 4 stays open.** Do not offer to write a report, and do not promise a list
+of contacts. What the results are for is the human's call once they have seen
+them, and saying so in advance is honest rather than vague.
+
+#### Long form
+
+When `sessions/` holds no real session yet, or the shape is new. About twenty
+lines, and that is the intended cost — this is the one place a stranger learns
+how the whole thing behaves.
 
 ```
 Slug:  <proposed-slug>
-Shape: <name> — existing, examples/<name>.md
 Topic: <two lines, in your own words, of what you understood>
+
+One question first, because it changes how I work:
+is this one thing you want to know about, or many candidates you want to
+pick from? I have read it as <many candidates / one subject>.
+
+Here is the whole thing before we start. I stop and wait for you four times:
+
+  now          you tell me the name above is right and I have understood the topic
+  next         I go looking for places worth searching and bring you the list.
+               You cut what is noise, add what I missed. I search nothing for
+               real until you have
+  after that   I write down what counts as a match, in your own words, and read
+               it back. You approve it or change it
+  at the end   you see what came back and pick what is worth acting on. Nothing
+               gets acted on that you did not pick
+
+Then what to do with the results is your call — someone to contact, a report,
+a list to apply from, something you name yourself. You choose that after you
+have seen them, not now.
+
+Saying yes here says yes to this plan and nothing else. I still stop at all
+three of the others. I do not know what the sources are yet — finding out is
+the next step, and you get to cut that list before anything is searched.
+
+Good? Rename it if the name is wrong.
+```
+
+#### Short form
+
+When the human has run a session before and the shape already exists — they have
+seen the long form and do not need it twice.
+
+```
+Slug:  <proposed-slug>
+Topic: <two lines, in your own words, of what you understood>
+Reading this as <many candidates to pick from / one subject to read up on>.
+
+Same four stops as last time: sources, criteria, results, then your call on
+what to make of them. Approving this approves the plan only.
 
 Good? Rename it if the slug is wrong.
 ```
+
+**Printing a plan does not make this two gates.** It is one stop — GATE 1, the
+slug and the shape — and the plan is what you print while standing at it. The
+gates are four.
 
 ### When it is a new shape
 
 Say so plainly, propose a name, and say what makes it different from the closest existing one. Do not force a topic into a shape that nearly fits — a shape that nearly fits produces a run that nearly works, and the human finds out three steps later.
 
+A new shape always gets the **long form** plan, with two lines added and the
+shape named — this is the one case where a repo word earns its place, because
+the human is being asked to agree to a kind of session that does not exist yet:
+
 ```
 Slug:  <proposed-slug>
-Shape: <proposed-name> — NEW. Closest is <existing>, but <what breaks>:
-       <e.g. the result is a written brief, not scored rows>
 Topic: <two lines>
 
-New shape means I write examples/<proposed-name>.md as we go. Good?
+This is a kind of search I have not done before. The closest one I have is
+<existing>, but <what breaks, in plain words — e.g. the answer is something
+written about one company, not a list of things to choose between>.
+
+<then the long-form plan, unchanged>
+
+It also means I write down how this kind of search works as we go, so the
+next one is easier. That file is public and holds no detail of your search.
 ```
 
 The signals that a topic is a new shape:

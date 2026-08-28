@@ -39,12 +39,19 @@ Two more things this shape does not have, and that is fine:
 
 ```
 Slug:  <subject>-brief
-Shape: company-research — existing, examples/company-research.md
 Topic: background on <an organisation> and <a person at it>, ahead of <the occasion>,
        on <date>.
+Reading this as one subject to read up on, not a list to choose from.
+
+Same four stops as last time: sources, criteria, then the brief itself and what
+you do before <the occasion>. Approving this approves the plan only.
 
 Good? Rename it if the slug is wrong.
 ```
+
+★ The cardinality line is the one that matters here. `one subject` is why this
+shape has no pre-filter, no diff and no score — and it is the one thing a human
+can confirm without knowing a single repo word.
 
 The deadline belongs in the topic line. It is what decides how deep to go, and
 it is the only thing in this shape that expires.

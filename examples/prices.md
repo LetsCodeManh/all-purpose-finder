@@ -30,8 +30,11 @@ and a row outside its window is not a result, it is history.
 
 ```
 Slug:  <category>-deals-<city>
-Shape: prices — existing, examples/prices.md
 Topic: weekly discounts on <category> at stores in and around <city>.
+Reading this as many candidates to pick from.
+
+Same four stops as last time: sources, criteria, results, then a review —
+there is nothing to make from a price list. Approving this approves the plan only.
 
 Good? Rename it if the slug is wrong.
 ```
