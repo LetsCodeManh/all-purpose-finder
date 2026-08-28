@@ -8,13 +8,13 @@ has; this is a second way in, never the way in.
 
 ```
 brew install ttyd                # once
-ttyd -p 7681 -W claude           # the right pane
-python3 ui/server.py             # the left pane, stdlib only
+ttyd -p 7681 -W claude           # optional terminal drawer
+python3 ui/server.py             # dashboard, stdlib only
 open http://localhost:8420
 ```
 
 Two processes, no npm, no build step, no database. Files are the contract between the
-two panes: the left pane listens to `sessions/`, not to the terminal.
+dashboard and terminal: the dashboard listens to `sessions/`, not to terminal output.
 
 ## What it does
 
@@ -23,13 +23,19 @@ Renders the session files and lets you tick a card. That is all of v1.
 Anything you cannot click, you say in the terminal — *"drop NoFluffJobs"* — and the left
 pane updates as the agent writes the file.
 
-- **Tabs** — `ls sessions/` minus `_template`. Badge is `status:` from each `MEMORY.md`.
-- **Chips** — derived from `shape` plus which files exist, never a hardcoded four.
+- **Session switcher** — `ls sessions/` minus `_template`, available from the header or
+  with `⌘K`. The active shape and output form remain visible beside it.
+- **Stage track** — the four steps, minus any the session declares it does not have.
   `✓` has output on disk · `●` where `status` says you are · `○` nothing written yet ·
   `⊘` not for this shape (only when `contacts: n/a — <reason>` is in the frontmatter).
+- **Source gaps** — blocked rows stay visible in a dedicated rail on the sources view;
+  every other view gives the document the full width.
 - **Ticking** writes `- [ ]` → `- [x]` on one line of `results.md`. Same edit you would
   make by hand in Obsidian or VS Code, where these checkboxes are also clickable.
 - **Live reload** — SSE. Edit a file in the terminal, the pane follows.
+- **Terminal drawer** — optional and detached at the bottom. Nothing in the dashboard
+  approves a gate: each stage says what it is waiting for, and you confirm it in the
+  terminal, where the approval and the next step are written to the session files.
 
 `listings.md` is never rendered. Its 3718 rows are not for reading; the header stat line
 is, and that is what the box at the top of the run screen shows.
