@@ -60,11 +60,24 @@ def test_label_survives_the_flip():
 
 
 def test_path_traversal_is_refused():
-    assert server.safe("../../etc", "passwd", server.READABLE) is None
-    assert server.safe("eu-ai-jobs", "../../AGENTS.md", server.READABLE) is None
-    assert server.safe("eu-ai-jobs", "listings.md", server.READABLE) is None, "3718 rows are never served"
-    assert server.safe("eu-ai-jobs", "sources.md", server.WRITABLE) is None, "v1 writes only the tick"
-    assert server.safe("eu-ai-jobs", "results.md", server.WRITABLE) is None, "results.md is a step-3 artifact, never written by a later step"
+    w = server.WRITABLE.__contains__
+    assert server.safe("../../etc", "passwd", server.readable) is None
+    assert server.safe("eu-ai-jobs", "../../AGENTS.md", server.readable) is None
+    assert server.safe("eu-ai-jobs", "listings.md", server.readable) is None, "3718 rows are never served"
+    assert server.safe("eu-ai-jobs", "sources.md", w) is None, "v1 writes only the tick"
+    assert server.safe("eu-ai-jobs", "results.md", w) is None, "results.md is a step-3 artifact, never written by a later step"
+    assert server.safe("eu-ai-jobs", "shortlist.md", w) is None, "and only where it exists"
+
+
+def test_readable_is_a_shape_not_a_list():
+    """A filler nobody has written yet still gets its file served."""
+    assert server.readable("letter.md") and server.readable("bid.md"), "filler names are an open set"
+    assert server.readable("MEMORY.md") and server.readable("shortlist.md")
+    assert not server.readable("listings.md"), "never served whole"
+    assert not server.readable("../AGENTS.md") and not server.readable("results.md.tmp")
+    assert not server.readable("Results.md") and not server.readable("") and not server.readable(None)
+    # widening reads never widens writes
+    assert server.WRITABLE == {"shortlist.md"}
 
 
 def test_stages_come_from_the_shape():

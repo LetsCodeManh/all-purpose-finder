@@ -24,10 +24,13 @@ UI = REPO / "ui"
 PORT = int(os.environ.get("FINDER_UI_PORT", "8420"))
 TTYD_PORT = int(os.environ.get("FINDER_TTYD_PORT", "7681"))
 
-# listings.md is deliberately absent: 3718 rows nobody reads. Its stat line is served
-# by /api/listings instead, which reads only the file's head.
-READABLE = {"MEMORY.md", "sources.md", "criteria.md", "results.md", "shortlist.md", "contacts.md"}
-WATCHED = READABLE | {"listings.md"}
+# What may be read is a shape, not a list. Filler names are an open set, so a whitelist
+# here would be a third place that has to learn every new filler name — and the two layers
+# above have already stopped doing that.
+NAME_RE = re.compile(r"^(MEMORY|[a-z0-9][a-z0-9-]*)\.md$")
+# listings.md is watched but never served whole: 3718 rows nobody reads. Its stat line goes
+# out through /api/listings instead, which reads only the file's head.
+NEVER_SERVED = {"listings.md"}
 # v1 still writes exactly one thing: a tick. Which file holds the tick changed — it left
 # results.md, which is now a pure step-3 artifact no later step edits, so the server must
 # refuse to write it at all. The write surface stays one file; it is a different file.
@@ -39,6 +42,20 @@ TICK = re.compile(r"^- \[[ x]\] ")
 # the track is read from examples/<shape>.md and never hardcoded here.
 FIXED_STAGES = ["sources", "criteria", "run"]
 EXAMPLES = REPO / "examples"
+
+
+def readable(name):
+    """Any session markdown file, except the one that is never served whole."""
+    return bool(NAME_RE.fullmatch(name or "")) and name not in NEVER_SERVED
+
+
+def session_files(d):
+    """The markdown in a session folder, by name and mtime — the page picks what it wants.
+
+    Globbed rather than listed for the same reason `readable` is a shape: a filler writes
+    `<name>.md` and the server must not need teaching that the name exists.
+    """
+    return {f.name: f.stat().st_mtime for f in d.glob("*.md") if NAME_RE.fullmatch(f.name)}
 
 
 def sessions():
@@ -55,7 +72,7 @@ def sessions():
         if not d.is_dir() or d.name.startswith("_"):
             continue
         meta = frontmatter(d / "MEMORY.md")
-        files = {n: (d / n).stat().st_mtime for n in WATCHED if (d / n).exists()}
+        files = session_files(d)
         out.append({
             "slug": d.name,
             "shape": meta.get("shape", ""),
@@ -171,8 +188,10 @@ def blocked_sources(slug):
     return out
 
 
-def safe(slug, name, allowed):
-    if not SLUG.match(slug or "") or name not in allowed:
+def safe(slug, name, ok):
+    """`ok` is a predicate, not a list: reads are shape-checked, writes are still the one
+    file. Widening what may be read never widens what may be written."""
+    if not SLUG.match(slug or "") or not ok(name):
         return None
     p = (SESSIONS / slug / name).resolve()
     if not str(p).startswith(str(SESSIONS.resolve()) + os.sep) or not p.exists():
@@ -185,10 +204,8 @@ def snapshot():
     for d in SESSIONS.iterdir() if SESSIONS.is_dir() else []:
         if not d.is_dir() or d.name.startswith("_"):
             continue
-        for n in WATCHED:
-            f = d / n
-            if f.exists():
-                out[f"{d.name}/{n}"] = f.stat().st_mtime
+        for n, mtime in session_files(d).items():
+            out[f"{d.name}/{n}"] = mtime
     return out
 
 
@@ -261,7 +278,7 @@ class Handler(BaseHTTPRequestHandler):
         # /api/file/<slug>/<name> — the raw markdown. The client parses it, so every
         # rendered element keeps its line number in the source file.
         if len(parts) == 4 and parts[:2] == ["api", "file"]:
-            f = safe(parts[2], parts[3], READABLE)
+            f = safe(parts[2], parts[3], readable)
             if not f:
                 return self.send_json({"error": "no such file"}, 404)
             return self.send_json({"text": f.read_text(encoding="utf-8"), "mtime": f.stat().st_mtime})
@@ -315,7 +332,7 @@ class Handler(BaseHTTPRequestHandler):
             req = json.loads(self.rfile.read(n) or b"{}")
         except (ValueError, json.JSONDecodeError):
             return self.send_json({"error": "bad request"}, 400)
-        f = safe(req.get("slug"), req.get("file"), WRITABLE)
+        f = safe(req.get("slug"), req.get("file"), WRITABLE.__contains__)
         if not f:
             return self.send_json({"error": "not writable"}, 400)
         if not isinstance(req.get("line"), int) or not isinstance(req.get("expect"), str):

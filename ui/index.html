@@ -271,15 +271,6 @@
         font-weight: 600;
         color: var(--ink);
       }
-      .chip.na {
-        cursor: help;
-      }
-      .chip.na .chip-dot {
-        border-color: #d5dae0;
-      }
-      .chip.na .chip-name {
-        color: #a4abb5;
-      }
       #stage-action {
         flex: none;
         display: flex;
@@ -573,6 +564,59 @@
         border-top: 1px solid var(--line2);
         color: var(--red);
         font-size: 11.5px;
+      }
+      /* the shortlist — the one thing on this page you can click. It sits above the
+         results it was generated from, because the tick is a decision taken while
+         reading them. */
+      .shortlist {
+        border: 1px solid #d8dde5;
+        border-radius: 10px;
+        background: #fff;
+        overflow: hidden;
+        margin-bottom: 18px;
+        box-shadow: var(--shadow);
+      }
+      .shortlist-head {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        padding: 13px 16px 12px;
+        background: var(--soft);
+        border-bottom: 1px solid var(--line2);
+      }
+      .shortlist-head .title {
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      .shortlist-head .file-meta {
+        margin-left: auto;
+        font: 600 11.5px var(--mono);
+        color: #287d4b;
+        background: var(--green-soft);
+        border: 1px solid #cfe9da;
+        padding: 3px 10px;
+        border-radius: 20px;
+      }
+      .shortlist .tick {
+        margin: 0;
+        padding: 10px 16px;
+        align-items: center;
+        border-bottom: 1px solid var(--line2);
+      }
+      .shortlist .tick:last-child {
+        border-bottom: 0;
+      }
+      .shortlist .tick:hover {
+        background: var(--soft);
+      }
+      .shortlist .tick-label {
+        color: var(--ink2);
+        font-size: 13px;
+      }
+      .shortlist .tick input:checked ~ .tick-label {
+        color: #287d4b;
+        font-weight: 500;
       }
       .card {
         border: 1px solid #d8dde5;
