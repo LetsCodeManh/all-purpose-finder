@@ -235,7 +235,7 @@ empty one stops.
 | file | holds |
 |------|-------|
 | `MEMORY.md` | status + next step. **Pointer only — no data** |
-| `sources.md` | one table, `type` is a column |
+| `sources.md` | one table, `type` is a column, then `## gaps` and `## notes` — what is not covered, and how the reading was done |
 | `criteria.md` | the approved checklist |
 | `results.md` | one file, diffed. Not per-site files. Never ticked, never edited by a later step |
 | `shortlist.md` | one line per kept row, regenerated each run. **The only file that carries ticks** |

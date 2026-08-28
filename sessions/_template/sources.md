@@ -14,3 +14,18 @@ Last updated: YYYY-MM-DD
   human-authorized browser or hand check of a blocked source.
 - `manual checked` — the date of that manual check, or `—`.
 - Blocked rows stay, with a URL the human can open by hand.
+
+## gaps
+
+What is **not** covered by the table above, and why. Coverage, not method.
+
+- <kind of source considered and not probed — and what it would add if it were>
+- <what was searched for and does not appear to exist>
+
+## notes
+
+How the reading was actually done. Method, not coverage.
+
+- <no feed found for X — the page is the only way in>
+- <a blocked source checked by hand on <date>: what it turned out to hold>
+- <a source excluded on privacy grounds, and the ground>

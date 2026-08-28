@@ -200,6 +200,13 @@ failed this run:       <name> (<error>)
 not checked since:     <name> — <date>
 ```
 
+**A run discovers gaps, and they go back into `sources.md`.** The message above is
+gone tomorrow; the file is not. A source that failed, one that has not been checked
+in a month, a kind of place you noticed is missing while reading the results — the
+first two are `## notes` with a date, the third is `## gaps`. Update the section,
+update `Last updated:`, and do not rewrite the table from what the run saw:
+adding a source is GATE 2, not a run.
+
 Then update `MEMORY.md` → `last run: <date>`. If the shape has anything to make from the result — `fillers:` is not empty — `status: output`, `next: tick the rows worth chasing`. `output` means the results exist and the human has not picked what to make from them yet, so reopening the session offers the menu again instead of re-running step 3. If `fillers:` is empty, `status: run` and `next:` points at the rerun: that shape genuinely ends here.
 
 Before handoff, run the topic-neutral consistency check:

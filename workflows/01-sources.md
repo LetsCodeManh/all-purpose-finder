@@ -80,6 +80,9 @@ State the gaps out loud in the same message:
 - what you looked for and did not find
 - anything you could not check, and why
 
+Say it here and it is gone tomorrow. After GATE 2 it goes in the file, under
+`## gaps` and `## notes` — section 6 below.
+
 ---
 
 ## 4. GATE 2 — the human prunes and adds
@@ -125,9 +128,47 @@ Then update `MEMORY.md` → `status: criteria`, `next: write criteria`.
 
 ---
 
+## 6. After the table — `## gaps` and `## notes`
+
+**The table is what you found. These two sections are what you did not, and how
+you read what you did.** A list that only says what it covers looks complete;
+this repo exists to make the opposite visible, and these sections are where that
+lives. Both are written now, at step 1, and updated on every run.
+
+Two sections, and the split is the useful part:
+
+| section | holds | one word |
+|---------|-------|----------|
+| `## gaps` | a kind of source considered and not probed, and what it would add. Something searched for that does not appear to exist at all | **coverage** |
+| `## notes` | no feed found and the page is the only way in. What a manual check of a blocked source actually turned up, and when. A source excluded on privacy grounds, and the ground | **method** |
+
+What does **not** go in either:
+
+- **A blocked source stays in the table**, with its `blocked` status, its URL and
+  its why-line. Moving it down here hides it in prose — the row is the record, and
+  a `## notes` line about it is a supplement, never a replacement.
+- **No findings.** These sections are about the sources, not about what the
+  sources said. What was found is `results.md`.
+- **No regexes.** The pre-filter stays in `criteria.md`, under the `must` line it
+  came from. Traceability to that line is what makes a wrong pattern findable, and
+  a regex kept next to the source it runs against loses it.
+- **Not a to-do list.** `## gaps` records what is not covered so the human can
+  decide; it does not promise to cover it next time.
+
+Write nothing under a heading rather than deleting the heading. **An empty
+`## gaps` is a claim** — it says this list has no holes — so leave the heading and
+say what makes it true: `nothing considered and skipped; the primary source is
+read directly`.
+
+---
+
 ## Rerunning this step
 
 The human comes back later and wants more sources. **Report the delta, never the whole list again.**
+
+`## gaps` and `## notes` are part of that delta. A source added closes a gap —
+strike the line rather than leaving it to contradict the table. A source that has
+gone quiet or started failing is a note with a date on it.
 
 Three buckets, in this order:
 

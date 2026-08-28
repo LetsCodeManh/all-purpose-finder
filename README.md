@@ -84,7 +84,7 @@ Each session is one folder, one file per thing:
 | file | holds |
 |------|-------|
 | `MEMORY.md` | slug, shape, status, next step. Pointer only — no data |
-| `sources.md` | where it looks, how each one reads, when it was last checked |
+| `sources.md` | where it looks, how each one reads, when it was last checked — and, under `## gaps`, what it does not cover |
 | `criteria.md` | the approved checklist, plus the regexes the pre-filter runs |
 | `results.md` | this run, diffed against the last one |
 | `shortlist.md` | one line per kept row, and the only file you tick |

@@ -129,6 +129,17 @@ the next step, and you get to cut that list before anything is searched.
 Good? Rename it if the name is wrong.
 ```
 
+**When the shape has nothing to make — `fillers: []` — the fourth stop is a
+review, not a menu.** Do not offer contacts, a report or a list to apply from to
+a session that ends at its result; promising a step that does not exist is the
+same lie as skipping one that does. Replace the "your call" paragraph with what
+the result actually is:
+
+```
+  at the end   you read what came back and decide what to do with it. There is
+               nothing for me to make from this one — the list is the answer
+```
+
 #### Short form
 
 When the human has run a session before and the shape already exists — they have
