@@ -10,8 +10,18 @@
  * the whole reason the addressing exists before anything needs it.
  */
 
-const STAGE_ORDER = ["sources", "criteria", "run", "contacts"];
-const FILE_FOR = { sources: "sources.md", criteria: "criteria.md", run: "results.md", contacts: "contacts.md" };
+// The stage track is the server's: three fixed steps and then whatever the shape's
+// `fillers:` menu offers. There is deliberately no fallback list here — a default four is
+// the old hardcoding wearing a shrug, and server.py already falls back safely when it
+// cannot read a shape.
+const FILE_FOR = { sources: "sources.md", criteria: "criteria.md", run: "results.md" };
+// A filler produces <name>.md, and filler names are an open set, so this cannot be an
+// exhaustive map. A stage whose file is not there is still a stage: the chip renders and
+// the screen says the document does not exist yet.
+const fileFor = (stage) => FILE_FOR[stage] || stage + ".md";
+// The one file the page writes. Ticks live here and nowhere else (AGENTS.md -> Ticks);
+// results.md is a step-3 artifact that no later step edits.
+const TICK_FILE = "shortlist.md";
 
 const S = { sessions: [], slug: null, stage: null, ttyd: false, ttydPort: 7681, files: {}, listings: null };
 
@@ -215,7 +225,6 @@ function postingSummary(text, count) {
 
 function renderLedgerCard(heading, content, ctx) {
   const card = el("section", "card", heading.line);
-  const tickBlock = content.find((b) => b.type === "tick" && b.kind === "card");
   const codeBlock = content.find((b) => b.type === "code");
   const paras = content.filter((b) => b.type === "para");
   const entries = paras.flatMap((b) => b.text.split("\n").map((text, offset) => ({ text, line: b.line + offset })));
@@ -229,7 +238,6 @@ function renderLedgerCard(heading, content, ctx) {
   const count = match ? Number(match[1]) : 0;
 
   const top = el("div", "card-top", heading.line);
-  if (tickBlock) top.appendChild(renderTick(tickBlock, ctx));
   const copy = el("div", "card-title-copy", heading.line);
   const title = el("h3", null, heading.line);
   title.innerHTML = inline(heading.text);
@@ -484,7 +492,10 @@ function renderBlocks(blocks, ctx) {
         n.textContent = b.text;
         break;
       case "table": n = renderTable(b, ctx); break;
-      case "tick": n = renderTick(b, ctx); break;
+      // A dead checkbox is worse than none: a tick renders only in the file the page can
+      // actually write. Old results.md files still carry `- [ ] chase` lines and they are
+      // no longer a decision anyone makes here.
+      case "tick": n = ctx.writable ? renderTick(b, ctx) : null; break;
       case "list": {
         n = el("ul", null, b.line);
         b.items.forEach((it) => {
@@ -530,35 +541,22 @@ async function tick(b, box, ctx) {
 /* ---------- chrome ---------- */
 
 function stagesFor(s) {
+  const stages = s.stages || [];
   const has = (n) => n in s.files;
-  const at = STAGE_ORDER.indexOf(s.status);
-  return STAGE_ORDER.map((name, i) => {
-    let mark, why = "";
-    // `contacts: n/a — <reason>` is the only thing that makes a stage not-for-this-shape.
-    // Never inferred from `shape`: if it is not on disk, the terminal user cannot see it.
-    const present =
-      name === "sources" ? has("sources.md") :
-      name === "criteria" ? has("criteria.md") :
-      name === "run" ? has("results.md") || has("listings.md") :
-      has("contacts.md");
+  const at = stages.indexOf(s.status);
+  return stages.map((name, i) => {
     // Read reality: ✓ means this stage has output on disk, ● is where `status` says you
-    // are, ○ means nothing written yet. The loop is run -> contacts -> run, so a stage
-    // downstream of `status` can legitimately already have a file.
-    if (name === "contacts" && s.contacts_na) { mark = "⊘"; why = s.contacts_na; }
-    else if (i === at) mark = "●";
-    else if (present) mark = "✓";
-    else mark = "○";
-    return { name, mark, why, present };
+    // are, ○ means nothing written yet. The loop is run -> filler -> run, so a stage
+    // downstream of `status` can legitimately already have a file. A shape with no step 4
+    // arrives here as a list with nothing after `run` — there is no stage to strike out.
+    const present = name === "run" ? has("results.md") || has("listings.md") : has(fileFor(name));
+    return { name, mark: i === at ? "●" : present ? "✓" : "○", present };
   });
 }
 
-function formFor(s) {
-  return s.files["listings.md"] ? "ledger" : s.files["results.md"] ? "brief" : "";
-}
-
-function visibleStages(s) {
-  return stagesFor(s).filter((st) => !(st.name === "contacts" && s.contacts_na));
-}
+// The shape's own `form:`, read from its frontmatter by the server. Which files happen to
+// exist says nothing about whether the result is a ledger or a brief.
+const formFor = (s) => s.form || "";
 
 function sourceFacts() {
   const payload = S.files["sources.md"];
@@ -588,14 +586,18 @@ function stageStatus(s, stage) {
     return approved ? "approved " + approved[1].split(" · ")[0] : (p ? "draft ready" : "not started");
   }
   if (stage === "run") {
-    const p = S.files["results.md"];
-    if (!p) return "not started";
-    const blocks = parse(p.text);
-    const ticks = blocks.filter((b) => b.type === "tick");
-    if (!ticks.length) return "draft";
-    return ticks.length + " cards · " + ticks.filter((b) => b.checked).length + " ticked";
+    if (!S.files["results.md"]) return "not started";
+    const t = shortlistTicks();
+    return t.length ? t.length + " rows · " + t.filter((b) => b.checked).length + " ticked" : "draft";
   }
-  return S.files["contacts.md"] ? "lookup complete" : "not started";
+  if (stage === "contacts") return S.files["contacts.md"] ? "lookup complete" : "not started";
+  return fileFor(stage) in S.files ? "written" : "not started";
+}
+
+// Every tick in the session, in the one file that holds them.
+function shortlistTicks() {
+  const p = S.files[TICK_FILE];
+  return p ? parse(p.text).filter((b) => b.type === "tick") : [];
 }
 
 // No approve button: every gate is confirmed in the terminal, where the approval and the
@@ -604,7 +606,7 @@ function actionFor(s) {
   const notes = {
     sources: "the next gate is recorded in the terminal",
     criteria: "the run waits for your approval",
-    run: formFor(s) === "ledger" ? "tick cards before moving on" : "review the artifact before rerunning",
+    run: formFor(s) === "ledger" ? "tick the shortlist, then say go in the terminal" : "review the artifact before rerunning",
     contacts: "append only, never rewritten",
   };
   return notes[S.stage] || "continue in the terminal";
@@ -642,18 +644,16 @@ function drawTabs() {
 function drawChips(s) {
   const bar = $("#chips");
   bar.innerHTML = "";
-  const stages = visibleStages(s);
+  const stages = stagesFor(s);
   bar.style.gridTemplateColumns = "repeat(" + stages.length + ", minmax(0, 1fr))";
   bar.style.setProperty("--stage-count", stages.length);
   stages.forEach((st, i) => {
-    const c = el("button", "chip" + (st.name === S.stage ? " on" : "") +
-      (st.mark === "⊘" ? " na" : "") + (st.mark === "✓" ? " done" : ""));
+    const c = el("button", "chip" + (st.name === S.stage ? " on" : "") + (st.mark === "✓" ? " done" : ""));
     c.type = "button";
     c.innerHTML = '<span class="chip-track"><span class="chip-dot"></span>' +
       (i < stages.length - 1 ? '<span class="chip-line"></span>' : "") + '</span>' +
       '<span class="chip-copy"><span class="chip-name">' + esc(stageLabel(s, st.name)) + '</span>' +
       '<span class="chip-status">' + esc(stageStatus(s, st.name)) + "</span></span>";
-    if (st.why) c.title = st.why;
     c.onclick = () => { S.stage = st.name; draw(); };
     bar.appendChild(c);
   });
@@ -683,10 +683,10 @@ function statBox(stats, blocked) {
 }
 
 function countLine() {
-  const cards = document.querySelectorAll("#doc .card").length;
-  const ticked = document.querySelectorAll("#doc .tick input:checked").length;
+  const rows = document.querySelectorAll("#doc .shortlist .tick input").length;
+  const ticked = document.querySelectorAll("#doc .shortlist .tick input:checked").length;
   const n = $("#count");
-  if (n && cards) n.textContent = cards + " cards · " + ticked + " ticked";
+  if (n && rows) n.textContent = rows + " rows · " + ticked + " ticked";
 }
 
 function note(msg) {
@@ -748,8 +748,8 @@ function screenBadge(s, blocks) {
     return approved ? "approved " + approved[1].split(" · ")[0] : "";
   }
   if (S.stage === "run") {
-    const ticks = blocks.filter((b) => b.type === "tick");
-    return ticks.length ? ticks.length + " cards · " + ticks.filter((b) => b.checked).length + " ticked" : "draft";
+    const t = shortlistTicks();
+    return t.length ? t.length + " rows · " + t.filter((b) => b.checked).length + " ticked" : "draft";
   }
   const table = contactTable(blocks);
   if (!table) return "";
@@ -765,13 +765,16 @@ function screenBadge(s, blocks) {
 function draw() {
   const s = S.sessions.find((x) => x.slug === S.slug);
   if (!s) return;
-  if (!S.stage) S.stage = STAGE_ORDER.indexOf(s.status) > -1 ? s.status : "sources";
+  // `output` is step 4 pending — it is not a stage, and the screen it means is the run,
+  // where the shortlist waiting to be ticked is.
+  if (!S.stage) S.stage = (s.stages || []).includes(s.status) ? s.status
+    : s.status === "output" ? "run" : "sources";
   drawTabs();
   drawChips(s);
 
   const doc = $("#doc");
   doc.innerHTML = "";
-  const file = FILE_FOR[S.stage];
+  const file = fileFor(S.stage);
   const payload = S.files[file];
 
   if (!payload) {
@@ -804,13 +807,18 @@ function draw() {
     if (box) body.appendChild(box);
   }
 
-  // A card is a thing you can tick, so the ticks decide — not the ###. A brief has
-  // ### section headings and no ticks, and must render as the prose it is.
-  const cards = blocks.some((b) => b.type === "tick" && b.kind === "card");
+  // The shortlist is the one clickable thing on the page, and it belongs beside the
+  // results it was generated from: results.md is the record, shortlist.md is the decision.
+  if (S.stage === "run" && S.files[TICK_FILE]) body.appendChild(shortlistPanel());
+
+  // Cards are a ledger's layout, and the shape says whether it produces one. It used to be
+  // guessed from whether results.md had ticks in it, which stopped being true when the
+  // ticks moved out.
+  const cards = S.stage === "run" && formFor(s) === "ledger";
   if (S.stage === "contacts") body.appendChild(renderContacts(blocks));
   else if (S.stage === "criteria") body.appendChild(renderCriteria(blocks, formFor(s)));
   else body.appendChild(renderBlocks(blocks, {
-    file, cards, writable: file === "results.md", hideBlocked: S.stage === "sources",
+    file, cards, writable: false, hideBlocked: S.stage === "sources",
   }));
   doc.appendChild(body);
   drawGaps(blocks);
@@ -818,6 +826,17 @@ function draw() {
     if (c.querySelector(".tick input:checked")) c.classList.add("ticked");
   });
   countLine();
+}
+
+function shortlistPanel() {
+  const ticks = shortlistTicks();
+  const panel = el("section", "shortlist", ticks.length ? ticks[0].line : 1);
+  const head = el("div", "shortlist-head");
+  head.innerHTML = '<span class="title">Shortlist</span><span class="file-meta">' + esc(TICK_FILE) +
+    " · " + ticks.filter((b) => b.checked).length + " of " + ticks.length + " ticked</span>";
+  panel.appendChild(head);
+  panel.appendChild(renderBlocks(ticks, { file: TICK_FILE, cards: false, writable: true }));
+  return panel;
 }
 
 function drawTerminal() {
@@ -896,9 +915,9 @@ async function load() {
   if (!s) return;
 
   S.files = {};
-  await Promise.all(STAGE_ORDER.map(async (stage) => {
-    const f = FILE_FOR[stage];
-    if (!(f in s.files)) return;
+  const wanted = new Set((s.stages || []).map(fileFor).concat([TICK_FILE]));
+  await Promise.all([...wanted].map(async (f) => {
+    if (!(f in s.files)) return;   // the server only lists files it has and will serve
     S.files[f] = await fetch("/api/file/" + s.slug + "/" + f).then((r) => r.json());
   }));
   // listings.md is never fetched whole — 3718 rows nobody reads. Only its stat line.

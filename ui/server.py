@@ -62,6 +62,9 @@ def sessions():
             "status": meta.get("status", ""),
             "last_run": meta.get("last run", ""),
             "stages": stages_for(meta.get("shape", ""), meta.get("status", "")),
+            # `form` is the shape's, not the session's: ledger or brief is decided when the
+            # shape is written, and the page used to infer it from which files existed.
+            "form": shape_meta(meta.get("shape", "")).get("form", ""),
             "next": meta.get("_next", ""),
             "files": files,
         })
@@ -89,6 +92,13 @@ def frontmatter(path):
     return meta
 
 
+def shape_meta(shape):
+    """The frontmatter of examples/<shape>.md — the shape's own account of itself."""
+    if not SLUG.match(shape or ""):
+        return {}
+    return frontmatter(EXAMPLES / (shape + ".md"))
+
+
 def fillers_for(shape):
     """The `fillers:` menu from examples/<shape>.md — or None when there is none to read.
 
@@ -97,9 +107,7 @@ def fillers_for(shape):
     is a licence to guess a step 4 from the shape's name — that would be the UI knowing
     something the files do not.
     """
-    if not SLUG.match(shape or ""):
-        return None
-    raw = frontmatter(EXAMPLES / (shape + ".md")).get("fillers")
+    raw = shape_meta(shape).get("fillers")
     if raw is None:
         return None
     return [x.strip() for x in raw.strip("[]").split(",") if x.strip()]

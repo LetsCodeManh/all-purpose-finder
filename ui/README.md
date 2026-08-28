@@ -18,20 +18,26 @@ dashboard and terminal: the dashboard listens to `sessions/`, not to terminal ou
 
 ## What it does
 
-Renders the session files and lets you tick a card. That is all of v1.
+Renders the session files and lets you tick a shortlist row. That is all of v1.
 
 Anything you cannot click, you say in the terminal — *"drop NoFluffJobs"* — and the left
 pane updates as the agent writes the file.
 
 - **Session switcher** — `ls sessions/` minus `_template`, available from the header or
-  with `⌘K`. The active shape and output form remain visible beside it.
-- **Stage track** — the four steps, minus any the session declares it does not have.
-  `✓` has output on disk · `●` where `status` says you are · `○` nothing written yet ·
-  `⊘` not for this shape (only when `contacts: n/a — <reason>` is in the frontmatter).
+  with `⌘K`. The active shape and its output form remain visible beside it; the form is
+  the `form:` in `examples/<shape>.md`, never a guess from which files exist.
+- **Stage track** — `sources · criteria · run`, then one stage per entry in that shape's
+  `fillers:`. A shape with `fillers: []` ends at the run and grows no fourth stage; a
+  filler this page has never heard of still gets a stage, because filler names are an
+  open set. `✓` has output on disk · `●` where `status` says you are · `○` nothing
+  written yet.
 - **Source gaps** — blocked rows stay visible in a dedicated rail on the sources view;
   every other view gives the document the full width.
-- **Ticking** writes `- [ ]` → `- [x]` on one line of `results.md`. Same edit you would
-  make by hand in Obsidian or VS Code, where these checkboxes are also clickable.
+- **Ticking** writes `- [ ]` → `- [x]` on one line of `shortlist.md`, and that is the
+  only file the server will write. Same edit you would make by hand in Obsidian or VS
+  Code, where these checkboxes are also clickable. `results.md` renders read-only and
+  offers no checkbox at all: the ticks left it, and a dead checkbox on screen is worse
+  than none.
 - **Live reload** — SSE. Edit a file in the terminal, the pane follows.
 - **Terminal drawer** — optional and detached at the bottom. Nothing in the dashboard
   approves a gate: each stage says what it is waiting for, and you confirm it in the
@@ -42,6 +48,8 @@ is, and that is what the box at the top of the run screen shows.
 
 ## Rules this code is built against
 
+- **The UI is optional, permanently.** Deleting `ui/` changes nothing about how the
+  repo works — no workflow, no rule and no session file may ever come to depend on it.
 - **Every UI action is a file edit a human could type by hand.** No UI-only gesture.
 - **No UI-only state.** No settings, no layout, no preferences stored beside a session.
   If the UI knew something the files did not, the terminal user would be running blind.
