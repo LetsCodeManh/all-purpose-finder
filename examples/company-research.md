@@ -1,3 +1,10 @@
+---
+shape: company-research
+form: brief
+cardinality: one
+fillers: []
+---
+
 # example — company-research
 
 One shape, walked end to end. Illustration, not procedure.

@@ -1,3 +1,10 @@
+---
+shape: <shape>
+form: ledger | brief
+cardinality: one | many
+fillers: [<filler>, ...]        # [] when there is nothing to make from the result
+---
+
 # example — <shape>
 
 Skeleton for a new shape. Copy it, fill each section **as the session passes

@@ -8,10 +8,10 @@ In: ticked rows in `shortlist.md` — rows marked `- [x]`. Out: `sessions/<slug>
 
 Worked example: `examples/<shape>.md` → *04 — contacts*, for the shape named in this session's `shape:` field. No example yet for this shape? Run the step from here anyway, say so, and write that section afterwards from what happened.
 
-Some shapes have no one to contact — a price hunt ends at the result. Then this
-step is one line: "nothing to look up here", `MEMORY.md` updated with
-`contacts: n/a — <reason>`, done. Saying it in the terminal alone loses it; the key
-keeps it on disk.
+Some shapes have no one to contact — a price hunt ends at the result. The shape says
+so already: `fillers: []` in `examples/<shape>.md`. Then this step is one line,
+"nothing to look up here", `MEMORY.md` left at `status: run` with `next:` pointing at
+the rerun, done. Say it out loud; the reason is on disk in the shape, not copied here.
 
 ---
 

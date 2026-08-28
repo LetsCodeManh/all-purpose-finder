@@ -60,13 +60,12 @@ stored source and criteria state disagree with the result.
 
 **One skill, not six.** A skill is a shortcut, not a capability. Only `session` is triggered by a human; the other four steps are walked by you, driven by `status`. Do not turn a workflow into a skill — that is five files only ever called by another file.
 
-**Contacts is optional, and the shape decides.** A topic with nobody to look up ends at `run`: say the result is final, leave `status: run`, and point `next:` at the rerun. Skipping the step out loud is correct; quietly inventing someone to contact is not.
+**Contacts is optional, and the shape decides — in `examples/<shape>.md` → `fillers:`.** A shape with `fillers: []` has nobody to look up and nothing else to make: the session ends at `run`, so say the result is final, leave `status: run`, and point `next:` at the rerun. Skipping the step out loud is correct; quietly inventing someone to contact is not.
 
-Said out loud is said in the terminal, and the terminal is gone tomorrow. Put it on
-disk too: the optional `MEMORY.md` key `contacts: n/a — <reason>` records that this
-session ends at `run` and why. Present means the step is closed by decision; absent
-means it is still ahead or already done. Never write it to skip a lookup the shape
-does have.
+That fact belongs to the shape, not to the session. It is on disk once, in the
+shape's frontmatter, and every session of that shape reads it there — never copied
+into a session's `MEMORY.md`. A shape whose `fillers:` is not empty does have the
+step; do not skip it for one session because this run looks thin.
 
 ---
 
@@ -77,7 +76,7 @@ does have.
 Three exceptions, all public and topic-neutral:
 
 - `sessions/_template/` — the **skeleton** of a session: empty files, no data. Not a session — never a slug, never listed as one. Copy its contents after GATE 2, as `workflows/01-sources.md` specifies.
-- `examples/<shape>.md` — one worked walkthrough per **shape**, keyed by workflow step. Illustration only, never procedure. No URLs and no vendor names, so the repo stays standalone. A new shape is a new file here, not an edit to a workflow. Skeleton: `examples/_template.md`.
+- `examples/<shape>.md` — one worked walkthrough per **shape**, keyed by workflow step. **The frontmatter is procedure and is read as such; the body below it is illustration only.** So the three fields are written from what the shape does, and the prose never has to be parsed. No URLs and no vendor names, so the repo stays standalone. A new shape is a new file here, not an edit to a workflow. Skeleton: `examples/_template.md`.
 - `tools/session_audit.py` — a read-only structural validator. It may count,
   compare dates, and check that result-link domains appear in `sources.md`. It
   never fetches, filters, scores, or knows a topic.
@@ -173,7 +172,7 @@ how, and why unticking is forbidden, is written where the file is specified:
 shortlist, no tick line, and its GATE 4 asks the human to review the result rather than
 to tick it. There is nothing to carry forward and nothing to count, so the empty-gate
 rule never fires there — it fires on shapes that ask for a decision and get none. Such
-a shape says so on disk with `contacts: n/a — <reason>`.
+a shape says so on disk with `fillers: []` in `examples/<shape>.md`.
 
 A skipped step is visible. A gate written up as satisfied is not, which is why an
 empty one stops.
@@ -194,7 +193,7 @@ empty one stops.
 
 | file | holds |
 |------|-------|
-| `MEMORY.md` | status + next step, plus optional `contacts: n/a — <reason>`. **Pointer only — no data** |
+| `MEMORY.md` | status + next step. **Pointer only — no data** |
 | `sources.md` | one table, `type` is a column |
 | `criteria.md` | the approved checklist |
 | `results.md` | one file, diffed. Not per-site files. Never ticked, never edited by a later step |
@@ -249,12 +248,38 @@ afterwards from what happened — started from `examples/_template.md`, never
 guessed up front. Never postpone a step waiting for an example, and never bend a
 topic toward a shape that has one.
 
-Two result forms:
+### The frontmatter — three fields, and what each one decides
 
-| form | what it is |
-|------|-----------|
-| `ledger` | scored rows, cards, diffed each run — many candidates, accept or reject |
-| `brief` | prose sections, every claim attributed — one subject, and the question is what is true about it |
+Every `examples/<shape>.md` opens with them. They are the machine half of a shape;
+the body below is the agent half, and neither replaces the other — a tender's
+closing-date trap and a classification-code trap are not derivable from three enum
+values, and `tenders` and `grants` carry identical fields with different traps.
+
+```yaml
+---
+shape: courses
+form: ledger        # ledger | brief
+cardinality: many   # one | many
+fillers: [apply-links]
+---
+```
+
+| field | values | decides |
+|-------|--------|---------|
+| `form` | `ledger` · `brief` | **how the result reads.** `ledger` is scored rows and cards; `brief` is prose sections, every claim attributed |
+| `cardinality` | `one` · `many` | **whether pre-filter, diff and score apply at all.** `many` is candidates you accept or reject, so all three run. `one` is a single subject the sources are all about, so there is nothing to narrow, nothing to compare against last week, and nothing to rank |
+| `fillers` | a list, possibly empty | **what can be made from the result at step 4.** `[]` means the session ends at `run` |
+
+**Defaults: `one → brief`, `many → ledger`.** A shape that deviates says why in its
+body — the field still states what it is, and the prose carries the reason.
+
+`cardinality` is the field that was missing longest, and its absence cost the most:
+`company-research` skips the pre-filter, the diff and contacts, and not one of those
+skips is because it is a brief. All three are because it has **one subject**. While
+the axis had no name, every skip got patched separately.
+
+`expiry` — whether `gone` is news, and whether a closing date sorts the file — stays
+**prose in the body**. It is not a frontmatter field.
 
 `examples/` is **public**. Placeholders only: no URLs, no vendor names, no real
 criteria, no real results, nothing about who the human is or what they are

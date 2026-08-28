@@ -1,3 +1,10 @@
+---
+shape: tenders
+form: ledger
+cardinality: many
+fillers: [contacts]
+---
+
 # example — tenders
 
 One shape, walked end to end. Illustration, not procedure: the procedure is in

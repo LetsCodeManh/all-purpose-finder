@@ -1,3 +1,10 @@
+---
+shape: jobs
+form: ledger
+cardinality: many
+fillers: [contacts]
+---
+
 # example — jobs
 
 One shape, walked end to end. Illustration, not procedure: the procedure is in

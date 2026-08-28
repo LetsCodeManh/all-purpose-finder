@@ -68,7 +68,10 @@ A `--refetch` on the **same day** does not rotate. Monday is still in `listings.
 
 ## 3. Result form — ledger or brief
 
-Two forms, and the shape decides which. Read `examples/<shape>.md` before writing anything.
+Two forms, and the shape decides which: `form:` in the frontmatter of
+`examples/<shape>.md`. Do not work it out from what is on disk. Read the body too
+before writing anything — and `cardinality: one` is what makes sections 4 and 5
+below not apply at all.
 
 | form | what it is | when |
 |------|-----------|------|

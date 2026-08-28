@@ -1,3 +1,10 @@
+---
+shape: prices
+form: ledger
+cardinality: many
+fillers: []
+---
+
 # example — prices
 
 One shape, walked end to end. Illustration, not procedure.
@@ -195,12 +202,10 @@ Skipped. Nothing to look up.
 ```
 This shape has no contacts step — the result is the end of it.
 MEMORY.md → status: run, next: rerun when the new week's flyers land.
-MEMORY.md → contacts: n/a — a price hunt has nobody to look up.
 ```
 
-That key is the whole reason this is not a hole: said in the terminal it is gone
-tomorrow, written to `MEMORY.md` it says next week why this session stops at `run`.
-No shortlist and no ticks anywhere in this shape, so a run that reports zero ticked
+This is not a hole: `fillers: []` in the frontmatter above says why this shape stops
+at `run`, once, for every session of it. No shortlist and no ticks anywhere in this shape, so a run that reports zero ticked
 rows here is correct rather than an empty gate.
 
 Note the loop: this shape does not finish, it cycles. `next:` points back at the
