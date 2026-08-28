@@ -200,7 +200,7 @@ failed this run:       <name> (<error>)
 not checked since:     <name> — <date>
 ```
 
-Then update `MEMORY.md` → `last run: <date>`. If the shape has anything to make from the result — `fillers:` is not empty — `status:` stays `run` until the human picks one at GATE 4, and `next: tick the rows worth chasing`. If `fillers:` is empty, `status: run` and `next:` points at the rerun.
+Then update `MEMORY.md` → `last run: <date>`. If the shape has anything to make from the result — `fillers:` is not empty — `status: output`, `next: tick the rows worth chasing`. `output` means the results exist and the human has not picked what to make from them yet, so reopening the session offers the menu again instead of re-running step 3. If `fillers:` is empty, `status: run` and `next:` points at the rerun: that shape genuinely ends here.
 
 Before handoff, run the topic-neutral consistency check:
 

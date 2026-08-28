@@ -1,7 +1,7 @@
 ---
 slug: <slug>
 shape: <jobs | prices | tenders | company-research | the new one>
-status: sources
+status: sources          # sources | criteria | run | output | <the filler that ran>
 last run: —
 ---
 

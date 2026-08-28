@@ -12,7 +12,13 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 
-VALID_STATUSES = {"sources", "criteria", "run", "contacts"}
+# Status is `sources` · `criteria` · `run` · `output`, then the name of whatever
+# filler ran. Filler names are an open set by design (AGENTS.md -> Step order), and
+# one may run before `fillers/<name>.md` exists, so a post-run status is checked for
+# shape rather than against a list.
+PRE_RUN_STATUSES = {"sources", "criteria"}
+FIXED_STATUSES = PRE_RUN_STATUSES | {"run", "output"}
+STATUS_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 VALID_SOURCE_STATUSES = {"ok", "blocked", "error", "untested"}
 VALID_METHODS = {"feed", "page", "blocked"}
 VALID_MANUAL = {"checked", "partial", "unavailable", "—", "-", ""}
@@ -20,13 +26,13 @@ DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 LINK_RE = re.compile(r"\[[^\]]+\]\((https?://[^)]+)\)")
 
 # ponytail: filed, not built — tick counting.
-# A tick is `^- \[[ x]\] ` at the start of a line in results.md (AGENTS.md -> Ticks),
+# A tick is `^- \[[ x]\] ` at the start of a line in shortlist.md (AGENTS.md -> Ticks),
 # so ticked-vs-total is a count, and anything countable belongs in a script rather
 # than in a claim an agent makes about a file. This is the deterministic check on the
 # exact failure that produced the rule: a contacts run reporting "all 38 orgs ticked"
-# against a results.md holding zero `- [x]`.
-# Shape when built: count ticked and total rows per section, print them in the report,
-# and error when status is `contacts` and results.md holds no tick at all.
+# against a shortlist holding zero `- [x]`.
+# Shape when built: count ticked and total rows, print them in the report, and error
+# when a filler has run and shortlist.md holds no tick at all.
 
 
 @dataclass
@@ -207,8 +213,9 @@ def audit_session(repo: Path, slug: str) -> Audit:
     if memory.get("slug") != slug:
         audit.error(f"MEMORY.md slug is {memory.get('slug')!r}, expected {slug!r}")
     status = memory.get("status", "")
-    if status not in VALID_STATUSES:
+    if not STATUS_RE.fullmatch(status):
         audit.error(f"unknown MEMORY.md status {status!r}")
+    post_run = status not in FIXED_STATUSES or status == "output"
     if not memory.get("shape"):
         audit.error("MEMORY.md has no shape")
     last_run = memory.get("last run", "")
@@ -224,7 +231,7 @@ def audit_session(repo: Path, slug: str) -> Audit:
         if not updated or not DATE_RE.fullmatch(updated.group(1)):
             audit.error("sources.md has no valid Last updated date")
 
-    criteria_required = status in {"run", "contacts"}
+    criteria_required = status not in PRE_RUN_STATUSES
     criteria_text = read_text(folder / "criteria.md", audit, required=criteria_required)
     if criteria_text:
         approved = re.search(r"^Approved:\s*(\S+)", criteria_text, re.MULTILINE)
@@ -233,7 +240,7 @@ def audit_session(repo: Path, slug: str) -> Audit:
         if not re.search(r"^Last amended:", criteria_text, re.MULTILINE):
             audit.warn("criteria.md predates the Last amended field")
 
-    results_required = DATE_RE.fullmatch(last_run or "") is not None or status == "contacts"
+    results_required = DATE_RE.fullmatch(last_run or "") is not None or post_run
     results_text = read_text(folder / "results.md", audit, required=results_required)
     if results_text:
         first_lines = "\n".join(results_text.splitlines()[:12])
@@ -257,8 +264,10 @@ def audit_session(repo: Path, slug: str) -> Audit:
             )
         audit_result_links(results_text, source_hosts, audit)
 
-    if status == "contacts" and not (folder / "contacts.md").is_file():
-        audit.notes.append("contacts step is pending; contacts.md does not exist yet")
+    if status == "output":
+        audit.notes.append("step 4 is pending; the human has not picked what to make yet")
+    elif status == "contacts" and not (folder / "contacts.md").is_file():
+        audit.notes.append("contacts filler is pending; contacts.md does not exist yet")
 
     return audit
 
@@ -307,6 +316,29 @@ def selfcheck() -> int:
             print_audit(good)
             print("selfcheck: expected valid fixture to pass", file=sys.stderr)
             return 1
+
+        memory_path = session / "MEMORY.md"
+        original_memory = memory_path.read_text(encoding="utf-8")
+        for open_status in ("output", "resume"):
+            memory_path.write_text(
+                original_memory.replace("status: run", f"status: {open_status}"),
+                encoding="utf-8",
+            )
+            named = audit_session(repo, "demo")
+            if named.errors:
+                print_audit(named)
+                print(f"selfcheck: expected status {open_status!r} to pass", file=sys.stderr)
+                return 1
+        memory_path.write_text(
+            original_memory.replace("status: run", "status: Not A Status"),
+            encoding="utf-8",
+        )
+        bad_status = audit_session(repo, "demo")
+        if not any("unknown MEMORY.md status" in error for error in bad_status.errors):
+            print_audit(bad_status)
+            print("selfcheck: expected a malformed status to fail", file=sys.stderr)
+            return 1
+        memory_path.write_text(original_memory, encoding="utf-8")
 
         original_results = (session / "results.md").read_text(encoding="utf-8")
         (session / "results.md").write_text(

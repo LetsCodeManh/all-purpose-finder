@@ -29,9 +29,9 @@ resolve it as "then all of them": say what you found and ask. Ticks carried forw
 from earlier runs are not an empty gate. Full rule: `AGENTS.md` → **Ticks**.
 
 Some shapes have nothing to make — a price hunt ends at the result. The shape says
-so already: `fillers: []` in `examples/<shape>.md`. Then this step is one line,
-"nothing to make from this one", `MEMORY.md` left at `status: run` with `next:`
-pointing at the rerun, done.
+so already: `fillers: []` in `examples/<shape>.md`, and such a session never reaches
+`status: output` at all. Then this step is one line, "nothing to make from this one",
+`MEMORY.md` left at `status: run` with `next:` pointing at the rerun, done.
 
 ---
 
@@ -67,5 +67,6 @@ helpful — that is the whole failure mode this repo exists to prevent.
   `fillers/<name>.md` — the repo-change gate in `AGENTS.md` → **Where you may
   write**. Never write the file first and ask after.
 
-Then `MEMORY.md` → `status:` the filler you ran, and `next:` what the human does
-with what it produced.
+Then `MEMORY.md` → `status:` the name of the filler you ran, and `next:` what the
+human does with what it produced. That status still routes back here, which is
+correct: the same shortlist can have something else made from it tomorrow.

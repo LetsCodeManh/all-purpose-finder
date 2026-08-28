@@ -102,12 +102,13 @@ The signals that a topic is a new shape:
 2. Print the status line and the `next:` line back to the human — one short block, so they know where they are before anything moves.
 3. Route on `status`:
 
-| status | run |
-|--------|-----|
-| `sources` | `workflows/01-sources.md` |
-| `criteria` | `workflows/02-criteria.md` |
-| `run` | `workflows/03-run.md` |
-| a filler name, e.g. `contacts` | `workflows/04-output.md`, then `fillers/<name>.md` |
+| status | means | run |
+|--------|-------|-----|
+| `sources` | sources not approved yet | `workflows/01-sources.md` |
+| `criteria` | sources approved, criteria not | `workflows/02-criteria.md` |
+| `run` | ready to run, or a shape with nothing to make has finished one | `workflows/03-run.md` |
+| `output` | results exist, nothing picked from them yet | `workflows/04-output.md` |
+| a filler name, e.g. `contacts` | that filler has run; the shortlist is still there | `workflows/04-output.md`, then `fillers/<name>.md` |
 
 Never skip forward because a later step looks more useful. If the human explicitly asks for a different step, say which step the session is on, then do what they asked.
 

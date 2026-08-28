@@ -39,12 +39,18 @@ resume, a proposal, links to apply with — and the procedure for each one is a
 
 The current step is the `status` field in `sessions/<slug>/MEMORY.md`. Read it, do that step, update it. Never run a later step because it seems more useful.
 
-| status | you run |
-|--------|---------|
-| `sources` | `workflows/01-sources.md` |
-| `criteria` | `workflows/02-criteria.md` |
-| `run` | `workflows/03-run.md` |
-| a filler name, e.g. `contacts` | `workflows/04-output.md`, then `fillers/<name>.md` |
+| status | means | you run |
+|--------|-------|---------|
+| `sources` | sources not approved yet | `workflows/01-sources.md` |
+| `criteria` | sources approved, criteria not | `workflows/02-criteria.md` |
+| `run` | criteria approved, or this shape has nothing to make and the last run is done | `workflows/03-run.md` |
+| `output` | results exist, the human has not picked what to make from them | `workflows/04-output.md` |
+| a filler name, e.g. `contacts` | that filler has run; the same shortlist is still there to make something else from | `workflows/04-output.md`, then `fillers/<name>.md` |
+
+`output` is a status, not a gate — there are four gates and GATE 4 is the one it
+sits at. A finished run never leaves `status: run` behind on a shape that has
+something to make: that reads as "step 3 is next" and re-runs a run that already
+happened.
 
 Entry procedure for every session: `workflows/00-session.md`.
 
