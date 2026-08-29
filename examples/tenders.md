@@ -46,9 +46,8 @@ Topic: public contracts for <kind of work> published by <authority level> in
        <region>, above <size> or any size.
 Reading this as many candidates to pick from.
 
-Same five stops as last time: this plan, sources, criteria, detailed results,
-then the shortlist and your call on what to make. Approving this approves the
-plan only.
+Same four stops as last time: this plan, sources, criteria, then the shortlist
+and your call on what to make. Approving this approves the plan only.
 
 Good? Rename it if the slug is wrong.
 ```

@@ -102,5 +102,5 @@ block, auto-rerun, locking, a framework.
 
 ```
 python3 ui/test_server.py    # both write paths, incl. refusing a moved line
-node ui/test_app.js          # parser identity markers and five-gate stage states
+node ui/test_app.js          # parser identity markers and four-gate stage states
 ```

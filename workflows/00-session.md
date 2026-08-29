@@ -70,7 +70,7 @@ GATE 1* below — before searching for sources.
 
 Say what the whole session is going to do before the human agrees to start it.
 Not to be thorough: a human who can see where you stop can tell whether you
-stopped there. This is the same five stops the rest of this repo is built on,
+stopped there. This is the same four stops the rest of this repo is built on,
 said once, in advance, out loud.
 
 Three rules, and they are what make it safe to print:
@@ -112,7 +112,7 @@ One question first, because it changes how I work:
 is this one thing you want to know about, or many candidates you want to
 pick from? I have read it as <many candidates / one subject>.
 
-Here is the whole thing before we start. I stop and wait for you five times:
+Here is the whole thing before we start. I stop and wait for you four times:
 
   now          you tell me the name above is right and I have understood the topic
   next         I go looking for places worth searching and bring you the list.
@@ -120,7 +120,6 @@ Here is the whole thing before we start. I stop and wait for you five times:
                real until you have
   after that   I write down what counts as a match, in your own words, and read
                it back. You approve it or change it
-  results      you read the detailed result and tell me what is wrong or missing
   at the end   you use the compact shortlist to pick what is worth acting on,
                then say what — if anything — to make from it
 
@@ -153,16 +152,15 @@ Slug:  <proposed-slug>
 Topic: <two lines, in your own words, of what you understood>
 Reading this as <many candidates to pick from / one subject to read up on>.
 
-Same five stops as last time: this plan, sources, criteria, detailed results,
-then your call from the shortlist or whole artifact. Approving this approves
-the plan only.
+Same four stops as last time: this plan, sources, criteria, then your call from
+the shortlist or whole artifact. Approving this approves the plan only.
 
 Good? Rename it if the slug is wrong.
 ```
 
 **Printing a plan does not make this two gates.** It is one stop — GATE 1, the
 slug and the shape — and the plan is what you print while standing at it. The
-gates are five.
+gates are four.
 
 ### When it is a new shape
 

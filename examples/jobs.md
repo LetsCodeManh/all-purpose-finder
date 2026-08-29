@@ -19,7 +19,7 @@ standalone — no live links to rot, and **no real session's content**. Read
 - **Recurs?** Yes. New-since-last-run is the point.
 - **Selection:** rows — `shortlist.py` writes the compact tick list beside the
   detailed result.
-- **Fillers?** `contacts` — someone to talk to per organisation.
+- **Next steps?** `contacts` — someone to talk to per organisation.
 
 ---
 
@@ -34,9 +34,8 @@ Slug:  <topic>-<region>
 Topic: <role family> roles in <region>, <work-mode preference>, <seniority band>.
 Reading this as many candidates to pick from.
 
-Same five stops as last time: this plan, sources, criteria, detailed results,
-then the shortlist and your call on what to make. Approving this approves the
-plan only.
+Same four stops as last time: this plan, sources, criteria, then the shortlist
+and your call on what to make. Approving this approves the plan only.
 
 Good? Rename it if the slug is wrong.
 ```

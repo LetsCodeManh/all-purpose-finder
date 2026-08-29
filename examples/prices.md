@@ -33,9 +33,8 @@ Slug:  <category>-deals-<city>
 Topic: weekly discounts on <category> at stores in and around <city>.
 Reading this as many candidates to pick from.
 
-Same five stops as last time: this plan, sources, criteria, detailed results,
-then your call on the approved price result as a whole. Approving this approves
-the plan only.
+Same four stops as last time: this plan, sources, criteria, then your call on the
+approved price result as a whole. Approving this approves the plan only.
 
 Good? Rename it if the slug is wrong.
 ```
