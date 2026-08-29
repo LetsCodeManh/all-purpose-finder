@@ -3,7 +3,7 @@
 const assert = require("assert");
 const { inline, parse, stagesFor, shortlistMatches, nextStepIdeas, resultCardCount,
   activeResultRowCount, resultBadge, compactResultRow, rerunInProgress,
-  runFreshness } = require("./app.js");
+  runFreshness, organisationOf, organisationCount, selectionLabel } = require("./app.js");
 
 function session(status, stages = ["sources", "criteria", "run"], files = {}) {
   return { status, stages, files, form: "ledger", selection: "rows" };
@@ -32,13 +32,29 @@ function testGateFourStates() {
   assert.strictEqual(done[3].mark, "✓");
 }
 
-function testChosenOutputReplacesSlot() {
+function testChosenOutputSitsBesideTheSlot() {
+  // The gate is not consumed by the thing made at it: the same result can have
+  // something else made from it tomorrow, so Next Steps stays on the track.
   const track = stagesFor(session("letter", ["sources", "criteria", "run", "contacts", "letter"], {
     "results.md": 1,
     "letter.md": 1,
   }));
-  assert.strictEqual(track[3].stage, "letter");
-  assert.strictEqual(track[3].mark, "●");
+  assert.strictEqual(track.length, 5);
+  assert.strictEqual(track[3].stage, null, "the Next Steps slot survives");
+  assert.strictEqual(track[3].mark, "✓", "answered, not pending");
+  assert.strictEqual(track[4].stage, "letter");
+  assert.strictEqual(track[4].mark, "●");
+}
+
+function testSelectionLabelCountsOrganisations() {
+  assert.strictEqual(organisationOf("- [x] Example Co — Engineer · 2/2"), "Example Co");
+  assert.strictEqual(organisationOf("Example Co — Engineer · 2/2"), "Example Co");
+  // Two roles at one employer are one contact lookup, not two.
+  assert.strictEqual(organisationCount(["A Co — One", "A Co — Two", "B Co — Three"]), 2);
+  assert.strictEqual(selectionLabel(3, ["A Co — One", "A Co — Two", "B Co — Three"]),
+    "3 selected · 2 organisations");
+  assert.strictEqual(selectionLabel(1, ["A Co — One"]), "1 selected · 1 organisation");
+  assert.strictEqual(selectionLabel(0, []), "0 selected · 0 organisations");
 }
 
 function testShortlistFiltering() {
@@ -83,7 +99,8 @@ for (const [name, fn] of Object.entries({
   testIdentityMarkersStayHidden,
   testEveryShapeGetsGateFour,
   testGateFourStates,
-  testChosenOutputReplacesSlot,
+  testChosenOutputSitsBesideTheSlot,
+  testSelectionLabelCountsOrganisations,
   testShortlistFiltering,
   testNextStepIdeasAreExamplesNotShapeMenu,
   testResultsSeparatePostingsFromCards,

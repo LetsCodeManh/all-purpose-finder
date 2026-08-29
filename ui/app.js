@@ -939,16 +939,19 @@ function stagesFor(s) {
     const active = name === s.status;
     return { name, stage: name, mark: active ? "●" : present ? "✓" : "○", present };
   });
+  // The slot is the gate, not the thing made at it. It used to be *replaced* by the
+  // output that ran, which left no way back to a shortlist AGENTS.md says is still
+  // there to make something else from. Next Steps stays; what was made sits beside it.
   const chosen = chosenOutput(s);
+  const answered = Boolean(chosen) || s.status === "done";
+  track.push({
+    name: null, stage: null,
+    mark: s.status === "next-steps" ? "●" : answered ? "✓" : "○",
+    present: answered, locked: rerunInProgress(s),
+  });
   if (chosen) {
     const present = has(fileFor(chosen));
     track.push({ name: chosen, stage: chosen, mark: s.status === chosen ? "●" : present ? "✓" : "○", present });
-  } else {
-    track.push({
-      name: null, stage: null,
-      mark: s.status === "next-steps" ? "●" : s.status === "done" ? "✓" : "○",
-      present: s.status === "done", locked: rerunInProgress(s),
-    });
   }
   return track;
 }
@@ -987,6 +990,8 @@ function stageLabel(s, stage) {
 function stageStatus(s, stage) {
   if (!stage) {
     if (s.status === "done") return "nothing else chosen";
+    const made = chosenOutput(s);
+    if (made) return "made " + made + " · can make another";
     return "choose what to do";
   }
   if (stage === "sources") {
@@ -1025,6 +1030,22 @@ function nextStepIdeas(selection) {
     : ["Create a summary", "Draft a proposal", "Prepare a briefing", "Extract action items"];
 }
 
+// `- [x] <issuer> — <item> · <score>`: the issuer is everything before the first em
+// dash. Contact lookup runs once per organisation (AGENTS.md -> Cost), so the selected
+// organisation count — not the row count — is what a row-based next step costs.
+function organisationOf(label) {
+  return String(label).replace(/^-\s*\[[ x]\]\s*/, "").split(" — ")[0].trim();
+}
+
+function organisationCount(labels) {
+  return new Set(labels.map(organisationOf).filter(Boolean)).size;
+}
+
+function selectionLabel(count, labels) {
+  const orgs = organisationCount(labels);
+  return count + " selected · " + orgs + " organisation" + (orgs === 1 ? "" : "s");
+}
+
 function updateGateFiveRows() {
   const rows = [...document.querySelectorAll("#gate5-list .tick")];
   if (!rows.length) return;
@@ -1034,16 +1055,17 @@ function updateGateFiveRows() {
   const mode = modeButton ? modeButton.dataset.mode : "all";
   let visible = 0;
   let selected = 0;
+  const chosenLabels = [];
   rows.forEach((row) => {
     const input = row.querySelector("input");
     const checked = !!(input && input.checked);
-    if (checked) selected++;
+    if (checked) { selected++; chosenLabels.push(row.textContent || ""); }
     const show = shortlistMatches(row.textContent || "", checked, query, mode);
     row.hidden = !show;
     if (show) visible++;
   });
   const selectedNode = $("#gate5-selected");
-  if (selectedNode) selectedNode.textContent = selected + " selected";
+  if (selectedNode) selectedNode.textContent = selectionLabel(selected, chosenLabels);
   const visibleNode = $("#gate5-visible");
   if (visibleNode) visibleNode.textContent = visible + " shown";
 }
@@ -1350,7 +1372,6 @@ function draw() {
   const s = S.sessions.find((x) => x.slug === S.slug);
   if (!s) return;
   const chosen = chosenOutput(s);
-  if (S.stage === SLOT_STAGE && chosen) S.stage = chosen;
   if (S.stage === SLOT_STAGE && rerunInProgress(s)) S.stage = "run";
   // `next-steps` and `done` belong to the GATE 4 slot; neither is an output filename.
   if (!S.stage) S.stage = (s.stages || []).includes(s.status) ? s.status
@@ -1384,7 +1405,7 @@ function draw() {
     const body = el("div", "docbody gate5-body");
     const content = el("section", "gate5-guide");
     const isRows = selectionFor(s) === "rows";
-    const selected = ticks.filter((b) => b.checked).length;
+    const selectedTicks = ticks.filter((b) => b.checked);
     const suggestions = nextStepIdeas(selectionFor(s))
       .map((name) => '<span class="gate5-idea">' + esc(name) + '</span>').join("");
     content.innerHTML = '<div class="gate5-intro"><span class="gate5-kicker">Decision, not production</span>' +
@@ -1392,7 +1413,9 @@ function draw() {
         '<p>The result is ready. Choose the input, then decide what you want to do next—or keep the result as it is.</p></div>' +
         '<div class="gate5-steps"><div class="gate5-step"><span class="gate5-number">1</span>' +
         '<div><strong>' + (isRows ? 'Select candidates' : 'Use the whole result') + '</strong>' +
-        '<span id="gate5-selected">' + (isRows ? selected + ' selected' : 'results.md selected') + '</span></div></div>' +
+        '<span id="gate5-selected">' + (isRows
+          ? esc(selectionLabel(selectedTicks.length, selectedTicks.map((b) => b.label)))
+          : 'results.md selected') + '</span></div></div>' +
         '<div class="gate5-step"><span class="gate5-number">2</span><div><strong>Choose a next step</strong>' +
         '<span class="gate5-ideas">' + suggestions + '</span></div></div></div>' +
         '<div class="gate5-terminal-note">These are examples, not a fixed menu. In the terminal: choose one, name something else, or say <strong>nothing</strong>.</div>';
@@ -1626,5 +1649,6 @@ if (typeof document !== "undefined") {
 if (typeof module !== "undefined") {
   module.exports = { inline, parse, stagesFor, selectionFor, shortlistMatches, nextStepIdeas,
     resultCardCount, activeResultCardCount, resultRunCounts, activeResultRowCount,
-    resultBadge, compactResultRow, rerunInProgress, runFreshness, SLOT_STAGE };
+    resultBadge, compactResultRow, rerunInProgress, runFreshness, SLOT_STAGE,
+    organisationOf, organisationCount, selectionLabel };
 }
