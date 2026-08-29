@@ -1,4 +1,4 @@
-# filler — contacts
+# next step — contacts
 
 Find a human to talk to, for the rows the human ticked. Nothing else.
 
@@ -10,11 +10,15 @@ Out: `sessions/<slug>/contacts.md`.
 Two, and both **refuse and point**. Never continue on a guess, and never fill the
 gap yourself.
 
+The shape must use `selection: rows`. An artifact-wide result has no organisations
+chosen for contact lookup; if the human wants contacts from one, row selection is a
+different output that must be named first.
+
 No results yet:
 
 ```
 No results yet — this session is at `criteria`.
-Fillers work on results. Continue the session first:  /session <slug>
+Next steps work on results. Continue the session first:  /session <slug>
 ```
 
 Results, but nothing ticked:
@@ -75,8 +79,8 @@ Report per ticked organisation: found / not found / already cached. Then:
 MEMORY.md → next: <what the human does with these>
 ```
 
-**Stop at the contact.** This filler finds the human; it does not write to them.
+**Stop at the contact.** This procedure finds the human; it does not write to them.
 Drafting the message, the letter or the bid is a different thing to make, and the
-human names it — offer it back at GATE 4 if it is worth offering, and write nothing
+  human names it — offer it back at GATE 4 if it is worth offering, and write nothing
 until they answer. Producing an unasked-for draft is the same failure as looking up
 an unticked row.

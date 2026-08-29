@@ -3,6 +3,7 @@
 .codex/
 .cursor/
 CLAUDE.local.md
+backlog.md
 
 # sessions hold personal data (your hunt, a client's tenders), and sessions/tools/
 # holds the scripts. Local only until you say otherwise.

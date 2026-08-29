@@ -24,9 +24,8 @@ UI = REPO / "ui"
 PORT = int(os.environ.get("FINDER_UI_PORT", "8420"))
 TTYD_PORT = int(os.environ.get("FINDER_TTYD_PORT", "7681"))
 
-# What may be read is a shape, not a list. Filler names are an open set, so a whitelist
-# here would be a third place that has to learn every new filler name — and the two layers
-# above have already stopped doing that.
+# What may be read is a shape, not a list. Next-step artifact names are an open set, so
+# a whitelist here would have to learn every new thing a user might ask to make.
 NAME_RE = re.compile(r"^(MEMORY|[a-z0-9][a-z0-9-]*)\.md$")
 # listings.md is watched but never served whole: 3718 rows nobody reads. Its stat line goes
 # out through /api/listings instead, which reads only the file's head.
@@ -43,8 +42,8 @@ MANUAL_VALUES = {"checked", "partial", "unavailable", "\u2014"}
 SLUG = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 TICK = re.compile(r"^- \[[ x]\] ")
 
-# Three fixed steps and one open slot. What fills the slot is per-shape, so the tail of
-# the track is read from examples/<shape>.md and never hardcoded here.
+# Three fixed steps and one open Next Steps slot. If an output runs, its status is added
+# to the track without pretending the shape prescribed it.
 FIXED_STAGES = ["sources", "criteria", "run"]
 EXAMPLES = REPO / "examples"
 
@@ -57,10 +56,28 @@ def readable(name):
 def session_files(d):
     """The markdown in a session folder, by name and mtime — the page picks what it wants.
 
-    Globbed rather than listed for the same reason `readable` is a shape: a filler writes
-    `<name>.md` and the server must not need teaching that the name exists.
+    Globbed rather than listed for the same reason `readable` is a shape: a next step
+    may write `<name>.md` and the server must not need teaching that the name exists.
     """
     return {f.name: f.stat().st_mtime for f in d.glob("*.md") if NAME_RE.fullmatch(f.name)}
+
+
+def artifact_run_dates(d):
+    """Semantic dates written by the workflow, never filesystem mtimes."""
+    specs = {
+        "listings": ("listings.md", r"^# listings\s+—\s+fetched\s+(\d{4}-\d{2}-\d{2})"),
+        "results": ("results.md", r"^(?:Run|Prepared)\s+(\d{4}-\d{2}-\d{2})\b"),
+        "shortlist": ("shortlist.md", r"^Run\s+(\d{4}-\d{2}-\d{2})\b"),
+    }
+    dates = {}
+    for key, (name, pattern) in specs.items():
+        path = d / name
+        if not path.is_file():
+            dates[key] = ""
+            continue
+        match = re.search(pattern, path.read_text(encoding="utf-8", errors="replace"), re.MULTILINE)
+        dates[key] = match.group(1) if match else ""
+    return dates
 
 
 def sessions():
@@ -84,15 +101,19 @@ def sessions():
             continue
         meta = frontmatter(memory)
         files = session_files(d)
+        dates = artifact_run_dates(d)
         out.append({
             "slug": d.name,
             "shape": meta.get("shape", ""),
             "status": meta.get("status", ""),
             "last_run": meta.get("last run", ""),
+            "pending_run": meta.get("pending run", ""),
+            "run_dates": dates,
             "stages": stages_for(meta.get("shape", ""), meta.get("status", "")),
             # `form` is the shape's, not the session's: ledger or brief is decided when the
             # shape is written, and the page used to infer it from which files existed.
             "form": shape_meta(meta.get("shape", "")).get("form", ""),
+            "selection": shape_meta(meta.get("shape", "")).get("selection", ""),
             "next": meta.get("_next", ""),
             "files": files,
         })
@@ -122,36 +143,19 @@ def frontmatter(path):
 
 def shape_meta(shape):
     """The frontmatter of examples/<shape>.md — the shape's own account of itself."""
-    if not SLUG.match(shape or ""):
+    if not SLUG.fullmatch(shape or ""):
         return {}
     return frontmatter(EXAMPLES / (shape + ".md"))
 
 
-def fillers_for(shape):
-    """The `fillers:` menu from examples/<shape>.md — or None when there is none to read.
-
-    None is not []: `fillers: []` is a shape saying out loud that it ends at `run` and has
-    no step 4, while a missing file or a missing key is the UI simply not knowing. Neither
-    is a licence to guess a step 4 from the shape's name — that would be the UI knowing
-    something the files do not.
-    """
-    raw = shape_meta(shape).get("fillers")
-    if raw is None:
-        return None
-    return [x.strip() for x in raw.strip("[]").split(",") if x.strip()]
-
-
 def stages_for(shape, status):
-    """`sources · criteria · run`, then one stage per filler the shape offers.
+    """`sources · criteria · run`, then the output that actually ran, if any.
 
-    Filler names are an open set by design, and `fillers:` is a menu rather than a
-    constraint, so a session can legitimately sit at a filler this shape never listed. An
-    unrecognised status is appended instead of dropped: the track must still show where
-    you are. `output` is step 4 pending — the human has not picked yet — so it names no
-    stage of its own.
+    Output names are an open set. `output` and `done` are gate states, not artifact
+    filenames, so neither becomes a stage of its own.
     """
-    stages = FIXED_STAGES + (fillers_for(shape) or [])
-    if status and status != "output" and status not in stages:
+    stages = list(FIXED_STAGES)
+    if status and status not in {"output", "done"} and status not in stages:
         stages.append(status)
     return stages
 
@@ -169,7 +173,10 @@ def listings_stats(slug):
         head = [ln.rstrip("\n") for ln in islice(fh, 12)]
     stats = {"fetched": "", "counts": [], "line": ""}
     for ln in head:
-        if ln.startswith("Fetched:"):
+        heading = re.match(r"^# listings\s+—\s+fetched\s+(\d{4}-\d{2}-\d{2})", ln)
+        if heading:
+            stats["fetched"] = heading.group(1)
+        elif ln.startswith("Fetched:"):
             stats["fetched"] = ln[8:].strip()
         # `3718 rows · 204 kept · 414 new · 76 changed · 2836 unchanged · 392 gone`
         elif re.match(r"^\d[\d,]* rows", ln):

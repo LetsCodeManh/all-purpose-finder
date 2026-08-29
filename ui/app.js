@@ -14,15 +14,13 @@
  * enforced there, at the write, rather than by a test asserting the parser is right.
  */
 
-// The stage track is the server's: three fixed steps and then whatever the shape's
-// `fillers:` menu offers. There is deliberately no fallback list here — a default four is
-// the old hardcoding wearing a shrug, and server.py already falls back safely when it
-// cannot read a shape.
+// The stage track is the server's: three fixed steps and the output that actually ran.
+// Next Steps itself is an open slot, not a shape-owned menu.
 const FILE_FOR = { sources: "sources.md", criteria: "criteria.md", run: "results.md" };
 const SLOT_STAGE = "**slot**";
-// A filler produces <name>.md, and filler names are an open set, so this cannot be an
-// exhaustive map. A stage whose file is not there is still a stage: the chip renders and
-// the screen says the document does not exist yet.
+// A next step may produce <name>.md, and output names are an open set, so this cannot be
+// an exhaustive map. A stage whose file is not there is still a stage: the chip renders
+// and the screen says the document does not exist yet.
 const fileFor = (stage) => FILE_FOR[stage] || stage + ".md";
 // The one file the page writes. Ticks live here and nowhere else (AGENTS.md -> Ticks);
 // results.md is a step-3 artifact that no later step edits.
@@ -40,6 +38,7 @@ const safeUrl = (u) => (/^https?:\/\//i.test(u) ? u : "#");
 function inline(s) {
   const tok = [];
   const hold = (html) => "@@" + (tok.push(html) - 1) + "@@";
+  s = s.replace(/<!--.*?-->/g, "");   // machine identity markers stay hidden
   s = s.replace(/`([^`]+)`/g, (m, c) => hold("<code>" + esc(c) + "</code>"));
   s = s.replace(/\[([^\]]*)\]\(([^)\s]+)\)/g, (m, t, u) =>
     hold('<a href="' + escAttr(safeUrl(u)) + '" target="_blank" rel="noreferrer">' + esc(t) + "</a>"));
@@ -64,6 +63,8 @@ function parse(text) {
   while (i < lines.length) {
     const raw = lines[i];
     const no = i + 1;
+
+    if (/^\s*<!--.*?-->\s*$/.test(raw)) { i++; continue; }
 
     if (/^```/.test(raw)) {
       const fence = [];
@@ -409,6 +410,46 @@ function renderLedgerBlocks(blocks, ctx) {
   return frag;
 }
 
+function compactResultRow(text) {
+  const visible = text.replace(/<!--\s*identity:\s*.+?\s*-->/g, "").trim();
+  const split = visible.indexOf(" · ");
+  return split < 0 ? { label: visible, score: "" } : {
+    label: visible.slice(0, split), score: visible.slice(split + 3),
+  };
+}
+
+function renderCompactResultRows(blocks, ctx) {
+  const frag = document.createDocumentFragment();
+  blocks.forEach((block) => {
+    if (block.type !== "list") {
+      frag.appendChild(renderBlocks([block], { ...ctx, cards: false }));
+      return;
+    }
+    block.items.forEach((item) => {
+      const row = compactResultRow(item.text);
+      const card = el("section", "card compact-result-card", item.line);
+      const top = el("div", "card-top", item.line);
+      const copy = el("div", "card-title-copy", item.line);
+      const title = el("h3", null, item.line);
+      title.innerHTML = inline(row.label);
+      copy.appendChild(title);
+      const state = el("div", "card-source", item.line);
+      state.textContent = "unchanged";
+      top.append(copy, state);
+      card.appendChild(top);
+      if (row.score) {
+        const foot = el("div", "card-foot", item.line);
+        const metrics = el("span", "card-metrics", item.line);
+        metrics.innerHTML = inline(row.score);
+        foot.appendChild(metrics);
+        card.appendChild(foot);
+      }
+      frag.appendChild(card);
+    });
+  });
+  return frag;
+}
+
 function resultSectionKind(text) {
   const key = text.trim().toLowerCase();
   if (key.startsWith("new")) return "new";
@@ -424,6 +465,55 @@ function resultSectionCount(blocks) {
   if (cards) return { count: cards, unit: "card" };
   const list = blocks.find((b) => b.type === "list");
   return { count: list ? list.items.length : 0, unit: "row" };
+}
+
+function resultCardCount(blocks) {
+  return blocks.filter((b) => b.type === "heading" && b.level === 3).length;
+}
+
+function activeResultCardCount(blocks) {
+  let section = "";
+  let count = 0;
+  blocks.forEach((block) => {
+    if (block.type === "heading" && block.level === 2) section = resultSectionKind(block.text);
+    else if (block.type === "heading" && block.level === 3 &&
+      ["new", "changed", "unchanged"].includes(section)) count++;
+  });
+  return count;
+}
+
+function resultRunCounts(text) {
+  const match = text.match(/^Run\s+\d{4}-\d{2}-\d{2}\s+·\s+(\d+) new\s+·\s+(\d+) changed\s+·\s+(\d+) unchanged\s+·\s+(\d+) gone/im);
+  if (!match) return null;
+  return { new: +match[1], changed: +match[2], unchanged: +match[3], gone: +match[4] };
+}
+
+function activeResultRowCount(text) {
+  let section = "other";
+  const identities = new Set();
+  const postings = new Set();
+  text.split("\n").forEach((line) => {
+    const heading = line.match(/^##\s+(.+?)\s*$/);
+    if (heading) {
+      section = resultSectionKind(heading[1]);
+      return;
+    }
+    if (!["new", "changed", "unchanged"].includes(section)) return;
+    for (const match of line.matchAll(/<!--\s*identity:\s*(.+?)\s*-->/g)) identities.add(match[1]);
+    for (const match of line.matchAll(/\[posting\]\((https?:\/\/[^)]+)\)/gi)) postings.add(match[1]);
+  });
+  if (identities.size) return identities.size;
+  if (postings.size) return postings.size;
+  const counts = resultRunCounts(text);
+  return counts ? counts.new + counts.changed + counts.unchanged : 0;
+}
+
+function resultBadge(text) {
+  const cards = activeResultCardCount(parse(text));
+  const counts = resultRunCounts(text);
+  const rows = counts ? counts.new + counts.changed + counts.unchanged : 0;
+  if (rows && rows !== cards) return rows + " postings · " + cards + " cards";
+  return cards ? cards + " cards" : (rows ? rows + " postings" : "draft");
 }
 
 function mustRules() {
@@ -537,7 +627,7 @@ function renderResultSection(heading, blocks, ctx) {
   section.appendChild(summary);
   const body = el("div", "result-section-body", heading.line);
   if (blocks.length) body.appendChild(kind === "dropped" ? renderDroppedRows(blocks, ctx) :
-    renderLedgerBlocks(blocks, ctx));
+    kind === "unchanged" ? renderCompactResultRows(blocks, ctx) : renderLedgerBlocks(blocks, ctx));
   else {
     const empty = el("div", "result-empty", heading.line);
     empty.textContent = "No " + kind + " results in this run.";
@@ -825,6 +915,7 @@ async function tick(b, box, ctx) {
     const card = box.closest(".card");
     if (card) card.classList.toggle("ticked", want);
     countLine();
+    updateGateFiveRows();
   } else {
     box.checked = !want;
     note(res.detail || "tick refused");
@@ -835,28 +926,29 @@ async function tick(b, box, ctx) {
 /* ---------- chrome ---------- */
 
 const FIXED = ["sources", "criteria", "run"];
-// Step 4 is a slot, not a stage called Contacts. The shape's `fillers:` is a menu of what
-// could fill it; until the human picks one at GATE 4 the track shows a selectable slot
-// whose panel explains the choice still happens in the terminal.
-const chosenFiller = (s) => (s.stages || []).slice(FIXED.length).includes(s.status) ? s.status : null;
+// GATE 4 is a slot, not a stage called Contacts. Until the human picks a next step,
+// the track shows a selectable slot whose panel explains the choice stays open.
+const chosenOutput = (s) => (s.stages || []).slice(FIXED.length).includes(s.status) ? s.status : null;
+const rerunInProgress = (s) => s.status === "run" && /^\d{4}-\d{2}-\d{2}$/.test(s.pending_run || "");
 
 function stagesFor(s) {
   const stages = s.stages || [];
   const has = (n) => n in s.files;
-  const offered = stages.slice(FIXED.length);
   const track = FIXED.map((name) => {
     const present = name === "run" ? has("results.md") || has("listings.md") : has(fileFor(name));
-    return { name, stage: name, mark: name === s.status ? "●" : present ? "✓" : "○", present };
+    const active = name === s.status;
+    return { name, stage: name, mark: active ? "●" : present ? "✓" : "○", present };
   });
-  // A shape with `fillers: []` and no filler status ends at the run: no slot to draw.
-  if (!offered.length) return track;
-  const chosen = chosenFiller(s);
+  const chosen = chosenOutput(s);
   if (chosen) {
     const present = has(fileFor(chosen));
     track.push({ name: chosen, stage: chosen, mark: s.status === chosen ? "●" : present ? "✓" : "○", present });
   } else {
-    // `output` is step 4 pending — that is exactly where you are standing.
-    track.push({ name: null, stage: null, mark: s.status === "output" ? "●" : "○", present: false, offered });
+    track.push({
+      name: null, stage: null,
+      mark: s.status === "output" ? "●" : s.status === "done" ? "✓" : "○",
+      present: s.status === "done", locked: rerunInProgress(s),
+    });
   }
   return track;
 }
@@ -864,6 +956,15 @@ function stagesFor(s) {
 // The shape's own `form:`, read from its frontmatter by the server. Which files happen to
 // exist says nothing about whether the result is a ledger or a brief.
 const formFor = (s) => s.form || "";
+const selectionFor = (s) => s.selection || "";
+
+function runFreshness(s) {
+  const dates = s.run_dates || {};
+  const expected = rerunInProgress(s) ? s.pending_run : s.last_run;
+  const required = selectionFor(s) === "rows" ? ["listings", "results", "shortlist"] : ["results"];
+  const mismatched = required.filter((name) => dates[name] !== expected);
+  return { expected, dates, mismatched, ready: Boolean(expected) && mismatched.length === 0 };
+}
 
 function sourceFacts() {
   const payload = S.files["sources.md"];
@@ -878,13 +979,16 @@ function sourceFacts() {
 
 function stageLabel(s, stage) {
   const form = formFor(s);
-  if (!stage) return "Step 4";               // the slot's own name, until something fills it
+  if (!stage) return "Next Steps";            // GATE 4's user-facing name
   if (stage === "run") return form === "brief" ? "Brief" : "Results";
   return stage.charAt(0).toUpperCase() + stage.slice(1);
 }
 
-function stageStatus(s, stage, offered) {
-  if (!stage) return offered && offered.length ? offered.join(" · ") + " offered" : "not chosen yet";
+function stageStatus(s, stage) {
+  if (!stage) {
+    if (s.status === "done") return "nothing else chosen";
+    return "choose what to do";
+  }
   if (stage === "sources") {
     const f = sourceFacts();
     return f.total ? f.total + " sources" + (f.blocked ? " · " + f.blocked + " blocked" : "") : "not started";
@@ -896,8 +1000,9 @@ function stageStatus(s, stage, offered) {
   }
   if (stage === "run") {
     if (!S.files["results.md"]) return "not started";
-    const t = shortlistTicks();
-    return t.length ? t.length + " rows · " + t.filter((b) => b.checked).length + " ticked" : "draft";
+    if (rerunInProgress(s)) return "rerun " + s.pending_run + " in progress";
+    if (formFor(s) === "brief") return "whole artifact";
+    return resultBadge(S.files["results.md"].text);
   }
   if (stage === "contacts") return S.files["contacts.md"] ? "lookup complete" : "not started";
   return fileFor(stage) in S.files ? "written" : "not started";
@@ -909,15 +1014,78 @@ function shortlistTicks() {
   return p ? parse(p.text).filter((b) => b.type === "tick") : [];
 }
 
+function shortlistMatches(label, checked, query, mode) {
+  if (mode === "selected" && !checked) return false;
+  return !query || label.toLowerCase().includes(query.trim().toLowerCase());
+}
+
+function nextStepIdeas(selection) {
+  return selection === "rows"
+    ? ["Find contacts", "Compare selected", "Prepare an application or proposal", "Collect official links"]
+    : ["Create a summary", "Draft a proposal", "Prepare a briefing", "Extract action items"];
+}
+
+function updateGateFiveRows() {
+  const rows = [...document.querySelectorAll("#gate5-list .tick")];
+  if (!rows.length) return;
+  const search = $("#gate5-search");
+  const modeButton = document.querySelector(".gate5-filter.on");
+  const query = search ? search.value : "";
+  const mode = modeButton ? modeButton.dataset.mode : "all";
+  let visible = 0;
+  let selected = 0;
+  rows.forEach((row) => {
+    const input = row.querySelector("input");
+    const checked = !!(input && input.checked);
+    if (checked) selected++;
+    const show = shortlistMatches(row.textContent || "", checked, query, mode);
+    row.hidden = !show;
+    if (show) visible++;
+  });
+  const selectedNode = $("#gate5-selected");
+  if (selectedNode) selectedNode.textContent = selected + " selected";
+  const visibleNode = $("#gate5-visible");
+  if (visibleNode) visibleNode.textContent = visible + " shown";
+}
+
+function gateFiveRowList(shortlist, writable) {
+  const wrap = el("div", "gate5-rows");
+  const tools = el("div", "gate5-tools");
+  tools.innerHTML = '<label class="gate5-search"><span class="sr-only">Search shortlist</span>' +
+    '<input id="gate5-search" type="search" placeholder="Search candidates" autocomplete="off"></label>' +
+    '<div class="gate5-filters" aria-label="Filter shortlist">' +
+    '<button type="button" class="gate5-filter on" data-mode="all">All</button>' +
+    '<button type="button" class="gate5-filter" data-mode="selected">Selected</button></div>' +
+    '<span class="gate5-visible" id="gate5-visible"></span>';
+  wrap.appendChild(tools);
+  const list = el("div", "gate5-list");
+  list.id = "gate5-list";
+  const ticks = parse(shortlist.text).filter((b) => b.type === "tick");
+  list.appendChild(renderBlocks(ticks, { file: TICK_FILE, cards: false, writable }));
+  wrap.appendChild(list);
+  tools.querySelector("#gate5-search").addEventListener("input", updateGateFiveRows);
+  tools.querySelectorAll(".gate5-filter").forEach((button) => {
+    button.addEventListener("click", () => {
+      tools.querySelectorAll(".gate5-filter").forEach((other) => other.classList.toggle("on", other === button));
+      updateGateFiveRows();
+    });
+  });
+  return wrap;
+}
+
 // No approve button: every gate is confirmed in the terminal, where the approval and the
 // next step get written. This line says what the stage is waiting for, and nothing clicks.
 function actionFor(s) {
   const notes = {
     sources: "the next gate is recorded in the terminal",
     criteria: "the run waits for your approval",
-    run: formFor(s) === "ledger" ? "tick the shortlist, then say go in the terminal" : "review the artifact before rerunning",
+    run: rerunInProgress(s) ? "finish and publish the rerun before Next Steps" :
+      (s.status === "run" ? "run the approved criteria" : "review or correct the published result"),
     contacts: "append only, never rewritten",
   };
+  if (S.stage === SLOT_STAGE) return selectionFor(s) === "rows"
+    ? "Next Steps: tick rows, then choose what—if anything—to do"
+    : "Next Steps: choose what—if anything—to do with the result";
   return notes[S.stage] || "continue in the terminal";
 }
 
@@ -963,10 +1131,11 @@ function drawChips(s) {
       (st.mark === "✓" ? " done" : "") + (st.stage ? "" : " slot") +
       (st.mark === "●" ? " here" : ""));
     c.type = "button";
+    c.disabled = Boolean(st.locked);
     c.innerHTML = '<span class="chip-track"><span class="chip-dot"></span>' +
       (i < stages.length - 1 ? '<span class="chip-line"></span>' : "") + '</span>' +
       '<span class="chip-copy"><span class="chip-name">' + esc(stageLabel(s, st.stage)) + '</span>' +
-      '<span class="chip-status">' + esc(stageStatus(s, st.stage, st.offered)) + "</span></span>";
+      '<span class="chip-status">' + esc(stageStatus(s, st.stage)) + "</span></span>";
     c.onclick = () => { S.stage = slot ? SLOT_STAGE : st.stage; draw(); };
     bar.appendChild(c);
   });
@@ -999,7 +1168,7 @@ function countLine() {
   const rows = document.querySelectorAll("#doc .tick input").length;
   const ticked = document.querySelectorAll("#doc .tick input:checked").length;
   const n = $("#count");
-  if (n && rows) n.textContent = rows + " rows · " + ticked + " ticked";
+  if (n && rows) n.textContent = rows + " rows · " + ticked + " selected";
 }
 
 function note(msg) {
@@ -1147,6 +1316,9 @@ function drawGaps(blocks) {
 
 function screenTitle(s) {
   if (S.stage === "sources") return "Working sources";
+  if (S.stage === "run" && rerunInProgress(s) && (s.run_dates || {}).results !== s.pending_run) {
+    return "Previous Results";
+  }
   return stageLabel(s, S.stage);
 }
 
@@ -1160,8 +1332,8 @@ function screenBadge(s, blocks) {
     return approved ? "approved " + approved[1].split(" · ")[0] : "";
   }
   if (S.stage === "run") {
-    const t = shortlistTicks();
-    return t.length ? t.length + " rows · " + t.filter((b) => b.checked).length + " ticked" : "draft";
+    if (formFor(s) === "brief") return "whole artifact";
+    return resultBadge(S.files["results.md"].text);
   }
   const table = contactTable(blocks);
   if (!table) return "";
@@ -1177,22 +1349,23 @@ function screenBadge(s, blocks) {
 function draw() {
   const s = S.sessions.find((x) => x.slug === S.slug);
   if (!s) return;
-  const chosen = chosenFiller(s);
+  const chosen = chosenOutput(s);
   if (S.stage === SLOT_STAGE && chosen) S.stage = chosen;
-  // `output` is step 4 pending — it is not a stage, and the screen it means is the run,
-  // where the shortlist waiting to be ticked is.
+  if (S.stage === SLOT_STAGE && rerunInProgress(s)) S.stage = "run";
+  // `output` and `done` belong to the GATE 4 slot; neither is an output filename.
   if (!S.stage) S.stage = (s.stages || []).includes(s.status) ? s.status
-    : s.status === "output" ? "run" : "sources";
+    : (s.status === "output" || s.status === "done") ? SLOT_STAGE : "sources";
   document.body.classList.toggle("sources-page", S.stage === "sources");
   document.documentElement.classList.toggle("sources-page", S.stage === "sources");
   document.body.classList.toggle("criteria-page", S.stage === "criteria");
   document.documentElement.classList.toggle("criteria-page", S.stage === "criteria");
-  document.body.classList.toggle("run-page", S.stage === "run");
-  document.documentElement.classList.toggle("run-page", S.stage === "run");
+  const fullDocument = S.stage === "run" || S.stage === SLOT_STAGE;
+  document.body.classList.toggle("full-page", fullDocument);
+  document.documentElement.classList.toggle("full-page", fullDocument);
   const contentGrid = $("#content-grid");
   contentGrid.classList.toggle("sources-layout", S.stage === "sources");
   contentGrid.classList.toggle("criteria-screen", S.stage === "criteria");
-  contentGrid.classList.toggle("run-screen", S.stage === "run");
+  contentGrid.classList.toggle("full-screen", fullDocument);
   $("#document-card").classList.remove("sources-collapsed");
   drawTabs();
   drawChips(s);
@@ -1200,18 +1373,59 @@ function draw() {
   const doc = $("#doc");
   doc.innerHTML = "";
   if (S.stage === SLOT_STAGE) {
-    const slot = stagesFor(s).find((st) => !st.stage);
-    const offered = slot ? slot.offered : [];
     const head = el("div", "dochead");
-    head.innerHTML = '<span class="title">Step 4</span>';
+    const ticks = shortlistTicks();
+    const badge = selectionFor(s) === "rows" ? ticks.length + " rows · " +
+      ticks.filter((b) => b.checked).length + " selected" : "whole artifact";
+    head.innerHTML = '<span class="title">Next Steps</span><span class="count-badge" id="count">' +
+      esc(badge) + '</span><span class="file-meta">' +
+      (selectionFor(s) === "rows" ? "shortlist.md" : "results.md") + "</span>";
     doc.appendChild(head);
-    const body = el("div", "docbody");
-    const content = el("div");
-    content.innerHTML = '<h2>Offered fillers</h2><p>' + esc(offered.join(" · ")) +
-      '</p><p>A filler is chosen in the terminal; nothing is picked here.</p>';
+    const body = el("div", "docbody gate5-body");
+    const content = el("section", "gate5-guide");
+    const isRows = selectionFor(s) === "rows";
+    const selected = ticks.filter((b) => b.checked).length;
+    const suggestions = nextStepIdeas(selectionFor(s))
+      .map((name) => '<span class="gate5-idea">' + esc(name) + '</span>').join("");
+    content.innerHTML = '<div class="gate5-intro"><span class="gate5-kicker">Decision, not production</span>' +
+        '<h2>What should these results become?</h2>' +
+        '<p>The result is ready. Choose the input, then decide what you want to do next—or keep the result as it is.</p></div>' +
+        '<div class="gate5-steps"><div class="gate5-step"><span class="gate5-number">1</span>' +
+        '<div><strong>' + (isRows ? 'Select candidates' : 'Use the whole result') + '</strong>' +
+        '<span id="gate5-selected">' + (isRows ? selected + ' selected' : 'results.md selected') + '</span></div></div>' +
+        '<div class="gate5-step"><span class="gate5-number">2</span><div><strong>Choose a next step</strong>' +
+        '<span class="gate5-ideas">' + suggestions + '</span></div></div></div>' +
+        '<div class="gate5-terminal-note">These are examples, not a fixed menu. In the terminal: choose one, name something else, or say <strong>nothing</strong>.</div>';
     body.appendChild(content);
+    const resultsPayload = S.files["results.md"];
+    const activeRows = resultsPayload ? activeResultRowCount(resultsPayload.text) : 0;
+    if (isRows && activeRows && activeRows !== ticks.length) {
+      const warning = el("div", "gate5-integrity");
+      const gap = Math.abs(ticks.length - activeRows);
+      const detail = ticks.length > activeRows
+        ? gap + ' shortlist rows have no active posting in results.md.'
+        : gap + ' active result postings are missing from shortlist.md.';
+      warning.innerHTML = '<strong>Selection does not match the detailed result.</strong>' +
+        '<span>' + esc(detail) + ' Repair or rerun the session before using this selection.</span>';
+      body.appendChild(warning);
+    }
+    if (isRows) {
+      const shortlist = S.files[TICK_FILE];
+      if (shortlist) body.appendChild(gateFiveRowList(shortlist, true));
+      else {
+        const missing = el("div", "empty");
+        missing.textContent = "shortlist.md does not exist for this row-selection shape.";
+        body.appendChild(missing);
+      }
+    } else {
+      const whole = el("div", "empty");
+      whole.textContent = "The result is the selection; there are no rows to tick.";
+      body.appendChild(whole);
+    }
     doc.appendChild(body);
     drawGaps([]);
+    countLine();
+    updateGateFiveRows();
     return;
   }
   const file = fileFor(S.stage);
@@ -1240,10 +1454,13 @@ function draw() {
   const head = el("div", "dochead");
   head.classList.add(S.stage + "-head");
   const badge = screenBadge(s, blocks);
+  const fileFreshnessMeta = S.stage === "run" && (s.run_dates || {}).results
+    ? " · run " + (s.run_dates || {}).results
+    : (S.stage === "criteria" ? "" : (s.files[file] ? " · updated " + ago(s.files[file]) : ""));
   head.innerHTML = '<span class="title">' + esc(screenTitle(s)) + '</span>' +
     (badge ? '<span class="count-badge" id="count">' + esc(badge) + '</span>' : '<span id="count"></span>') +
     '<span class="file-meta">' + esc(file) + (S.stage === "contacts" ? " · append only" :
-      S.stage === "criteria" ? "" : (s.files[file] ? " · updated " + ago(s.files[file]) : "")) + "</span>";
+      fileFreshnessMeta) + "</span>";
   if (S.stage === "sources") {
     const collapse = el("button", "sources-collapse");
     collapse.id = "sources-collapse";
@@ -1264,6 +1481,17 @@ function draw() {
   }
   doc.appendChild(head);
   const body = el("div", "docbody");
+
+  if (S.stage === "run" && rerunInProgress(s)) {
+    const freshness = runFreshness(s);
+    const warning = el("div", "run-stale");
+    warning.innerHTML = '<strong>Rerun incomplete — these are previous results.</strong>' +
+      '<span>Pending run ' + esc(freshness.expected) + ' · listings ' +
+      esc(freshness.dates.listings || "not fetched") + ' · displayed results ' +
+      esc(freshness.dates.results || "unknown") +
+      '. Next Steps stays locked until publication succeeds.</span>';
+    body.appendChild(warning);
+  }
 
   // run is three screens under one status: read reality, do not add a state machine.
   if (S.stage === "run" && S.listings) {
@@ -1394,3 +1622,9 @@ if (typeof document !== "undefined") {
   bindUI();
   load().then(live);
 }   // importable for tests
+
+if (typeof module !== "undefined") {
+  module.exports = { inline, parse, stagesFor, selectionFor, shortlistMatches, nextStepIdeas,
+    resultCardCount, activeResultCardCount, resultRunCounts, activeResultRowCount,
+    resultBadge, compactResultRow, rerunInProgress, runFreshness, SLOT_STAGE };
+}

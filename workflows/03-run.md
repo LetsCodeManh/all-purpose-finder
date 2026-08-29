@@ -4,10 +4,24 @@ Fetch, narrow with a script, score the survivors, diff against last time.
 
 Rules: `AGENTS.md`. Entry: `00-session.md`.
 
-In: `sources.md` + an approved `criteria.md`. Out: `results.md` and
-`shortlist.md`, plus `listings.md` for ledger shapes.
+In: `sources.md` + an approved `criteria.md`. Out: `results.md`, plus
+`shortlist.md` for `selection: rows` and `listings.md` for ledger shapes.
 
 Worked example: `examples/<shape>.md` → *03 — run*, for the shape named in this session's `shape:` field. No example yet for this shape? Run the step from here anyway, say so, and write that section afterwards from what happened.
+
+If the run is already published (`status: output`, `done`, or a next-step output
+name), route to `workflows/04-output.md`; never refetch merely because the result
+is being viewed again.
+
+Before the first fetch of every initial run or rerun:
+
+```
+python3 tools/publish_run.py <slug> begin
+```
+
+This makes the run pending before `listings.md` can move ahead of the published
+result. If a previous result exists, call it **Previous Results** until publication.
+Do not offer Next Steps while `pending run:` exists.
 
 ---
 
@@ -169,6 +183,7 @@ One per surviving row. Same layout whatever the topic:
 
 ```markdown
 ### <issuer> — <item>
+<!-- identity: <canonical value from criteria.md identity> -->
 <where> · [<link>](<url>) · posted <date>
 source: <which source> · also seen: <other sources>
 
@@ -215,7 +230,7 @@ but it never adds one of its own silently. Say what you changed and why.
 ```
 ## new                 ← full cards
 ## changed             ← name the columns the state gave you, in words: the deadline moved, the price dropped
-## unchanged           ← collapsed to one line each, not full cards: `<issuer> — <item> · <score>`
+## unchanged           ← collapsed to one line each, not full cards; keep its hidden identity marker
 ## gone                ← keep the card, mark it
 ## dropped at scoring  ← one line each, and the `must` that killed it
 ```
@@ -264,23 +279,39 @@ Never re-print the whole list as if it were new. **New-since-last-run is the rea
 
 ---
 
-## 6. Write the shortlist — ledger form
+## 6. Write the shortlist — `selection: rows`
 
-`sessions/<slug>/shortlist.md`, one line per row kept in `results.md`, in the same
-order. Skeleton: `sessions/_template/shortlist.md`.
+Write `results.md` first, then generate `sessions/<slug>/shortlist.md` beside it
+with this session's deterministic script:
 
 ```
-- [ ] <issuer> — <item> · <score>
+python3 sessions/<slug>/tools/shortlist.py <slug>
+```
+
+On the first row-selection run, write `shortlist.py` before invoking it; there is
+no shared copy. Start from the specification in
+`sessions/_template/tools/README.md` or copy a neighbouring session's version and
+diverge. It belongs to this session and never imports another session at runtime.
+
+The script projects one compact line per row kept in `results.md`, in the same
+order. It reads the previous shortlist before replacing it and carries ticks by
+the `identity` key from `criteria.md`. It has `--selfcheck`, uses no network and
+no LLM, and refuses a result row whose identity or score line it cannot read.
+Specification: `sessions/_template/tools/README.md`. Skeleton for the output:
+`sessions/_template/shortlist.md`.
+
+```
+- [ ] <issuer> — <item> · <score> <!-- identity: <canonical value> -->
 ```
 
 **Regenerate it whole, and carry the ticks forward by `identity`** — the same key the
-diff used above. Read the previous shortlist before you overwrite it: a row that was
-already there keeps the tick it had, only a row new to this run is written `- [ ]`, and
-a `gone` row drops off. **Never auto-untick.** Rewriting the file is not permission to
-reset the human's decisions, and a run where everything came back unticked is exactly
-the empty gate `AGENTS.md` → **Ticks** tells you to stop on.
+diff used above. A row that was already there keeps the tick it had, only a row new
+to this run is written `- [ ]`, and a `gone` row drops off. **Never auto-untick.**
+This is deterministic projection and comparison, so the script owns it; do not
+rebuild or compare the shortlist by eye.
 
-A shape with no ledger, or no step-4 decision to make, writes no shortlist and says so.
+A `selection: artifact` shape writes no shortlist. Its `results.md` is the whole
+input to GATE 4.
 
 ---
 
@@ -313,42 +344,33 @@ first two are `## notes` with a date, the third is `## gaps`. Update the section
 update `Last updated:`, and do not rewrite the table from what the run saw:
 adding a source is GATE 2, not a run.
 
-Then update `MEMORY.md` → `last run: <date>`. If the shape has anything to make from the result — `fillers:` is not empty — `status: output`, `next: tick the rows worth chasing`. `output` means the results exist and the human has not picked what to make from them yet, so reopening the session offers the menu again instead of re-running step 3. If `fillers:` is empty, `status: run` and `next:` points at the rerun: that shape genuinely ends here.
+Then publish the run; do not edit those MEMORY fields by hand:
 
-Before handoff, run the topic-neutral consistency check:
+```
+python3 tools/publish_run.py <slug> finish
+```
+
+The command refuses date mismatches or audit errors, then atomically updates
+`MEMORY.md` → `last run: <date>`, `status: output`,
+`next: decide what, if anything, to make`. `results.md` and, for
+`selection: rows`, `shortlist.md` now exist together. Results stay available for
+review or correction, while GATE 4 (Next Steps) is immediately ready.
+
+For diagnostics before publication, run either check:
 
 ```
 python3 tools/session_audit.py <slug>
+python3 tools/publish_run.py <slug> check
 ```
 
-Fix errors before GATE 4. Warnings remain visible in the gap report when they
+Fix errors before publication. Warnings remain visible in the gap report when they
 represent a real limitation rather than a malformed file.
 
 ---
 
-## 8. GATE 4
+## 8. Present the result and open Next Steps
 
-For a ledger:
-
-```
-Tick the rows worth chasing in shortlist.md — `- [ ]` → `- [x]`.
-What gets made from them is your call after that.
-```
-
-Rows that came in already ticked stay ticked; untick one to drop it. Say how many rows
-actually need a decision this run — the `new` ones plus the `changed` ones — so the
-human knows what they are looking at. If none of them ends up ticked, that is an empty
-gate: stop and ask, never read it as all of them.
-
-Then offer what can be made from the ticked rows and wait — `workflows/04-output.md`
-is that step, and it is a slot, not a fixed task.
-
-For a brief, ask the human to review the stated next action—read it before the
-occasion, make the decision, or request a refresh.
-
-Wait. Making the thing is the expensive step — do not pre-run it on everything to be
-helpful.
-
-When the shape has nothing to make from the result — `fillers: []` — GATE 4 is still a
-stop: say the result is final, say what the human does with it, and point `next:` back
-at the rerun rather than forward at a step that does not apply.
+Present `results.md`, including its scoring drops and gap report, then route to
+`workflows/04-output.md`. Results are not an approval gate. If the human spots
+something wrong or missing, apply the source or criteria delta gates and rerun only
+the affected sections.

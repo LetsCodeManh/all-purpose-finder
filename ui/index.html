@@ -219,6 +219,10 @@
         cursor: pointer;
         color: inherit;
       }
+      .chip:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+      }
       .chip-track {
         display: flex;
         align-items: center;
@@ -244,7 +248,7 @@
         padding-right: 14px;
         min-height: 32px;
       }
-      /* The slot opens its Step 4 explanation; it does not choose a filler. */
+      /* Next Steps selects inputs; the actual choice stays in the terminal. */
       .chip.slot .chip-name {
         color: #a4abb5;
       }
@@ -321,10 +325,10 @@
         grid-template-columns: minmax(0, 1fr);
       }
       #content-grid.criteria-screen #gaps,
-      #content-grid.run-screen #gaps {
+      #content-grid.full-screen #gaps {
         display: none;
       }
-      #content-grid.run-screen {
+      #content-grid.full-screen {
         grid-template-columns: minmax(0, 1fr);
       }
       html.sources-page,
@@ -460,49 +464,49 @@
         overscroll-behavior: contain;
         scrollbar-gutter: stable;
       }
-      html.run-page,
-      body.run-page {
+      html.full-page,
+      body.full-page {
         height: 100vh;
         min-height: 0;
         overflow: hidden;
       }
-      body.run-page {
+      body.full-page {
         display: flex;
         flex-direction: column;
       }
-      body.run-page #topbar,
-      body.run-page #stage-card {
+      body.full-page #topbar,
+      body.full-page #stage-card {
         flex: none;
       }
-      body.run-page #workspace,
-      body.run-page #content-grid,
-      body.run-page #main-column,
-      body.run-page #document-card,
-      body.run-page #doc,
-      body.run-page .docbody {
+      body.full-page #workspace,
+      body.full-page #content-grid,
+      body.full-page #main-column,
+      body.full-page #document-card,
+      body.full-page #doc,
+      body.full-page .docbody {
         min-height: 0;
       }
-      body.run-page #workspace,
-      body.run-page #content-grid,
-      body.run-page #document-card,
-      body.run-page .docbody {
+      body.full-page #workspace,
+      body.full-page #content-grid,
+      body.full-page #document-card,
+      body.full-page .docbody {
         flex: 1;
       }
-      body.run-page #workspace,
-      body.run-page #content-grid,
-      body.run-page #main-column,
-      body.run-page #document-card {
+      body.full-page #workspace,
+      body.full-page #content-grid,
+      body.full-page #main-column,
+      body.full-page #document-card {
         overflow: hidden;
       }
-      body.run-page #content-grid {
+      body.full-page #content-grid {
         align-items: stretch;
       }
-      body.run-page #doc {
+      body.full-page #doc {
         height: 100%;
         display: flex;
         flex-direction: column;
       }
-      body.run-page .docbody {
+      body.full-page .docbody {
         overflow-y: auto;
         overscroll-behavior: contain;
         scrollbar-gutter: stable;
@@ -563,6 +567,197 @@
       .empty {
         color: var(--dimmer);
         padding: 26px 0;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      .gate5-body {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+      .gate5-guide {
+        border: 1px solid #dfe5ee;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #f8faff, #fff);
+        padding: 18px;
+      }
+      .gate5-kicker {
+        color: var(--blue);
+        font: 600 10.5px var(--mono);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .gate5-intro h2 {
+        margin: 6px 0 4px;
+        font-size: 19px;
+      }
+      .gate5-intro p {
+        margin: 0;
+        max-width: 74ch;
+        color: var(--dim);
+        line-height: 1.5;
+      }
+      .gate5-steps {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 16px;
+      }
+      .gate5-step {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        border: 1px solid var(--line2);
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.82);
+        padding: 12px;
+      }
+      .gate5-step > div {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+      }
+      .gate5-step strong {
+        color: var(--ink);
+        font-size: 13px;
+      }
+      .gate5-step span:not(.gate5-number):not(.gate5-idea) {
+        color: var(--dimmer);
+        font: 11px var(--mono);
+      }
+      .gate5-number {
+        width: 22px;
+        height: 22px;
+        flex: none;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: #e9effc;
+        color: var(--blue);
+        font: 600 11px var(--mono);
+      }
+      .gate5-ideas {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .gate5-idea {
+        display: inline-flex;
+        width: fit-content;
+        border: 1px solid #d9e2f5;
+        border-radius: 999px;
+        background: #f2f6ff;
+        color: #526086;
+        padding: 2px 7px;
+        font: 600 10.5px var(--mono);
+      }
+      .gate5-terminal-note,
+      .gate5-wait {
+        margin-top: 14px;
+        padding-top: 12px;
+        border-top: 1px solid #e5e9f1;
+        color: var(--dim);
+        font-size: 12px;
+      }
+      .gate5-wait {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+      .gate5-integrity {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        border: 1px solid #efd8bd;
+        border-radius: 9px;
+        background: #fff9f2;
+        color: #7d4a2f;
+        padding: 11px 13px;
+        font-size: 12px;
+      }
+      .gate5-integrity span {
+        color: #8b674f;
+      }
+      .gate5-rows {
+        border-top: 1px solid var(--line2);
+      }
+      .gate5-tools {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 12px 0;
+        background: #fff;
+      }
+      .gate5-search {
+        flex: 1;
+      }
+      .gate5-search input {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--soft);
+        color: var(--ink);
+        padding: 8px 10px;
+        font: 12px var(--sans);
+        outline: none;
+      }
+      .gate5-search input:focus {
+        border-color: #a9bce4;
+        box-shadow: 0 0 0 3px rgba(70, 109, 190, 0.1);
+      }
+      .gate5-filters {
+        display: flex;
+        padding: 2px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--soft);
+      }
+      .gate5-filter {
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--dim);
+        padding: 5px 9px;
+        cursor: pointer;
+        font: 11px var(--mono);
+      }
+      .gate5-filter.on {
+        background: #fff;
+        color: var(--ink);
+        box-shadow: 0 1px 3px rgba(25, 32, 45, 0.09);
+      }
+      .gate5-visible {
+        min-width: 58px;
+        color: var(--dimmer);
+        text-align: right;
+        font: 10.5px var(--mono);
+      }
+      .gate5-list .tick {
+        margin: 0;
+        padding: 9px 2px;
+        border-bottom: 1px solid #f0f2f5;
+      }
+      .gate5-list .tick:last-child {
+        border-bottom: 0;
+      }
+      .gate5-list .tick[hidden] {
+        display: none;
       }
       #doc h1,
       #doc h2,
@@ -834,6 +1029,22 @@
       }
 
       /* run stats and cards */
+      .run-stale {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 18px;
+        padding: 12px 15px;
+        border: 1px solid #e8c68f;
+        border-radius: 10px;
+        background: #fff8ed;
+        color: #754620;
+        font-size: 12px;
+      }
+      .run-stale span {
+        color: #876548;
+        font: 11.5px var(--mono);
+      }
       .stats {
         border: 1px solid var(--line2);
         border-radius: 10px;
@@ -985,6 +1196,19 @@
         color: #7a8390;
         font-style: italic;
         text-wrap: pretty;
+      }
+      .compact-result-card .card-top {
+        padding-bottom: 12px;
+      }
+      .compact-result-card .card-source {
+        padding: 2px 7px;
+        border-radius: 999px;
+        background: #eef6f1;
+        color: #56806a;
+      }
+      .compact-result-card .card-foot {
+        padding-top: 8px;
+        padding-bottom: 9px;
       }
       .result-overview,
       .result-section {
@@ -1908,6 +2132,15 @@
         .dochead .file-meta {
           width: 100%;
           margin-left: 0;
+        }
+        .gate5-steps {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .gate5-tools {
+          flex-wrap: wrap;
+        }
+        .gate5-search {
+          flex-basis: 100%;
         }
         .card-top {
           flex-wrap: wrap;

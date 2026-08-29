@@ -2,7 +2,7 @@
 shape: prices
 form: ledger
 cardinality: many
-fillers: []
+selection: artifact
 ---
 
 # example — prices
@@ -16,10 +16,10 @@ standalone — no live links, and no real session's content.
 - **Identity:** issuer = the seller · item = the product.
 - **Recurs?** Yes, and faster than jobs — a weekly cycle, and every row expires
   on a stated date. The diff that matters is *new this week* and *ends tomorrow*.
-- **Fillers?** **None.** `fillers: []` — nothing to make from a price list and
-  nobody to look up. Step 04 is one line, and the result is the end of the road.
-- **Ticks?** **No.** The tick is what feeds a filler, and this shape has none, so
-  it writes no `shortlist.md` at all. GATE 4 here asks for a review, not a tick.
+- **Selection:** artifact — the grouped price result stays whole, so there is no
+  `shortlist.md`.
+- **Next steps:** propose a few uses of the published comparison; the human may name
+  something else or answer "nothing".
 
 The one structural difference from jobs: **every row carries a from–to window**,
 and a row outside its window is not a result, it is history.
@@ -33,8 +33,9 @@ Slug:  <category>-deals-<city>
 Topic: weekly discounts on <category> at stores in and around <city>.
 Reading this as many candidates to pick from.
 
-Same four stops as last time: sources, criteria, results, then a review —
-there is nothing to make from a price list. Approving this approves the plan only.
+Same five stops as last time: this plan, sources, criteria, detailed results,
+then your call on the approved price result as a whole. Approving this approves
+the plan only.
 
 Good? Rename it if the slug is wrong.
 ```
@@ -199,17 +200,16 @@ not checked since:     <name> — <date>
 
 ## 04 — output
 
-Skipped. `fillers: []` — nothing to make, nobody to look up.
+GATE 4 acts on the published grouped result as a whole. Propose a few relevant
+next steps, then ask:
 
 ```
-Nothing to make from this one — the result is the end of it.
-MEMORY.md → status: run, next: rerun when the new week's flyers land.
+Nothing else for this run.
+MEMORY.md → status: done, next: rerun when the new week's flyers land.
 ```
 
-This is not a hole: `fillers: []` in the frontmatter above says why this shape
-stops at `run`, once, for every session of it. No shortlist and no ticks anywhere
-in this shape either, so a run that reports zero ticked rows here is correct
-rather than an empty gate.
+`selection: artifact` explains why there is no shortlist or tick count. Suggestions
+come from the actual result and never limit what the human can name later.
 
-Note the loop: this shape does not finish, it cycles. `next:` points back at the
-run, not forward at a step that does not apply.
+Note the loop: this shape finishes the current cycle at `done`; `next:` points at
+the next week's run.

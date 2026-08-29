@@ -142,8 +142,8 @@ def test_path_traversal_is_refused():
 
 
 def test_readable_is_a_shape_not_a_list():
-    """A filler nobody has written yet still gets its file served."""
-    assert server.readable("letter.md") and server.readable("bid.md"), "filler names are an open set"
+    """An output nobody has written before still gets its file served."""
+    assert server.readable("letter.md") and server.readable("bid.md"), "output names are an open set"
     assert server.readable("MEMORY.md") and server.readable("shortlist.md")
     assert not server.readable("listings.md"), "never served whole"
     assert not server.readable("../AGENTS.md") and not server.readable("results.md.tmp")
@@ -152,20 +152,26 @@ def test_readable_is_a_shape_not_a_list():
     assert server.WRITABLE == {"shortlist.md"}
 
 
-def test_stages_come_from_the_shape():
-    assert server.stages_for("jobs", "run") == ["sources", "criteria", "run", "contacts"]
-    # `fillers: []` — the shape ends at run and grows no step-4 stage
+def test_stages_follow_actual_status():
+    assert server.stages_for("jobs", "run") == ["sources", "criteria", "run"]
+    # Gate states are not filenames or output stages.
     assert server.stages_for("company-research", "run") == ["sources", "criteria", "run"]
-    # step 4 pending: the human has not picked what to make, so nothing is named yet
     assert server.stages_for("company-research", "output") == ["sources", "criteria", "run"]
+    assert server.stages_for("jobs", "done") == ["sources", "criteria", "run"]
     # an unknown shape is not a crash and is not a guess
     assert server.stages_for("no-such-shape", "criteria") == ["sources", "criteria", "run"]
-    # filler names are an open set: a session sitting at one the menu never listed still
-    # shows where it is
-    assert server.stages_for("jobs", "letter") == ["sources", "criteria", "run", "contacts", "letter"]
-    assert server.fillers_for("company-research") == [], "empty is not the same as unknown"
-    assert server.fillers_for("no-such-shape") is None
-    assert server.fillers_for("../../AGENTS") is None
+    # Output names are open: a session sitting at one still shows where it is.
+    assert server.stages_for("jobs", "letter") == ["sources", "criteria", "run", "letter"]
+
+
+def test_artifact_dates_are_semantic_not_mtime():
+    folder = Path(tempfile.mkdtemp())
+    (folder / "listings.md").write_text("# listings — fetched 2026-08-29\n", encoding="utf-8")
+    (folder / "results.md").write_text("Run 2026-08-28 · 1 new · 0 changed · 0 unchanged · 0 gone\n", encoding="utf-8")
+    (folder / "shortlist.md").write_text("Run 2026-08-28 · 1 rows\n", encoding="utf-8")
+    assert server.artifact_run_dates(folder) == {
+        "listings": "2026-08-29", "results": "2026-08-28", "shortlist": "2026-08-28"
+    }
 
 
 def test_gate_one_session_is_listed_and_probe_only_folder_is_not():
@@ -182,7 +188,8 @@ def test_gate_one_session_is_listed_and_probe_only_folder_is_not():
     (sessions / "probe-only" / "tools").mkdir(parents=True)
     examples.mkdir()
     (examples / "widgets.md").write_text(
-        "---\nshape: widgets\nform: ledger\ncardinality: many\nfillers: []\n---\n",
+        "---\nshape: widgets\nform: ledger\ncardinality: many\n"
+        "selection: rows\n---\n",
         encoding="utf-8",
     )
     old_sessions, old_examples = server.SESSIONS, server.EXAMPLES
@@ -192,6 +199,7 @@ def test_gate_one_session_is_listed_and_probe_only_folder_is_not():
         assert [s["slug"] for s in found] == ["approved"], found
         assert found[0]["status"] == "sources"
         assert found[0]["shape"] == "widgets"
+        assert found[0]["selection"] == "rows"
         assert found[0]["next"] == "propose sources"
         assert found[0]["files"] == {"MEMORY.md": (sessions / "approved" / "MEMORY.md").stat().st_mtime}
     finally:

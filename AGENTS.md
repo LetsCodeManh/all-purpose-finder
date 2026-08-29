@@ -17,7 +17,7 @@ Four gates. Each one stops you until the human answers. There is no "obviously t
 | 1 | Session creation | the human confirms the slug and shape |
 | 2 | Sources list | the human prunes and adds |
 | 3 | Criteria checklist | the human approves |
-| 4 | Results → next action | the human reviews the result; for a ledger, they tick rows in `shortlist.md` — `- [x]`, see **Ticks** |
+| 4 | Next Steps | the human reviews the result as needed; for `selection: rows`, they tick `shortlist.md`, then choose what, if anything, to make |
 
 Passing a gate without an answer is the single worst failure mode in this repo. If you are unsure whether you are at a gate, you are at a gate.
 
@@ -29,13 +29,14 @@ A session moves in one direction:
 
 ```
 sources → criteria → run → [ what the result is for ]
-  fixed     fixed    fixed          open
+  fixed     fixed    fixed             open
 ```
 
-**Three fixed steps and one open slot.** The first three are the same for every
-topic. The fourth is whatever the result was for — someone to talk to, a report, a
-resume, a proposal, links to apply with — and the procedure for each one is a
-**filler**: `fillers/<name>.md`. The step itself is the gate that offers them.
+**Three fixed steps and one open slot.** Sources, criteria and the run are the same
+for every topic. The fourth gate is **Next Steps**: whatever the human decides the
+result is for—someone to talk to, a report,
+a resume, a proposal, links to apply with, or nothing. Some recurring choices have
+a reusable procedure in `next-steps/<name>.md`; those files never define the menu.
 
 The current step is the `status` field in `sessions/<slug>/MEMORY.md`. Read it, do that step, update it. Never run a later step because it seems more useful.
 
@@ -43,14 +44,29 @@ The current step is the `status` field in `sessions/<slug>/MEMORY.md`. Read it, 
 |--------|-------|---------|
 | `sources` | sources not approved yet | `workflows/01-sources.md` |
 | `criteria` | sources approved, criteria not | `workflows/02-criteria.md` |
-| `run` | criteria approved, or this shape has nothing to make and the last run is done | `workflows/03-run.md` |
-| `output` | results exist, the human has not picked what to make from them | `workflows/04-output.md` |
-| a filler name, e.g. `contacts` | that filler has run; the same shortlist is still there to make something else from | `workflows/04-output.md`, then `fillers/<name>.md` |
+| `run` | criteria approved; the next action is a run | `workflows/03-run.md` |
+| `output` | the run is published; GATE 4 is waiting for selection and the next action | `workflows/04-output.md` |
+| `done` | GATE 4 was answered with nothing to make; the same result remains available | follow `next:`; rerun or reopen output only when asked |
+| an output name, e.g. `contacts` | that next step has run; the same shortlist is still there to make something else from | `workflows/04-output.md`, then use a reusable procedure if one exists |
 
-`output` is a status, not a gate — there are four gates and GATE 4 is the one it
-sits at. A finished run never leaves `status: run` behind on a shape that has
-something to make: that reads as "step 3 is next" and re-runs a run that already
-happened.
+`output` is the stop after the run. Publication moves there directly; Results is
+available for review or correction, but it is not a gate. GATE 4 moves the session
+to `done` or the output name. A finished run never leaves `status: run` behind: that reads as
+"step 3 is next" and re-runs a run that already happened.
+
+### Run publication is atomic
+
+`MEMORY.md` is the publication marker. Before any fetch, run
+`python3 tools/publish_run.py <slug> begin`; it sets `status: run` and a
+`pending run:` date without changing `last run:`. Existing results are then explicitly
+previous results, and Next Steps is closed. After `listings.md`, `results.md`, and any
+`shortlist.md` have all been written for that same date, run `publish_run.py <slug>
+finish`. It validates the dates and the session audit, then—and only then—moves to
+`status: output`, advances `last run:`, and removes `pending run:`.
+
+Never update `last run:` or publish `status: output` by hand. A partial run may remain
+at `status: run`; it must never look published. The UI and audit independently compare
+the semantic dates written inside the artifacts, never filesystem modification times.
 
 Entry procedure for every session: `workflows/00-session.md`.
 
@@ -70,14 +86,14 @@ the amendment date, then update `results.md`. An explicit request to add a fact
 to the result is permission to propose the amendment, not permission to make the
 stored source and criteria state disagree with the result.
 
-**A skill is a shortcut, not a capability, and it holds no logic.** One per thing a human types: `session` to start or continue one, and one per filler, because a filler is the one step the human names. The four workflow steps are walked by you, driven by `status` — do not turn a workflow into a skill, that is a file only ever called by another file. Every skill is a pointer at the real document, so the repo runs identically in an agent that has never heard of `.claude/`.
+**A skill is a shortcut, not a capability, and it holds no logic.** `session` starts or continues the workflow; a frequently named next step may have its own shortcut only when a reusable procedure exists. The workflow files are walked by you, driven by `status` — do not turn a workflow into a skill, that is a file only ever called by another file. Every skill is a pointer at the real document, so the repo runs identically in an agent that has never heard of `.claude/`.
 
-**Step 4 is optional, and the shape decides — in `examples/<shape>.md` → `fillers:`.** A shape with `fillers: []` has nothing to make from its result and nobody to look up: the session ends at `run`, so say the result is final, leave `status: run`, and point `next:` at the rerun. Skipping the step out loud is correct; quietly inventing someone to contact, or a document nobody asked for, is not.
-
-That fact belongs to the shape, not to the session. It is on disk once, in the
-shape's frontmatter, and every session of that shape reads it there — never copied
-into a session's `MEMORY.md`. A shape whose `fillers:` is not empty does have the
-step; do not skip it for one session because this run looks thin.
+**GATE 4 is never skipped.** Call it **Next Steps** to the human. Propose two to
+four small possibilities grounded in the result, selected rows and the
+human's stated goal. They are examples, never a capability list or fixed end goal.
+`selection:` says whether GATE 4 acts on ticked rows or on the artifact as
+a whole. The human may name something else or answer "nothing"; record
+`status: done` rather than silently ending at `run`.
 
 ---
 
@@ -85,32 +101,35 @@ step; do not skip it for one session because this run looks thin.
 
 **Only inside `sessions/<slug>/`.**
 
-Three exceptions, all public and topic-neutral:
+Five exceptions, all public and topic-neutral:
 
 - `sessions/_template/` — the **skeleton** of a session: empty files, no data. Not a session — never a slug, never listed as one. Copy `MEMORY.md` after GATE 1, then copy each remaining file only when its workflow step reaches it. Never copy the skeleton over an existing `MEMORY.md`.
-- `examples/<shape>.md` — one worked walkthrough per **shape**, keyed by workflow step. **The frontmatter is procedure and is read as such; the body below it is illustration only.** So the three fields are written from what the shape does, and the prose never has to be parsed. No URLs and no vendor names, so the repo stays standalone. A new shape is a new file here, not an edit to a workflow. Skeleton: `examples/_template.md`.
+- `examples/<shape>.md` — one worked walkthrough per **shape**, keyed by workflow step. **The frontmatter is procedure and is read as such; the body below it is illustration only.** So the four fields are written from what the shape does, and the prose never has to be parsed. No URLs and no vendor names, so the repo stays standalone. A new shape is a new file here, not an edit to a workflow. Skeleton: `examples/_template.md`.
 - `tools/session_audit.py` — a read-only structural validator. It may count,
   compare dates, read a shape's frontmatter, and check one file's claims against
   another's — that result-link domains appear in `sources.md` for a brief, and that
   a ledger's hand-read `page` sources reached `listings.md` or were declared unread.
   It never fetches, filters, scores, or knows a topic.
-- `fillers/<name>.md` — one procedure per thing that can be made from a result,
+- `tools/publish_run.py` — the topic-neutral run transaction. It writes only the
+  target session's `MEMORY.md`, and only to begin a pending run or publish one after
+  structural validation succeeds.
+- `next-steps/<name>.md` — one procedure per repeatable thing that can be made from a result,
   tool-neutral. **The first executable exception in this list**, and the only one
   guarded by a gate of its own, below.
 
-**Writing a filler is gated. Running one is not.** A session that invents a new
+**Writing a reusable next-step procedure is gated. Running a next step is not.** A session that invents a new
 thing to make runs it there and then, from what the human described — that run is
 theirs, it costs nothing, and asking permission for it would be the friction this
 repo is trying to remove. Writing it back into the repo is the different act:
 
 ```
-That worked. Write it up as `fillers/<name>.md` so it is reusable?
+That worked. Write it up as `next-steps/<name>.md` so it is reusable?
 It goes in the public repo.
 ```
 
 Then wait for the answer. **The reason is publication, not caution:** this is the
 first time an agent writes executable procedure that strangers will run, on their
-machines, against their own sessions. A wrong line in `fillers/` is wrong for
+machines, against their own sessions. A wrong line in `next-steps/` is wrong for
 everyone who clones this repo, and nobody reviews it because it arrived looking
 like part of the method.
 
@@ -119,7 +138,7 @@ all four. This one fires rarely, changes the repo rather than the session, and i
 the same class of rule as *do not write to `AGENTS.md` or `workflows/`*. The gates
 are four.
 
-**Scrub a filler exactly like `examples/`**: placeholders instead of names,
+**Scrub a reusable next-step procedure exactly like `examples/`**: placeholders instead of names,
 numbers and URLs, no vendor names, nothing about who the human is or what they
 were looking for. The file records how the thing is made. It never records the
 search.
@@ -201,32 +220,36 @@ Obsidian, VS Code and Cursor, so ticking needs no tooling and no script.
 second:
 
 ```
-- [x] <issuer> — <item> · <score>
+- [x] <issuer> — <item> · <score> <!-- identity: <canonical value> -->
 ```
 
 `<score>` is whatever the card's own score line said — the shape decides how that
-reads, this line does not. `results.md` is a pure artifact of the run: it records what
+reads, this line does not. The HTML comment is hidden in rendered Markdown and is
+the stable key `shortlist.py` uses to carry a tick across runs; it is required and
+never guessed from the visible label. `results.md` is a pure artifact of the run: it records what
 was found and never carries a decision, so nothing in it is ticked and no later step
 writes to it. Skeletons: `sessions/_template/shortlist.md`,
 `sessions/_template/results.md`; per-shape card layout: `examples/<shape>.md`.
 
-The shortlist is regenerated every run and **the ticks carry forward by `identity`** —
+The shortlist is regenerated by `sessions/<slug>/tools/shortlist.py` every run and
+**the ticks carry forward by `identity`** —
 how, and why unticking is forbidden, is written where the file is specified:
 `sessions/_template/shortlist.md`.
 
 - **An untick is an answer.** A row left `- [ ]` is a rejection. Do not look something
   up because it scored well.
 - **Zero ticks among the rows that needed a decision is a stop.** Not a green light,
-  and never "then all of them". Ask. This is *rows that needed a decision this run* —
+  and never "then all of them". Ask unless the human explicitly said they rejected
+  all of them or want nothing made. This is *rows that needed a decision this run* —
   rows new to this shortlist, and `changed` rows put back in front of the human — not
   "no rows ticked at all": a run whose rows all carry their ticks forward produces zero
   new ticks legitimately, and that gate is satisfied.
 
-**A tick is the input to step 4.** A shape that ends at `run` has neither: no
-shortlist, no tick line, and its GATE 4 asks the human to review the result rather than
-to tick it. There is nothing to carry forward and nothing to count, so the empty-gate
-rule never fires there — it fires on shapes that ask for a decision and get none. Such
-a shape says so on disk with `fillers: []` in `examples/<shape>.md`.
+**A tick is the row-selection input to GATE 4.** Results is available beside it for
+review or correction, but does not need a separate approval. A
+`selection: artifact` shape writes no shortlist and GATE 4 acts on the whole
+result. There is nothing to carry forward or count for that shape, so the empty-tick
+rule applies only to `selection: rows`.
 
 A skipped step is visible. A gate written up as satisfied is not, which is why an
 empty one stops.
@@ -239,6 +262,9 @@ empty one stops.
 - Only survivors get scored.
 - Fetched listings are cached in `listings.md` and not refetched the same day, so re-scoring after a criteria edit is free. `--refetch` forces fresh.
 - **The diff is a script, not a judgment.** `prefilter.py` rotates the last run to `listings.prev.md` and writes a `state` column — `new` / `changed:<cols>` / `unchanged` / `gone`. Comparing two files by eye is the one step an LLM cannot be checked on, and it makes every rerun cost a full re-score. Only `new` and `changed` rows are scored.
+- The compact shortlist is a script projection, not a second agent summary.
+  `shortlist.py` reads the identities and score lines already written in
+  `results.md`, carries old ticks by identity, and refuses ambiguity.
 - Contact lookup runs on ticked rows only, once per organisation. Ticks carry across runs in `shortlist.md`, so a rerun re-looks-up nothing — see **Ticks**.
 
 ---
@@ -247,7 +273,7 @@ empty one stops.
 
 | file | holds |
 |------|-------|
-| `MEMORY.md` | status + next step. **Pointer only — no data** |
+| `MEMORY.md` | status + next step, plus `last run` and temporary `pending run`. **Pointer only — no topic data** |
 | `sources.md` | one table, `type` is a column, then `## gaps` and `## notes` — what is not covered, and how the reading was done |
 | `criteria.md` | the approved checklist |
 | `results.md` | one file, diffed. Not per-site files. Never ticked, never edited by a later step |
@@ -302,19 +328,19 @@ afterwards from what happened — started from `examples/_template.md`, never
 guessed up front. Never postpone a step waiting for an example, and never bend a
 topic toward a shape that has one.
 
-### The frontmatter — three fields, and what each one decides
+### The frontmatter — four fields, and what each one decides
 
 Every `examples/<shape>.md` opens with them. They are the machine half of a shape;
 the body below is the agent half, and neither replaces the other — a tender's
-closing-date trap and a classification-code trap are not derivable from three enum
+closing-date trap and a classification-code trap are not derivable from four enum
 values, and `tenders` and `grants` carry identical fields with different traps.
 
 ```yaml
 ---
 shape: courses
-form: ledger        # ledger | brief
-cardinality: many   # one | many
-fillers: [apply-links]
+form: ledger
+cardinality: many
+selection: rows
 ---
 ```
 
@@ -322,21 +348,19 @@ fillers: [apply-links]
 |-------|--------|---------|
 | `form` | `ledger` · `brief` | **how the result reads.** `ledger` is scored rows and cards; `brief` is prose sections, every claim attributed |
 | `cardinality` | `one` · `many` | **whether pre-filter, diff and score apply at all.** `many` is candidates you accept or reject, so all three run. `one` is a single subject the sources are all about, so there is nothing to narrow, nothing to compare against last week, and nothing to rank |
-| `fillers` | a list, possibly empty | **what can be made from the result at step 4.** `[]` means the session ends at `run` |
+| `selection` | `rows` · `artifact` | **what GATE 4 acts on.** `rows` writes a compact `shortlist.md` beside `results.md`; `artifact` uses the result as a whole and writes no shortlist |
 
-**`fillers:` is a menu, not a constraint.** It is what gets offered at GATE 4, drawn
-from the rows actually on screen rather than read out as a capability list. The human
-may always name something that is not in it — including one with no `fillers/` file
-yet. Refusing a request because the shape's list does not mention it is the shape
-telling the human what they are allowed to want, which is backwards.
+Keep frontmatter values bare: no inline comments. The UI reads this deliberately
+small syntax without a YAML dependency; explanatory prose belongs below the closing
+`---`.
 
 **Defaults: `one → brief`, `many → ledger`.** A shape that deviates says why in its
 body — the field still states what it is, and the prose carries the reason.
 
-`cardinality` is the field that was missing longest, and its absence cost the most:
-`company-research` skips the pre-filter, the diff and contacts, and not one of those
-skips is because it is a brief. All three are because it has **one subject**. While
-the axis had no name, every skip got patched separately.
+`cardinality` decides why `company-research` skips the pre-filter, diff and score:
+it has **one subject**. `selection: artifact` separately decides why it has no
+shortlist. Next-step suggestions are proposed from the actual result and
+are not shape metadata.
 
 `expiry` — whether `gone` is news, and whether a closing date sorts the file — stays
 **prose in the body**. It is not a frontmatter field.

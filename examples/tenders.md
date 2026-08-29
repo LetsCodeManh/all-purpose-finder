@@ -2,7 +2,7 @@
 shape: tenders
 form: ledger
 cardinality: many
-fillers: [contacts]
+selection: rows
 ---
 
 # example — tenders
@@ -20,8 +20,10 @@ standalone — no live links to rot, and no real session's content.
   strips it.
 - **Recurs?** Yes, and on a clock. Every row carries a **closing date**, and that
   date is what sorts the file. The diff that matters is *new* and *closing soon*.
-- **Fillers?** `contacts`, per authority — and the notice itself usually names the
-  contact point, so step 04 succeeds more often here than anywhere else.
+- **Selection:** rows — GATE 4 uses the compact shortlist beside the detailed
+  notices.
+- **Next steps:** propose possibilities from the selected notices. Contact lookup
+  is often useful because a notice commonly publishes a contact point.
 
 Closest shape is `jobs` — same rows, same cards, same scoring. Three things
 differ, and all three come from the same fact, that a tender is a legal process
@@ -44,8 +46,9 @@ Topic: public contracts for <kind of work> published by <authority level> in
        <region>, above <size> or any size.
 Reading this as many candidates to pick from.
 
-Same four stops as last time: sources, criteria, results, then your call on
-what to make of them. Approving this approves the plan only.
+Same five stops as last time: this plan, sources, criteria, detailed results,
+then the shortlist and your call on what to make. Approving this approves the
+plan only.
 
 Good? Rename it if the slug is wrong.
 ```
@@ -201,6 +204,7 @@ A scored card:
 
 ```markdown
 ### <authority> — <notice title>
+<!-- identity: <notice reference> -->
 ref <notice reference> · <place of performance> · [notice](<url>)
 published <date> · **closes <date> — <N> days left**
 source: central register · also seen: one regional portal
@@ -242,7 +246,7 @@ The shortlist line — the closing date belongs in it, because this shape's whol
 argument is that a date outranks a score:
 
 ```
-- [ ] <authority> — <notice title> · closes <date> · 5/7 · 0 must misses
+- [ ] <authority> — <notice title> · closes <date> · 5/7 · 0 must misses <!-- identity: <notice reference> -->
 ```
 
 Dropped at scoring, this shape. **A closed tender is not a `must` miss and does not
@@ -269,10 +273,12 @@ not checked since:     <name> — <date>
 
 ---
 
-## 04 — output · contacts
+## 04 — output · Next Steps
 
-The filler this shape offers is `contacts`. **Once per authority**, not once per
-notice — three ticked tenders from one authority is one lookup.
+GATE 4 uses the generated shortlist beside the detailed cards.
+Propose relevant possibilities without fixing the user's end goal. If the human
+chooses contacts, look up **once per authority**, not once per notice — three
+ticked tenders from one authority is one lookup.
 
 Lookup order is the same as everywhere, but step 1 pays off far more often here:
 a notice names a contact point by law in most jurisdictions. Read the notice

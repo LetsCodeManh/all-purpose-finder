@@ -70,7 +70,7 @@ GATE 1* below — before searching for sources.
 
 Say what the whole session is going to do before the human agrees to start it.
 Not to be thorough: a human who can see where you stop can tell whether you
-stopped there. This is the same four stops the rest of this repo is built on,
+stopped there. This is the same five stops the rest of this repo is built on,
 said once, in advance, out loud.
 
 Three rules, and they are what make it safe to print:
@@ -94,7 +94,7 @@ which is `cardinality`, asked in human. Ask that one out loud, say which way you
 read it, and let them correct you. The shape name is yours to carry; the
 distinction behind it is theirs to confirm.
 
-**Step 4 stays open.** Do not offer to write a report, and do not promise a list
+**Step 5 stays open.** Do not offer to write a report, and do not promise a list
 of contacts. What the results are for is the human's call once they have seen
 them, and saying so in advance is honest rather than vague.
 
@@ -112,7 +112,7 @@ One question first, because it changes how I work:
 is this one thing you want to know about, or many candidates you want to
 pick from? I have read it as <many candidates / one subject>.
 
-Here is the whole thing before we start. I stop and wait for you four times:
+Here is the whole thing before we start. I stop and wait for you five times:
 
   now          you tell me the name above is right and I have understood the topic
   next         I go looking for places worth searching and bring you the list.
@@ -120,8 +120,9 @@ Here is the whole thing before we start. I stop and wait for you four times:
                real until you have
   after that   I write down what counts as a match, in your own words, and read
                it back. You approve it or change it
-  at the end   you see what came back and pick what is worth acting on. Nothing
-               gets acted on that you did not pick
+  results      you read the detailed result and tell me what is wrong or missing
+  at the end   you use the compact shortlist to pick what is worth acting on,
+               then say what — if anything — to make from it
 
 Then what to do with the results is your call — someone to contact, a report,
 a list to apply from, something you name yourself. You choose that after you
@@ -134,15 +135,12 @@ the next step, and you get to cut that list before anything is searched.
 Good? Rename it if the name is wrong.
 ```
 
-**When the shape has nothing to make — `fillers: []` — the fourth stop is a
-review, not a menu.** Do not offer contacts, a report or a list to apply from to
-a session that ends at its result; promising a step that does not exist is the
-same lie as skipping one that does. Replace the "your call" paragraph with what
-the result actually is:
+**When `selection: artifact`, there is no shortlist.** Keep the fourth stop, but
+say that it acts on the result as a whole:
 
 ```
-  at the end   you read what came back and decide what to do with it. There is
-               nothing for me to make from this one — the list is the answer
+  at the end   you decide what, if anything, to make from the result
+               as a whole
 ```
 
 #### Short form
@@ -155,15 +153,16 @@ Slug:  <proposed-slug>
 Topic: <two lines, in your own words, of what you understood>
 Reading this as <many candidates to pick from / one subject to read up on>.
 
-Same four stops as last time: sources, criteria, results, then your call on
-what to make of them. Approving this approves the plan only.
+Same five stops as last time: this plan, sources, criteria, detailed results,
+then your call from the shortlist or whole artifact. Approving this approves
+the plan only.
 
 Good? Rename it if the slug is wrong.
 ```
 
 **Printing a plan does not make this two gates.** It is one stop — GATE 1, the
 slug and the shape — and the plan is what you print while standing at it. The
-gates are four.
+gates are five.
 
 ### When it is a new shape
 
@@ -209,7 +208,7 @@ and not before, create the session and write its pointer:
    `slug`, `shape`, `status: sources`, `last run: —`, and
    `next: propose sources`.
 3. Copy no other skeleton file yet. `sources.md` is written only after GATE 2;
-   `criteria.md` only after GATE 3; result and filler files only when they run.
+   `criteria.md` only after GATE 3; result and next-step files only when they run.
 
 This is the durable GATE 1 record. If the source search is interrupted, the next
 call sees `status: sources` and resumes the correct step instead of losing the
@@ -227,9 +226,10 @@ approved slug and shape.
 |--------|-------|-----|
 | `sources` | sources not approved yet | `workflows/01-sources.md` |
 | `criteria` | sources approved, criteria not | `workflows/02-criteria.md` |
-| `run` | ready to run, or a shape with nothing to make has finished one | `workflows/03-run.md` |
-| `output` | results exist, nothing picked from them yet | `workflows/04-output.md` |
-| a filler name, e.g. `contacts` | that filler has run; the shortlist is still there | `workflows/04-output.md`, then `fillers/<name>.md` |
+| `run` | criteria approved; ready to run | `workflows/03-run.md` |
+| `output` | the run is published; Next Steps (GATE 4) is waiting | `workflows/04-output.md` |
+| `done` | GATE 4 was answered with nothing to make | follow `next:`; rerun or reopen output only when asked |
+| an output name, e.g. `contacts` | that next step has run; the shortlist is still there | `workflows/04-output.md`, then use a reusable procedure if one exists |
 
 Never skip forward because a later step looks more useful. If the human explicitly asks for a different step, say which step the session is on, then do what they asked.
 

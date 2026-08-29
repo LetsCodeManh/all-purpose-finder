@@ -2,7 +2,7 @@
 shape: company-research
 form: brief
 cardinality: one
-fillers: []
+selection: artifact
 ---
 
 # example — company-research
@@ -22,8 +22,9 @@ no live links, and no real session's content.
   sources are about the same one or two entities by definition.
 - **Recurs?** Barely. One-shot with a deadline — a meeting, a call, a decision.
   A rerun is a refresh before the next meeting, not a weekly diff.
-- **Fillers?** **None.** `fillers: []` — the contact *is* the subject, and the
-  brief is what was to be made. Step 04 is one line.
+- **Selection:** artifact — the sourced brief stays whole; no shortlist.
+- **Next steps:** propose a few uses of the published brief, such as a summary,
+  briefing, proposal, or question list; the human may name something else or stop.
 
 Two more things this shape does not have, and that is fine:
 
@@ -43,8 +44,8 @@ Topic: background on <an organisation> and <a person at it>, ahead of <the occas
        on <date>.
 Reading this as one subject to read up on, not a list to choose from.
 
-Same four stops as last time: sources, criteria, then the brief itself and what
-you do before <the occasion>. Approving this approves the plan only.
+Same four stops as last time: this plan, sources, criteria, then your call on the
+published brief as a whole. Approving this approves the plan only.
 
 Good? Rename it if the slug is wrong.
 ```
@@ -208,10 +209,10 @@ whenever the occasion, objective, or underlying brief changes.
 
 ## 04 — output
 
-Skipped. `fillers: []` — the subject is the contact, and the brief is the thing that
-was to be made.
+At GATE 4 the published brief is the whole input; propose
+a few relevant next steps without treating them as a menu, then wait.
 
 ```
 Nothing to make from this one; the brief is the result.
-MEMORY.md → next: read the brief before <the occasion>.
+MEMORY.md → status: done, next: read the brief before <the occasion>.
 ```

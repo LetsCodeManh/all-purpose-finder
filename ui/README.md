@@ -28,12 +28,18 @@ pane updates as the agent writes the file.
   probe-only folder from an older run is not a session and is not listed. The active
   shape and its output form remain visible beside it; the form is the `form:` in
   `examples/<shape>.md`, never a guess from which files exist.
-- **Stage track** — `sources · criteria · run`, and then **the slot**. Step 4 is one
-  chip, not one per filler: it reads `Step 4` and lists what the shape offers until the
-  human picks at GATE 4, and takes the filler's name once `status` says which one. An
-  unfilled slot opens a read-only explanation of the offered fillers; the choice still
-  happens in the terminal. `✓` has output on disk · `●` where `status` says you are ·
-  `○` nothing written yet.
+- **Stage track** — `sources · criteria · results`, and then **Next Steps** (GATE 4).
+  A validated run publishes directly to `status: output`: Results remains available
+  for inspection or correction, while Next Steps shows the generated shortlist with
+  writable ticks, or says the whole artifact is selected. It shows a few lightweight examples appropriate to
+  rows or an artifact; these are prompts, not a fixed menu or end goal. `✓` has output
+  on disk · `●` where `status` says you are · `○` nothing written yet.
+- **Results separates postings from cards.** Its badge shows the active posting count
+  and, when grouped variants make it different, the number of visual cards. Tick counts
+  appear only in Next Steps, where the selection can be changed.
+- **Unchanged stays compact on disk and card-shaped on screen.** `results.md` carries
+  unchanged decisions as one line each so reruns remain cheap; the UI presents those
+  lines with the same card-list hierarchy as new results when the section is opened.
 - **The stage track does not reflow.** Its action column has a fixed width, so changing
   the stage note never moves the chips. Sources uses its two equal columns; Criteria and
   Results deliberately use the full width.
@@ -43,17 +49,27 @@ pane updates as the agent writes the file.
   agent or run it yourself — and a control that records the answer in that row's
   `manual status` / `manual checked` columns. A sources.md without those columns gets
   the prompt and no control: there would be nowhere to put the answer.
-- **Ticking** writes `- [ ]` → `- [x]` on one line of `shortlist.md`. Same edit you would
-  make by hand in Obsidian or VS Code, where these checkboxes are also clickable.
-  `results.md` renders read-only and offers no checkbox: the ticks left it, and a dead
-  checkbox on screen is worse than none.
+- **Ticking in Next Steps** writes `- [ ]` → `- [x]` on one line of `shortlist.md`. Same edit you would
+  make by hand in Obsidian or VS Code, where these checkboxes are also clickable. The
+  screen separates selecting inputs from choosing an output, and the shortlist can be
+  searched or filtered to selected rows. Those views are presentation only; they never
+  rewrite or reorder the file. `results.md` renders read-only and offers no checkbox:
+  the ticks left it, and a dead checkbox on screen is worse than none.
+- **Results and Next Steps fill the viewport.** Their document card uses the full
+  content width and keeps its own body scroll, so the stage track and file header stay
+  visible while long cards or shortlists move underneath.
+- **A half-run cannot look published.** The server compares the semantic run dates
+  inside `listings.md`, `results.md`, and `shortlist.md` with `MEMORY.md`. While a
+  `pending run` exists, the old artifact is labelled Previous Results, a freshness
+  warning names both dates, and Next Steps is locked. File modification time is never
+  presented as the run date.
 - **Two writes, two files.** A tick may write `shortlist.md` and nothing else; a hand
   check may write `sources.md` and nothing else. Each endpoint carries its own writable
   set, so widening one never widens the other.
 - **Live reload** — SSE. Edit a file in the terminal, the pane follows.
 - **Terminal drawer** — optional and detached at the bottom. Nothing in the dashboard
   approves a gate: each stage says what it is waiting for, and you confirm it in the
-  terminal, where the approval and the next step are written to the session files.
+  terminal, where the Next Steps choice is written to the session files.
 
 `listings.md` is never rendered. Its 3718 rows are not for reading; the header stat line
 is, and that is what the box at the top of the run screen shows.
@@ -86,4 +102,5 @@ block, auto-rerun, locking, a framework.
 
 ```
 python3 ui/test_server.py    # both write paths, incl. refusing a moved line
+node ui/test_app.js          # parser identity markers and five-gate stage states
 ```

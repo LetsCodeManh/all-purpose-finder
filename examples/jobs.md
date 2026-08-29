@@ -2,7 +2,7 @@
 shape: jobs
 form: ledger
 cardinality: many
-fillers: [contacts]
+selection: rows
 ---
 
 # example — jobs
@@ -17,6 +17,8 @@ standalone — no live links to rot, and **no real session's content**. Read
 - **Result form:** ledger — rows, scored, diffed each run.
 - **Identity:** issuer = the organisation hiring · item = the role title.
 - **Recurs?** Yes. New-since-last-run is the point.
+- **Selection:** rows — `shortlist.py` writes the compact tick list beside the
+  detailed result.
 - **Fillers?** `contacts` — someone to talk to per organisation.
 
 ---
@@ -32,8 +34,9 @@ Slug:  <topic>-<region>
 Topic: <role family> roles in <region>, <work-mode preference>, <seniority band>.
 Reading this as many candidates to pick from.
 
-Same four stops as last time: sources, criteria, results, then your call on
-what to make of them. Approving this approves the plan only.
+Same five stops as last time: this plan, sources, criteria, detailed results,
+then the shortlist and your call on what to make. Approving this approves the
+plan only.
 
 Good? Rename it if the slug is wrong.
 ```
@@ -159,6 +162,7 @@ A scored card:
 
 ```markdown
 ### <employer> — <role title>
+<!-- identity: <canonical value from criteria.md identity> -->
 <location> · [posting](<url>) · posted <date>
 source: employer careers feed · also seen: one aggregator, one regional board
 
@@ -176,7 +180,7 @@ open   ✓ somewhere I can learn — <what you read to decide>
 The shortlist line for this shape — employer, role, score:
 
 ```
-- [ ] <employer> — <role title> · 4/6 · 1 unknown · 0 must misses
+- [ ] <employer> — <role title> · 4/6 · 1 unknown · 0 must misses <!-- identity: <canonical value> -->
 ```
 
 Dropped at scoring. Jobs drop overwhelmingly on region and on role family, and the
@@ -206,9 +210,12 @@ not checked since:     <name> — <date>
 
 ---
 
-## 04 — output · contacts
+## 04 — output · Next Steps
 
-The filler this shape offers is `contacts`. **Once per employer**, not once per row — two ticked roles at one org is one lookup.
+GATE 4 uses the generated shortlist beside the detailed cards.
+Propose a few relevant possibilities from what is selected—contacts, comparison,
+application preparation, official links—without fixing the user's end goal. If the
+human chooses contacts, look up **once per employer**, not once per row.
 
 Lookup order: the posting itself (a named person, or a linked team page) → the
 employer's own site → a public search for whoever owns that team.

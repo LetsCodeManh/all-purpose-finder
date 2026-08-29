@@ -2,6 +2,10 @@
 
 Scripts belong to **this session**, not to the engine.
 
+The one shared lifecycle script is `tools/publish_run.py` at the repository root.
+It is topic-neutral and writes only `MEMORY.md`: use `<slug> begin` before fetching,
+then `<slug> finish` after this session's artifacts pass validation.
+
 **This folder ships no code, and that is deliberate.** A jobs session writes
 scripts that normalise the field names job feeds use. A price session parses a
 promotions feed with a from–to window. A tender session has to read a closing
@@ -18,13 +22,29 @@ it from the rules below. That is the intended path, not a missing file.
 trade — divergence you can see, over a shared script that quietly grows a
 branch per topic.
 
-A jobs session tends to end up with three:
+A row-selection jobs session tends to end up with four:
 
 | script | does |
 |--------|------|
 | `probe.py` | fetch one URL, report `feed` / `page` / `blocked` with the reason, print the field names a feed actually carries. Run before a source is proposed |
 | `regex.py` | read the `## prefilter` block out of `criteria.md` and hand back the patterns |
 | `prefilter.py` | fetch every `feed`+`ok` source, normalise, dedupe, apply the patterns, diff against `listings.prev.md`, write `listings.md` |
+| `shortlist.py` | after `results.md` is written, project its kept rows into `shortlist.md` and carry ticks forward by the hidden `identity` marker |
+
+`shortlist.py` reads only the result sections that remain actionable: full cards
+and collapsed kept rows, never `gone` or `dropped at scoring`. Every input row has
+exactly one `<!-- identity: ... -->` marker. The script:
+
+1. reads the previous shortlist into `identity → checked`
+2. reads the new result in display order and refuses missing or duplicate identities
+3. copies the visible issuer, item and score without rewriting them
+4. emits `Run <date> · <N> rows`, then one checkbox line with the hidden identity
+5. writes atomically, preserving `x` or blank by identity and defaulting only new
+   identities to blank
+
+The ticked count is deliberately not stored in the header: a UI click changes one
+checkbox line, and a second mutable tally would become stale immediately. Count the
+checkboxes when displaying or auditing them.
 
 **`probe.py` usually grows a second mode, and it is the one that finds the primary
 sources.** Many domains publish through a small set of hosted platforms rather than
@@ -62,6 +82,10 @@ Rules that hold whatever the script does:
   where an LLM is both the most expensive tool and the only one whose mistakes
   nobody can spot — a miscounted tally and a missed `gone` row both look like
   nothing. Reading meaning stays with the agent; that is the whole split.
+- **`shortlist.py` is a projection, not a scorer.** It reads the stable identity
+  marker and visible label/score already written in `results.md`, preserves the old
+  checkbox by identity, and writes the compact file atomically. It refuses missing
+  or duplicate identities. It never decides whether a row belongs or changes a score.
 - **a deterministic step that drops something ships with a way to see what it
   dropped.** Deterministic means repeatable, not correct — a wrong script is
   wrong identically every run, and consistency reads as confidence. `probe.py`

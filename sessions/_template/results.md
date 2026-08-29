@@ -6,17 +6,19 @@ Read: <how deep — feed fields only, or bodies fetched>. Undecidable on that
 alone: <criteria>.
 
 What this run found, rewritten each run. Nothing is ticked here — the decision
-lives in `shortlist.md`, which is generated from this file.
+lives in `shortlist.md` when `selection: rows`; `tools/shortlist.py` generates it
+from this file. For `selection: artifact`, this whole file reaches GATE 4.
 
 ## new
 
 ### <issuer> — <item>
+<!-- identity: <canonical value from criteria.md identity> -->
 
 ## changed
 
 ## unchanged
 
-<issuer> — <item> · <score>
+<issuer> — <item> · <score> <!-- identity: <canonical value> -->
 
 ## gone
 

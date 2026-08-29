@@ -24,7 +24,7 @@ Four gates. At each one the agent stops and waits for you:
 | 1 | session created | confirm the slug and the shape |
 | 2 | sources proposed | cut what is noise, add what it missed |
 | 3 | criteria written back | approve what it will search against |
-| 4 | results ready | review the result; for a ledger, tick the rows worth chasing in `shortlist.md`, then say what to make from them |
+| 4 | next steps | review the result, then use `shortlist.md` or the whole artifact to choose what, if anything, should be made |
 
 Before gate 3, candidate sources are searched and lightly probed only to
 establish whether and how they can be read. Full retrieval, filtering, scoring,
@@ -37,10 +37,9 @@ purposes before gate 4.
 
 - an AI coding agent that reads `AGENTS.md` or `CLAUDE.md` — this repo was
   built with one, and any equivalent works
-- `python3`, for the small scripts a session writes for itself. Standard library
-  only, no install step. There is no shared engine script to install or update:
-  each session writes what its own sources need, from the spec in
-  `sessions/_template/tools/README.md`
+- `python3`, for the small scripts a session writes for itself and the shared,
+  topic-neutral run publisher. Standard library only, no install step. Fetching and
+  parsing stay per session; `tools/publish_run.py` only guards lifecycle state.
 
 ---
 
@@ -61,16 +60,17 @@ natural-language command above, and they follow `AGENTS.md` plus
 `workflows/00-session.md`.
 
 The agent proposes a slug and a shape, then waits. Approve, and it walks the
-four steps in order:
+remaining gates in order:
 
 ```
 sources → criteria → run → [ what the result is for ]
 ```
 
-Three fixed steps and one open slot. The fourth is whatever you wanted the result
-for — someone to talk to, a report, a resume, links to apply with. The agent offers
-what it can make from the rows you ticked and waits; you can always name something
-it did not offer.
+Three fixed steps and one open slot. Results are published automatically after a
+validated run and remain available for review or correction. The fourth gate asks
+what the result is for — someone to talk to, a report, a resume, links to apply
+with, or nothing. Row shapes use the compact shortlist; artifact shapes use the
+whole result. You can always name something the agent did not offer.
 
 You can stop after any step and come back days later. `sessions/<slug>/MEMORY.md`
 holds the status, and it is the only thing the next session needs to resume.
@@ -83,11 +83,11 @@ Each session is one folder, one file per thing:
 
 | file | holds |
 |------|-------|
-| `MEMORY.md` | slug, shape, status, next step. Pointer only — no data |
+| `MEMORY.md` | slug, shape, status, next step, and published/pending run dates. Pointer only — no topic data |
 | `sources.md` | where it looks, how each one reads, when it was last checked — and, under `## gaps`, what it does not cover |
 | `criteria.md` | the approved checklist, plus the regexes the pre-filter runs |
 | `results.md` | this run, diffed against the last one |
-| `shortlist.md` | one line per kept row, and the only file you tick |
+| `shortlist.md` | compact scripted projection beside a row-based result, and the only file you tick |
 | `listings.md` | the raw fetch cache |
 | `contacts.md` | who to talk to, cached so it is never looked up twice |
 | `tools/` | that session's own scripts, if it needs any |
@@ -96,6 +96,11 @@ Run `python3 tools/session_audit.py <slug>` before relying on a finished session
 The validator is read-only and topic-neutral: it checks structure, source
 accounting, dates, and whether cited web domains are represented in the source
 table. It does not fetch or score anything.
+
+Every run starts with `python3 tools/publish_run.py <slug> begin` and ends with
+`python3 tools/publish_run.py <slug> finish`. Until the finish command validates
+all artifact dates and identities, the previous result stays visibly previous and
+Next Steps remains closed. A successful finish opens Next Steps immediately.
 
 **Sessions are yours and stay local.** `sessions/*` is gitignored. Your job
 hunt, your shopping list and your meeting prep never leave your machine, and
@@ -107,15 +112,16 @@ nothing in the tracked part of this repo says what you were looking for.
 
 The procedure is one procedure. A **shape** is what a kind of topic makes of it:
 
-| shape | result | recurs | step 4 |
-|-------|--------|--------|--------|
-| `jobs` | scored rows, diffed each run | yes | `contacts`, per organisation |
-| `tenders` | scored rows, each with a closing date that sorts them | yes | `contacts`, per authority |
-| `prices` | rows per seller, each with a from–to window | weekly | nothing to make |
-| `company-research` | a written brief, sourced | one-shot, before a meeting | nothing to make |
+| shape | result | recurs | Next Steps input |
+|-------|--------|--------|------------------|
+| `jobs` | scored rows, diffed each run | yes | selected shortlist rows |
+| `tenders` | scored rows, each with a closing date that sorts them | yes | selected shortlist rows |
+| `prices` | rows per seller, each with a from–to window | weekly | the whole result |
+| `company-research` | a written brief, sourced | one-shot, before a meeting | the whole brief |
 
-The step 4 column is the shape's `fillers:` list, and it is a menu rather than a
-limit — you can ask for something that is not on it.
+`selection:` decides rows versus the whole artifact. At Next Steps the agent
+proposes a few possibilities grounded in the actual result and your goal. They
+are examples, not a fixed menu; you can name something else or stop.
 
 Your topic may be none of these. That is expected — the agent says so at gate 1,
 proposes a name, and writes `examples/<shape>.md` as the session goes, from what
@@ -150,8 +156,8 @@ CLAUDE.md              one line, pointing at AGENTS.md
                        them and everything still works, you just type the sentence
 tools/session_audit.py read-only, topic-neutral session consistency check
 workflows/             one file per step, procedure only, no topic
-fillers/               one file per thing that can be made from a result. Step 4
-                       is a slot; these are what plugs into it
+next-steps/            optional reusable procedures for common next steps. They
+                       are implementation shortcuts, not the user's menu
 examples/              one worked walkthrough per shape. Public, placeholders only
 sessions/_template/    the skeleton of a session
 sessions/<slug>/       your sessions. Gitignored

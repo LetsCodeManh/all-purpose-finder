@@ -12,12 +12,11 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 
-# Status is `sources` · `criteria` · `run` · `output`, then the name of whatever
-# filler ran. Filler names are an open set by design (AGENTS.md -> Step order), and
-# one may run before `fillers/<name>.md` exists, so a post-run status is checked for
-# shape rather than against a list.
+# Status is `sources` · `criteria` · `run` · `output` · `done`, then
+# the name of whatever next-step output ran. Output names are an open set by design,
+# so a post-run status is checked for shape rather than against a list.
 PRE_RUN_STATUSES = {"sources", "criteria"}
-FIXED_STATUSES = PRE_RUN_STATUSES | {"run", "output"}
+FIXED_STATUSES = PRE_RUN_STATUSES | {"run", "output", "done"}
 STATUS_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 VALID_SOURCE_STATUSES = {"ok", "blocked", "error", "untested"}
 VALID_METHODS = {"feed", "page", "blocked"}
@@ -25,20 +24,16 @@ VALID_MANUAL = {"checked", "partial", "unavailable", "—", "-", ""}
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 LINK_RE = re.compile(r"\[[^\]]+\]\((https?://[^)]+)\)")
 SHAPE_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+TICK_RE = re.compile(r"^- \[([ x])\] .+<!--\s*identity:\s*(.+?)\s*-->\s*$")
 # A `page` source is read by hand, so nothing in the pipeline proves it happened: the
 # row still says `ok` and listings.md simply has no rows from it. The evidence is one
 # of two shapes, and this is what the check looks for (workflows/03-run.md -> 1).
 PAGE_MARKER = "## page sources"
 PAGE_NOT_READ = "page not read"
 
-# ponytail: filed, not built — tick counting.
-# A tick is `^- \[[ x]\] ` at the start of a line in shortlist.md (AGENTS.md -> Ticks),
-# so ticked-vs-total is a count, and anything countable belongs in a script rather
-# than in a claim an agent makes about a file. This is the deterministic check on the
-# exact failure that produced the rule: a contacts run reporting "all 38 orgs ticked"
-# against a shortlist holding zero `- [x]`.
-# Shape when built: count ticked and total rows, print them in the report, and error
-# when a filler has run and shortlist.md holds no tick at all.
+# Tick accounting is deterministic here: validate the hidden identities, compare
+# the header counts with the actual task-list rows, and refuse a row-based next step
+# that ran against zero selected inputs.
 
 
 @dataclass
@@ -138,6 +133,14 @@ def date_or_dash(value: str) -> bool:
     return value in {"", "—", "-"} or bool(DATE_RE.fullmatch(value))
 
 
+def artifact_run_date(path: Path, pattern: str) -> str:
+    if not path.is_file():
+        return ""
+    text = path.read_text(encoding="utf-8", errors="replace")
+    match = re.search(pattern, text, re.MULTILINE)
+    return match.group(1) if match else ""
+
+
 def audit_sources(text: str, audit: Audit) -> tuple[int, int, set[str]]:
     rows, headers = parse_source_table(text, audit)
     required = {"name", "type", "url", "method", "status", "last checked", "why"}
@@ -215,19 +218,91 @@ def audit_result_links(text: str, source_hosts: set[str], audit: Audit) -> None:
         audit.warn("results.md cites domains absent from sources.md: " + ", ".join(uncovered))
 
 
-def shape_form(repo: Path, shape: str) -> str:
-    """`form:` out of examples/<shape>.md — the shape's own account of how it reads."""
+def shape_fields(repo: Path, shape: str) -> dict[str, str]:
+    """The simple frontmatter fields out of examples/<shape>.md."""
     if not SHAPE_RE.fullmatch(shape or ""):
-        return ""
+        return {}
     path = repo / "examples" / (shape + ".md")
     if not path.is_file():
-        return ""
+        return {}
+    fields: dict[str, str] = {}
     for line in path.read_text(encoding="utf-8").splitlines()[1:]:
         if line.strip() == "---":
             break
-        if line.startswith("form:"):
-            return line.split(":", 1)[1].strip()
-    return ""
+        if ":" in line:
+            key, value = line.split(":", 1)
+            fields[key.strip()] = value.strip()
+    return fields
+
+
+def audit_shortlist(text: str, audit: Audit) -> tuple[int, int]:
+    total = ticked = 0
+    identities: set[str] = set()
+    for line in text.splitlines():
+        if not line.startswith("- ["):
+            continue
+        total += 1
+        match = TICK_RE.fullmatch(line)
+        if not match:
+            audit.error("shortlist.md tick has no valid hidden identity marker: " + line)
+            continue
+        ticked += match.group(1) == "x"
+        identity = match.group(2)
+        if identity in identities:
+            audit.error(f"shortlist.md has duplicate identity {identity!r}")
+        identities.add(identity)
+    header = re.search(r"^Run\s+\S+\s+·\s+(\d+) rows(?:\s+·\s+\d+ ticked)?", text, re.MULTILINE)
+    if not header:
+        audit.error("shortlist.md has no recognizable Run date · N rows header")
+    elif int(header.group(1)) != total:
+        audit.error(f"shortlist.md header reports {header.group(1)} rows; file has {total}")
+    audit.notes.append(f"{total} shortlist rows · {ticked} ticked")
+    return total, ticked
+
+
+def audit_ledger_result_counts(text: str, audit: Audit) -> int | None:
+    """Compare the ledger's Run summary with the result identities actually written.
+
+    A visual card may group several posting variants. New files use hidden identity
+    markers; legacy grouped cards use one `[posting](...)` link per result row.
+    The active count excludes `gone`, which is never regenerated into the shortlist.
+    """
+    header = re.search(
+        r"^Run\s+\d{4}-\d{2}-\d{2}\s+·\s+(\d+) new\s+·\s+(\d+) changed\s+"
+        r"·\s+(\d+) unchanged\s+·\s+(\d+) gone",
+        text,
+        re.MULTILINE | re.IGNORECASE,
+    )
+    if not header:
+        return None
+    reported = dict(zip(("new", "changed", "unchanged", "gone"), map(int, header.groups())))
+    cards = {key: 0 for key in reported}
+    identities = {key: set() for key in reported}
+    postings = {key: set() for key in reported}
+    section = ""
+    for line in text.splitlines():
+        heading = re.match(r"^##\s+(.+?)\s*$", line)
+        if heading:
+            section = heading.group(1).strip().lower()
+            continue
+        if section not in reported:
+            continue
+        if line.startswith("### "):
+            cards[section] += 1
+        identities[section].update(re.findall(r"<!--\s*identity:\s*(.+?)\s*-->", line))
+        postings[section].update(
+            re.findall(r"\[posting\]\((https?://[^)]+)\)", line, re.IGNORECASE)
+        )
+    actual = {
+        key: len(identities[key]) or len(postings[key]) or cards[key]
+        for key in reported
+    }
+    for key in reported:
+        if reported[key] != actual[key]:
+            audit.error(
+                f"results.md reports {reported[key]} {key}; file has {actual[key]} {key} rows"
+            )
+    return actual["new"] + actual["changed"] + actual["unchanged"]
 
 
 def audit_page_coverage(
@@ -284,12 +359,22 @@ def audit_session(repo: Path, slug: str) -> Audit:
     status = memory.get("status", "")
     if not STATUS_RE.fullmatch(status):
         audit.error(f"unknown MEMORY.md status {status!r}")
-    post_run = status not in FIXED_STATUSES or status == "output"
+    if status == "review":
+        audit.error("deprecated MEMORY.md status 'review'; published runs move directly to output")
+    post_run = status not in FIXED_STATUSES or status in {"output", "done"}
     if not memory.get("shape"):
         audit.error("MEMORY.md has no shape")
     last_run = memory.get("last run", "")
     if not date_or_dash(last_run):
         audit.error(f"invalid MEMORY.md last run date {last_run!r}")
+    pending_run = memory.get("pending run", "")
+    pending_active = bool(DATE_RE.fullmatch(pending_run))
+    if pending_run not in {"", "—", "-"} and not pending_active:
+        audit.error(f"invalid MEMORY.md pending run date {pending_run!r}")
+    if pending_active and status != "run":
+        audit.error("MEMORY.md pending run is only valid while status is run")
+    if status == "run" and pending_active:
+        audit.notes.append(f"run {pending_run} is in progress; existing results are previous")
 
     sources_text = read_text(folder / "sources.md", audit, required=status != "sources")
     source_count = blocked_count = 0
@@ -335,16 +420,68 @@ def audit_session(repo: Path, slug: str) -> Audit:
         # One coverage check per form, and they are not interchangeable. A brief
         # attributes every claim, so its check is the cited domains. A ledger's rows
         # come from listings.md, so its check is that the hand-read sources reached it.
-        form = shape_form(repo, memory.get("shape", ""))
+        shape = shape_fields(repo, memory.get("shape", ""))
+        form = shape.get("form", "")
+        cardinality = shape.get("cardinality", "")
+        if form not in {"ledger", "brief"}:
+            audit.error(f"shape has unknown or missing form {form!r}")
+        if cardinality not in {"one", "many"}:
+            audit.error(f"shape has unknown or missing cardinality {cardinality!r}")
+        active_result_rows = None
         if form == "brief":
             audit_result_links(results_text, source_hosts, audit)
         elif form == "ledger":
+            active_result_rows = audit_ledger_result_counts(results_text, audit)
             audit_page_coverage(folder, page_ok, results_text, audit)
 
+        selection = shape.get("selection", "")
+        if selection not in {"rows", "artifact"}:
+            audit.error(f"shape has unknown or missing selection {selection!r}")
+        shortlist_path = folder / "shortlist.md"
+        if selection == "rows":
+            if not (folder / "tools" / "shortlist.py").is_file():
+                audit.error("selection: rows requires tools/shortlist.py")
+            shortlist_text = read_text(shortlist_path, audit, required=True)
+            shortlist_total, ticked = audit_shortlist(shortlist_text, audit) if shortlist_text else (0, 0)
+            if active_result_rows is not None and shortlist_total != active_result_rows:
+                audit.error(
+                    f"shortlist.md has {shortlist_total} rows; results.md has "
+                    f"{active_result_rows} active rows"
+                )
+            if status not in FIXED_STATUSES and ticked == 0:
+                audit.error("a row-based next step ran with zero ticked shortlist rows")
+        elif selection == "artifact" and shortlist_path.is_file():
+            audit.error("selection: artifact must not write shortlist.md")
+
+        result_date = artifact_run_date(
+            folder / "results.md", r"^(?:Run|Prepared)\s+(\d{4}-\d{2}-\d{2})\b"
+        )
+        listing_date = artifact_run_date(
+            folder / "listings.md", r"^# listings\s+—\s+fetched\s+(\d{4}-\d{2}-\d{2})"
+        )
+        shortlist_date = artifact_run_date(
+            shortlist_path, r"^Run\s+(\d{4}-\d{2}-\d{2})\b"
+        )
+        if post_run and DATE_RE.fullmatch(last_run or ""):
+            if result_date != last_run:
+                audit.error(
+                    f"results.md run date is {result_date or 'missing'}, MEMORY.md last run is {last_run}"
+                )
+            if cardinality == "many" and listing_date != last_run:
+                audit.error(
+                    f"listings.md run date is {listing_date or 'missing'}, MEMORY.md last run is {last_run}"
+                )
+            if selection == "rows" and shortlist_date != last_run:
+                audit.error(
+                    f"shortlist.md run date is {shortlist_date or 'missing'}, MEMORY.md last run is {last_run}"
+                )
+
     if status == "output":
-        audit.notes.append("step 4 is pending; the human has not picked what to make yet")
+        audit.notes.append("GATE 4 is pending; the human has not picked what to make yet")
+    elif status == "done":
+        audit.notes.append("GATE 4 was answered with nothing to make")
     elif status == "contacts" and not (folder / "contacts.md").is_file():
-        audit.notes.append("contacts filler is pending; contacts.md does not exist yet")
+        audit.notes.append("contacts output is pending; contacts.md does not exist yet")
 
     return audit
 
@@ -379,6 +516,34 @@ def selfcheck() -> int:
             print("selfcheck: a GATE 1 MEMORY-only session should pass", file=sys.stderr)
             return 1
 
+        shortlist_audit = Audit("shortlist")
+        audit_shortlist(
+            "# shortlist — demo\n\nRun 2026-01-02 · 2 rows\n\n"
+            "- [x] A — One · 2/2 <!-- identity: one -->\n"
+            "- [ ] B — Two · 1/2 <!-- identity: two -->\n",
+            shortlist_audit,
+        )
+        if shortlist_audit.errors:
+            print_audit(shortlist_audit)
+            print("selfcheck: a scripted shortlist should pass", file=sys.stderr)
+            return 1
+        count_audit = Audit("counts")
+        active_cards = audit_ledger_result_counts(
+            "# results\n\nRun 2026-01-02 · 3 new · 0 changed · 0 unchanged · 0 gone\n\n"
+            "## new\n\n### One\nBody\n\n### Two\nBody\n\n## changed\n\n",
+            count_audit,
+        )
+        if active_cards != 2 or not any("reports 3 new" in error for error in count_audit.errors):
+            print_audit(count_audit)
+            print("selfcheck: result header/card mismatch should fail", file=sys.stderr)
+            return 1
+        malformed_shortlist = Audit("shortlist-bad")
+        audit_shortlist("- [ ] A — One · 2/2\n", malformed_shortlist)
+        if not any("identity marker" in error for error in malformed_shortlist.errors):
+            print_audit(malformed_shortlist)
+            print("selfcheck: a shortlist without identity should fail", file=sys.stderr)
+            return 1
+
         session = repo / "sessions" / "demo"
         session.mkdir(parents=True)
         (session / "MEMORY.md").write_text(
@@ -406,11 +571,13 @@ def selfcheck() -> int:
         examples = repo / "examples"
         examples.mkdir()
         (examples / "company-research.md").write_text(
-            "---\nshape: company-research\nform: brief\ncardinality: one\nfillers: []\n---\n",
+            "---\nshape: company-research\nform: brief\ncardinality: one\n"
+            "selection: artifact\n---\n",
             encoding="utf-8",
         )
         (examples / "widgets.md").write_text(
-            "---\nshape: widgets\nform: ledger\ncardinality: many\nfillers: []\n---\n",
+            "---\nshape: widgets\nform: ledger\ncardinality: many\n"
+            "selection: rows\n---\n",
             encoding="utf-8",
         )
 
@@ -433,6 +600,13 @@ def selfcheck() -> int:
         ledger_memory = original = (session / "MEMORY.md").read_text(encoding="utf-8")
         ledger_memory = ledger_memory.replace("shape: company-research", "shape: widgets")
         (session / "MEMORY.md").write_text(ledger_memory, encoding="utf-8")
+        (session / "tools").mkdir()
+        (session / "tools" / "shortlist.py").write_text("# fixture\n", encoding="utf-8")
+        (session / "shortlist.md").write_text(
+            "# shortlist — demo\n\nRun 2026-01-02 · 1 rows\n\n"
+            "- [ ] Example — a thing · 1/1 <!-- identity: example -->\n",
+            encoding="utf-8",
+        )
         ledger = audit_session(repo, "demo")
         if any("absent from sources.md" in w for w in ledger.warnings):
             print_audit(ledger)
@@ -466,12 +640,23 @@ def selfcheck() -> int:
             print_audit(declared)
             print("selfcheck: a page source declared unread is accounted for", file=sys.stderr)
             return 1
+        (session / "MEMORY.md").write_text(
+            ledger_memory.replace("status: run", "status: resume"), encoding="utf-8"
+        )
+        empty_output = audit_session(repo, "demo")
+        if not any("zero ticked" in error for error in empty_output.errors):
+            print_audit(empty_output)
+            print("selfcheck: a row next step with no ticks should fail", file=sys.stderr)
+            return 1
         results_path.write_text(clean_results, encoding="utf-8")
         (session / "MEMORY.md").write_text(original, encoding="utf-8")
+        (session / "shortlist.md").unlink()
+        (session / "tools" / "shortlist.py").unlink()
+        (session / "tools").rmdir()
 
         memory_path = session / "MEMORY.md"
         original_memory = memory_path.read_text(encoding="utf-8")
-        for open_status in ("output", "resume"):
+        for open_status in ("output", "done", "resume"):
             memory_path.write_text(
                 original_memory.replace("status: run", f"status: {open_status}"),
                 encoding="utf-8",
@@ -481,6 +666,15 @@ def selfcheck() -> int:
                 print_audit(named)
                 print(f"selfcheck: expected status {open_status!r} to pass", file=sys.stderr)
                 return 1
+        memory_path.write_text(
+            original_memory.replace("status: run", "status: review"),
+            encoding="utf-8",
+        )
+        deprecated = audit_session(repo, "demo")
+        if not any("deprecated" in error for error in deprecated.errors):
+            print_audit(deprecated)
+            print("selfcheck: deprecated review status should fail", file=sys.stderr)
+            return 1
         memory_path.write_text(
             original_memory.replace("status: run", "status: Not A Status"),
             encoding="utf-8",

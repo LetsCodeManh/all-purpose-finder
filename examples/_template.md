@@ -2,7 +2,7 @@
 shape: <shape>
 form: ledger | brief
 cardinality: one | many
-fillers: [<filler>, ...]        # [] when there is nothing to make from the result
+selection: rows | artifact
 ---
 
 # example — <shape>
@@ -18,8 +18,9 @@ Delete this paragraph and the italic prompts as you fill them in.
 - **Result form:** ledger | brief
 - **Identity:** issuer = *what* · item = *what*. Or: no dedupe key worth having, because *why*.
 - **Recurs?** *weekly · one-shot with a deadline · open-ended — and what the diff means here*
-- **Fillers?** *what can be made from this result — `contacts`, a report, a resume,
-  links to apply · or nothing, and step 04 is one line*
+- **Selection:** *ticked rows in `shortlist.md`, or the published artifact as a whole*
+- **Next steps?** *a few examples that would make sense for this result. They are
+  proposed at runtime, not stored as a fixed menu.*
 
 *What this shape does not have, and why that is fine — a missing pre-filter, no
 `gone` section, no expiry. Naming the absence stops the next run treating it as
@@ -79,9 +80,9 @@ what is `not read` because the run did not fetch that deep.*
 
 *One filled card, or one brief skeleton.*
 
-*The shortlist line — how `<issuer> — <item> · <score>` reads for this shape. A
-ledger shape writes one; a shape with nothing to make from its result writes none
-and says so.*
+*For `selection: rows`, the shortlist line — how `<issuer> — <item> · <score>`
+reads for this shape. `shortlist.py` writes it beside `results.md`. For
+`selection: artifact`, say why the result is the whole GATE 4 input.*
 
 *What a `## dropped at scoring` line looks like here — the `must` numbers this
 shape drops on most, and what a droppable row typically says.*
