@@ -91,7 +91,7 @@ shape drops on most, and what a droppable row typically says.*
 
 ---
 
-## 04 — output
+## 04 — Next Steps
 
 *Per organisation, or skipped. If skipped, say what `next:` points at instead —
 a rerun, a date, a decision.*

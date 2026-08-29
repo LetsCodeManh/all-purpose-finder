@@ -197,7 +197,7 @@ not checked since:     <name> — <date>
 
 ---
 
-## 04 — output
+## 04 — Next Steps
 
 GATE 4 acts on the published grouped result as a whole. Propose a few relevant
 next steps, then ask:

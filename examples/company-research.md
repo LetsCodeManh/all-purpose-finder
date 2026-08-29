@@ -207,7 +207,7 @@ whenever the occasion, objective, or underlying brief changes.
 
 ---
 
-## 04 — output
+## 04 — Next Steps
 
 At GATE 4 the published brief is the whole input; propose
 a few relevant next steps without treating them as a menu, then wait.

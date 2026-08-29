@@ -14,7 +14,7 @@ a resume, a proposal, links to apply with — or nothing. Some common choices ha
 reusable procedure in `next-steps/<name>.md`, but that library is an implementation
 shortcut, never the user's menu.
 
-Worked example: `examples/<shape>.md` → *04 — output*, for the shape named in this
+Worked example: `examples/<shape>.md` → *04 — Next Steps*, for the shape named in this
 session's `shape:` field. No example yet for this shape? Run the step from here
 anyway, say so, and write that section afterwards from what happened.
 

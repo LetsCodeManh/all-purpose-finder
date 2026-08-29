@@ -272,7 +272,7 @@ not checked since:     <name> — <date>
 
 ---
 
-## 04 — output · Next Steps
+## 04 — Next Steps
 
 GATE 4 uses the generated shortlist beside the detailed cards.
 Propose relevant possibilities without fixing the user's end goal. If the human
