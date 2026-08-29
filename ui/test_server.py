@@ -192,8 +192,10 @@ def test_gate_one_session_is_listed_and_probe_only_folder_is_not():
         "selection: rows\n---\n",
         encoding="utf-8",
     )
-    old_sessions, old_examples = server.SESSIONS, server.EXAMPLES
-    server.SESSIONS, server.EXAMPLES = sessions, examples
+    # examples/ is resolved from REPO now, because tools/shape.py is the one reader
+    # for the whole repo and takes the root rather than a per-consumer constant.
+    old_sessions, old_repo = server.SESSIONS, server.REPO
+    server.SESSIONS, server.REPO = sessions, root
     try:
         found = server.sessions()
         assert [s["slug"] for s in found] == ["approved"], found
@@ -203,7 +205,7 @@ def test_gate_one_session_is_listed_and_probe_only_folder_is_not():
         assert found[0]["next"] == "propose sources"
         assert found[0]["files"] == {"MEMORY.md": (sessions / "approved" / "MEMORY.md").stat().st_mtime}
     finally:
-        server.SESSIONS, server.EXAMPLES = old_sessions, old_examples
+        server.SESSIONS, server.REPO = old_sessions, old_repo
 
 
 if __name__ == "__main__":

@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 
 from session_audit import audit_session, find_repo_root
+from shape import owes_listings, shape
 
 
 DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -78,11 +79,6 @@ def artifact_dates(folder: Path) -> dict[str, str]:
     }
 
 
-def selection_for(repo: Path, shape: str) -> str:
-    path = repo / "examples" / f"{shape}.md"
-    return frontmatter(path.read_text(encoding="utf-8")).get("selection", "")
-
-
 def readiness(repo: Path, slug: str) -> tuple[list[str], str, dict[str, str]]:
     folder = repo / "sessions" / slug
     memory_path = folder / "MEMORY.md"
@@ -96,9 +92,15 @@ def readiness(repo: Path, slug: str) -> tuple[list[str], str, dict[str, str]]:
     if not DATE.fullmatch(pending):
         errors.append("MEMORY.md has no valid pending run date")
     dates = artifact_dates(folder)
+    # One shape reader, one rule. This used to key on `selection` while
+    # session_audit keyed on `cardinality`, so a `many`+`artifact` shape published
+    # clean and then failed the audit a second later.
+    fields = shape(repo, memory.get("shape", ""))
     required = ["results.md"]
-    if selection_for(repo, memory.get("shape", "")) == "rows":
-        required.extend(["listings.md", "shortlist.md"])
+    if owes_listings(fields):
+        required.append("listings.md")
+    if fields.get("selection") == "rows":
+        required.append("shortlist.md")
     for name in required:
         if dates.get(name) != pending:
             errors.append(f"{name} run date is {dates.get(name) or 'missing'}, expected {pending or 'pending date'}")

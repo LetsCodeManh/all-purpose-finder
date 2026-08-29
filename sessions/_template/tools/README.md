@@ -28,7 +28,7 @@ A row-selection jobs session tends to end up with four:
 |--------|------|
 | `probe.py` | fetch one URL, report `feed` / `page` / `blocked` with the reason, print the field names a feed actually carries. Run before a source is proposed |
 | `regex.py` | read the `## prefilter` block out of `criteria.md` and hand back the patterns |
-| `prefilter.py` | fetch every `feed`+`ok` source, normalise, dedupe, apply the patterns, diff against `listings.prev.md`, write `listings.md` |
+| `prefilter.py` | fetch every `feed`+`ok` source, normalise, dedupe, apply the patterns, diff against `listings.prev.md`, write `listings.md` — **output shape and the two script-read header lines: `sessions/_template/listings.md`** |
 | `shortlist.py` | after `results.md` is written, project its kept rows into `shortlist.md` and carry ticks forward by the hidden `identity` marker |
 
 `shortlist.py` reads only the result sections that remain actionable: full cards

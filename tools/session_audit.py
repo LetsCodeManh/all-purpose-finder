@@ -11,6 +11,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from urllib.parse import urlparse
 
+from shape import owes_listings, shape
+
 
 # Status is `sources` · `criteria` · `run` · `output` · `done`, then
 # the name of whatever next-step output ran. Output names are an open set by design,
@@ -23,7 +25,6 @@ VALID_METHODS = {"feed", "page", "blocked"}
 VALID_MANUAL = {"checked", "partial", "unavailable", "—", "-", ""}
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 LINK_RE = re.compile(r"\[[^\]]+\]\((https?://[^)]+)\)")
-SHAPE_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 TICK_RE = re.compile(r"^- \[([ x])\] .+<!--\s*identity:\s*(.+?)\s*-->\s*$")
 # A `page` source is read by hand, so nothing in the pipeline proves it happened: the
 # row still says `ok` and listings.md simply has no rows from it. The evidence is one
@@ -218,23 +219,6 @@ def audit_result_links(text: str, source_hosts: set[str], audit: Audit) -> None:
         audit.warn("results.md cites domains absent from sources.md: " + ", ".join(uncovered))
 
 
-def shape_fields(repo: Path, shape: str) -> dict[str, str]:
-    """The simple frontmatter fields out of examples/<shape>.md."""
-    if not SHAPE_RE.fullmatch(shape or ""):
-        return {}
-    path = repo / "examples" / (shape + ".md")
-    if not path.is_file():
-        return {}
-    fields: dict[str, str] = {}
-    for line in path.read_text(encoding="utf-8").splitlines()[1:]:
-        if line.strip() == "---":
-            break
-        if ":" in line:
-            key, value = line.split(":", 1)
-            fields[key.strip()] = value.strip()
-    return fields
-
-
 def audit_shortlist(text: str, audit: Audit) -> tuple[int, int]:
     total = ticked = 0
     identities: set[str] = set()
@@ -260,49 +244,34 @@ def audit_shortlist(text: str, audit: Audit) -> tuple[int, int]:
     return total, ticked
 
 
-def audit_ledger_result_counts(text: str, audit: Audit) -> int | None:
-    """Compare the ledger's Run summary with the result identities actually written.
+def audit_shortlist_covers_results(results_text: str, shortlist_text: str, audit: Audit) -> None:
+    """Every shortlist row points at a row that is really in results.md.
 
-    A visual card may group several posting variants. New files use hidden identity
-    markers; legacy grouped cards use one `[posting](...)` link per result row.
-    The active count excludes `gone`, which is never regenerated into the shortlist.
+    Section-blind on purpose. This replaced a check that compared the Run header's
+    `N new · N changed · …` against cards counted per section, which hardcoded four
+    section names — while workflows/03-run.md explicitly lets a shape rename or drop
+    any of them. `tenders` leads with `## closing soon` and `prices` uses `## new
+    this week`, so both were told their own header was a lie and neither could
+    publish. What that check bought was a stale number in a header; what it cost was
+    half the shapes in the repo.
+
+    Identities are the stable thing, so this compares those instead: it catches
+    shortlist.py inventing or losing a row, and it cannot care what the headings say.
+    `gone` rows legitimately leave the shortlist, so only the one direction is an
+    error — a shortlist row with nothing behind it.
     """
-    header = re.search(
-        r"^Run\s+\d{4}-\d{2}-\d{2}\s+·\s+(\d+) new\s+·\s+(\d+) changed\s+"
-        r"·\s+(\d+) unchanged\s+·\s+(\d+) gone",
-        text,
-        re.MULTILINE | re.IGNORECASE,
-    )
-    if not header:
-        return None
-    reported = dict(zip(("new", "changed", "unchanged", "gone"), map(int, header.groups())))
-    cards = {key: 0 for key in reported}
-    identities = {key: set() for key in reported}
-    postings = {key: set() for key in reported}
-    section = ""
-    for line in text.splitlines():
-        heading = re.match(r"^##\s+(.+?)\s*$", line)
-        if heading:
-            section = heading.group(1).strip().lower()
-            continue
-        if section not in reported:
-            continue
-        if line.startswith("### "):
-            cards[section] += 1
-        identities[section].update(re.findall(r"<!--\s*identity:\s*(.+?)\s*-->", line))
-        postings[section].update(
-            re.findall(r"\[posting\]\((https?://[^)]+)\)", line, re.IGNORECASE)
-        )
-    actual = {
-        key: len(identities[key]) or len(postings[key]) or cards[key]
-        for key in reported
+    in_results = set(re.findall(r"<!--\s*identity:\s*(.+?)\s*-->", results_text))
+    in_shortlist = {
+        match.group(2)
+        for match in (TICK_RE.fullmatch(line) for line in shortlist_text.splitlines())
+        if match
     }
-    for key in reported:
-        if reported[key] != actual[key]:
-            audit.error(
-                f"results.md reports {reported[key]} {key}; file has {actual[key]} {key} rows"
-            )
-    return actual["new"] + actual["changed"] + actual["unchanged"]
+    orphans = sorted(in_shortlist - in_results)
+    if orphans:
+        shown = ", ".join(orphans[:5]) + ("…" if len(orphans) > 5 else "")
+        audit.error(
+            f"{len(orphans)} shortlist rows have no row in results.md: {shown}"
+        )
 
 
 def audit_page_coverage(
@@ -420,34 +389,25 @@ def audit_session(repo: Path, slug: str) -> Audit:
         # One coverage check per form, and they are not interchangeable. A brief
         # attributes every claim, so its check is the cited domains. A ledger's rows
         # come from listings.md, so its check is that the hand-read sources reached it.
-        shape = shape_fields(repo, memory.get("shape", ""))
-        form = shape.get("form", "")
-        cardinality = shape.get("cardinality", "")
-        if form not in {"ledger", "brief"}:
-            audit.error(f"shape has unknown or missing form {form!r}")
-        if cardinality not in {"one", "many"}:
-            audit.error(f"shape has unknown or missing cardinality {cardinality!r}")
-        active_result_rows = None
+        # One shape reader for the whole repo: tools/shape.py. A shape whose example
+        # is not written yet gets documented defaults rather than three different
+        # failures, because AGENTS.md calls that state normal, not a blocker.
+        fields = shape(repo, memory.get("shape", ""))
+        form = fields["form"]
         if form == "brief":
             audit_result_links(results_text, source_hosts, audit)
         elif form == "ledger":
-            active_result_rows = audit_ledger_result_counts(results_text, audit)
             audit_page_coverage(folder, page_ok, results_text, audit)
 
-        selection = shape.get("selection", "")
-        if selection not in {"rows", "artifact"}:
-            audit.error(f"shape has unknown or missing selection {selection!r}")
+        selection = fields["selection"]
         shortlist_path = folder / "shortlist.md"
         if selection == "rows":
             if not (folder / "tools" / "shortlist.py").is_file():
                 audit.error("selection: rows requires tools/shortlist.py")
             shortlist_text = read_text(shortlist_path, audit, required=True)
-            shortlist_total, ticked = audit_shortlist(shortlist_text, audit) if shortlist_text else (0, 0)
-            if active_result_rows is not None and shortlist_total != active_result_rows:
-                audit.error(
-                    f"shortlist.md has {shortlist_total} rows; results.md has "
-                    f"{active_result_rows} active rows"
-                )
+            _, ticked = audit_shortlist(shortlist_text, audit) if shortlist_text else (0, 0)
+            if shortlist_text:
+                audit_shortlist_covers_results(results_text, shortlist_text, audit)
             if status not in FIXED_STATUSES and ticked == 0:
                 audit.error("a row-based next step ran with zero ticked shortlist rows")
         elif selection == "artifact" and shortlist_path.is_file():
@@ -467,7 +427,7 @@ def audit_session(repo: Path, slug: str) -> Audit:
                 audit.error(
                     f"results.md run date is {result_date or 'missing'}, MEMORY.md last run is {last_run}"
                 )
-            if cardinality == "many" and listing_date != last_run:
+            if owes_listings(fields) and listing_date != last_run:
                 audit.error(
                     f"listings.md run date is {listing_date or 'missing'}, MEMORY.md last run is {last_run}"
                 )
@@ -527,15 +487,31 @@ def selfcheck() -> int:
             print_audit(shortlist_audit)
             print("selfcheck: a scripted shortlist should pass", file=sys.stderr)
             return 1
-        count_audit = Audit("counts")
-        active_cards = audit_ledger_result_counts(
-            "# results\n\nRun 2026-01-02 · 3 new · 0 changed · 0 unchanged · 0 gone\n\n"
-            "## new\n\n### One\nBody\n\n### Two\nBody\n\n## changed\n\n",
-            count_audit,
+        # A shortlist row with nothing behind it is an error; a shape that renamed
+        # its sections is not. Both assertions matter — the second is the whole
+        # reason the old per-section counter went.
+        orphan_audit = Audit("orphan")
+        audit_shortlist_covers_results(
+            "## closing soon\n\n### One\n<!-- identity: one -->\n",
+            "- [x] A — One · 2/2 <!-- identity: one -->\n"
+            "- [ ] B — Two · 1/2 <!-- identity: two -->\n",
+            orphan_audit,
         )
-        if active_cards != 2 or not any("reports 3 new" in error for error in count_audit.errors):
-            print_audit(count_audit)
-            print("selfcheck: result header/card mismatch should fail", file=sys.stderr)
+        if not any("no row in results.md" in error for error in orphan_audit.errors):
+            print_audit(orphan_audit)
+            print("selfcheck: an orphan shortlist row should fail", file=sys.stderr)
+            return 1
+        renamed_audit = Audit("renamed")
+        audit_shortlist_covers_results(
+            "## closing soon\n\n### One\n<!-- identity: one -->\n\n"
+            "## new this week\n\n### Two\n<!-- identity: two -->\n",
+            "- [ ] A — One · 2/2 <!-- identity: one -->\n"
+            "- [ ] B — Two · 1/2 <!-- identity: two -->\n",
+            renamed_audit,
+        )
+        if renamed_audit.errors:
+            print_audit(renamed_audit)
+            print("selfcheck: renamed sections must not fail the check", file=sys.stderr)
             return 1
         malformed_shortlist = Audit("shortlist-bad")
         audit_shortlist("- [ ] A — One · 2/2\n", malformed_shortlist)
@@ -562,8 +538,11 @@ def selfcheck() -> int:
             "# criteria — demo\n\nApproved: 2026-01-02\nLast amended: —\n",
             encoding="utf-8",
         )
+        # Carries an identity marker so the same fixture serves the ledger phase
+        # below, where shortlist rows must point at a row that really exists.
         (session / "results.md").write_text(
             "# brief — demo\n\nPrepared 2026-01-02 · 1 source checked, 0 browser-dependent\n\n"
+            "### Example — a thing\n<!-- identity: example -->\n"
             "A claim. ([Example](https://example.com/page))\n",
             encoding="utf-8",
         )

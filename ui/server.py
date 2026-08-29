@@ -12,6 +12,7 @@ import json
 import os
 import re
 import socket
+import sys
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from itertools import islice
@@ -19,6 +20,11 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 REPO = Path(__file__).resolve().parent.parent
+# The shape's own account of itself is read by one file for the whole repo. The UI
+# used to keep a fourth copy of that parser and silently rendered an unwritten shape
+# as artifact selection, so a rows shape came up with nothing to tick and no error.
+sys.path.insert(0, str(REPO / "tools"))
+from shape import shape as shape_fields  # noqa: E402
 SESSIONS = REPO / "sessions"
 UI = REPO / "ui"
 PORT = int(os.environ.get("FINDER_UI_PORT", "8420"))
@@ -45,7 +51,6 @@ TICK = re.compile(r"^- \[[ x]\] ")
 # Three fixed steps and one open Next Steps slot. If an output runs, its status is added
 # to the track without pretending the shape prescribed it.
 FIXED_STAGES = ["sources", "criteria", "run"]
-EXAMPLES = REPO / "examples"
 
 
 def readable(name):
@@ -142,10 +147,8 @@ def frontmatter(path):
 
 
 def shape_meta(shape):
-    """The frontmatter of examples/<shape>.md — the shape's own account of itself."""
-    if not SLUG.fullmatch(shape or ""):
-        return {}
-    return frontmatter(EXAMPLES / (shape + ".md"))
+    """The shape's own account of itself, via the repo's one reader (tools/shape.py)."""
+    return shape_fields(REPO, shape)
 
 
 def stages_for(shape, status):
