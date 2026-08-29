@@ -46,6 +46,19 @@ function testChosenOutputSitsBesideTheSlot() {
   assert.strictEqual(track[4].mark, "●");
 }
 
+function testGateStateNeverBecomesAChip() {
+  // A stale or wrong `stages` list must not invent `next-steps.md`.
+  const track = stagesFor(session("next-steps", ["sources", "criteria", "run", "next-steps"], {
+    "results.md": 1, "shortlist.md": 1,
+  }));
+  assert.strictEqual(track.length, 4, "the gate state is not a fifth chip");
+  assert.strictEqual(track[3].stage, null, "it is the slot, not an artifact");
+  assert.strictEqual(track[3].mark, "●");
+  const doneTrack = stagesFor(session("done", ["sources", "criteria", "run", "done"]));
+  assert.strictEqual(doneTrack.length, 4);
+  assert.strictEqual(doneTrack[3].stage, null);
+}
+
 function testSelectionLabelCountsOrganisations() {
   assert.strictEqual(organisationOf("- [x] Example Co — Engineer · 2/2"), "Example Co");
   assert.strictEqual(organisationOf("Example Co — Engineer · 2/2"), "Example Co");
@@ -100,6 +113,7 @@ for (const [name, fn] of Object.entries({
   testEveryShapeGetsGateFour,
   testGateFourStates,
   testChosenOutputSitsBesideTheSlot,
+  testGateStateNeverBecomesAChip,
   testSelectionLabelCountsOrganisations,
   testShortlistFiltering,
   testNextStepIdeasAreExamplesNotShapeMenu,

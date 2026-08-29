@@ -928,7 +928,16 @@ async function tick(b, box, ctx) {
 const FIXED = ["sources", "criteria", "run"];
 // GATE 4 is a slot, not a stage called Contacts. Until the human picks a next step,
 // the track shows a selectable slot whose panel explains the choice stays open.
-const chosenOutput = (s) => (s.stages || []).slice(FIXED.length).includes(s.status) ? s.status : null;
+// Gate states are not artifact names. The server already refuses to put them on the
+// track (ui/server.py -> stages_for), but the client derives a *filename* from every
+// name it finds there, so a track it disagrees with renders a chip for `next-steps.md`
+// — a file that never exists. Duplicated on purpose: one wrong list should not be able
+// to invent a document.
+const GATE_STATES = new Set(["next-steps", "done"]);
+const chosenOutput = (s) => {
+  const made = (s.stages || []).slice(FIXED.length).filter((name) => !GATE_STATES.has(name));
+  return made.includes(s.status) ? s.status : null;
+};
 const rerunInProgress = (s) => s.status === "run" && /^\d{4}-\d{2}-\d{2}$/.test(s.pending_run || "");
 
 function stagesFor(s) {
