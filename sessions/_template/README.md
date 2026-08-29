@@ -2,14 +2,14 @@
 
 Not a session. The empty shape of one.
 
-```
-mkdir -p sessions/<slug>
-cp -R sessions/_template/. sessions/<slug>/
-```
+Copy files from here one at a time, when their state becomes real:
 
-Copy it during `workflows/01-sources.md`, after GATE 2 and once there is a real
-`sources.md` to write — not before. Delete the files the session has not
-reached yet; an empty `results.md` on a session still picking sources is
-noise. The `/.` merges into a tools-only folder created by the probe instead of
-navigating the skeleton underneath it. Leading `_` means "skip me" when listing
-sessions.
+- after GATE 1: create the session and fill `MEMORY.md` only
+- after GATE 2: copy and fill `sources.md`
+- after GATE 3: copy and fill `criteria.md`
+- after a run or filler: copy only the artifact that step produces
+
+Never copy this directory wholesale over a session: that would replace the
+approved slug, shape and status in `MEMORY.md` with placeholders, and it would
+create empty future artifacts that make the session look further along than it
+is. Leading `_` means "skip me" when listing sessions.

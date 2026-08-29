@@ -76,7 +76,13 @@ def sessions():
     for d in sorted(SESSIONS.iterdir()):
         if not d.is_dir() or d.name.startswith("_"):
             continue
-        meta = frontmatter(d / "MEMORY.md")
+        memory = d / "MEMORY.md"
+        # A session begins when GATE 1 writes its durable pointer. Older versions
+        # allowed a probe-only tools directory before that point; it is work in
+        # progress, not a session the dashboard can route, so keep it out of the UI.
+        if not memory.is_file():
+            continue
+        meta = frontmatter(memory)
         files = session_files(d)
         out.append({
             "slug": d.name,

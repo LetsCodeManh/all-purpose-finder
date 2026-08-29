@@ -62,6 +62,10 @@ The human described a topic instead of naming one.
    than inventing one; they can fill it in while approving GATE 1.
 4. **GATE 1. Print the plan, then wait.** Below.
 
+Before the answer, create nothing. After the human confirms the slug and the
+one-subject/many-candidates reading, record that approval immediately — *After
+GATE 1* below — before searching for sources.
+
 ### GATE 1 — print the plan
 
 Say what the whole session is going to do before the human agrees to start it.
@@ -79,9 +83,10 @@ Three rules, and they are what make it safe to print:
   is the easiest thing in this repo to misread as permission for what comes
   after. It is not. The limit line is part of the plan and is never printed
   without it, never softened, never moved to the end as a footnote.
-- **Rendered, never stored.** It holds no fact that is not already in
-  `workflows/`, so a stored copy only rots. GATE 1 approval is on disk already —
-  the `shape:` field and the folder existing are the record. Write nothing extra.
+- **The plan is rendered, never stored.** It holds no fact that is not already in
+  `workflows/`, so a stored copy only rots. After approval, the filled
+  `MEMORY.md` is the record: slug, shape, `status: sources`, and nothing from the
+  rendered plan.
 
 **Plain language, never repo words.** A stranger cannot approve
 `Shape: company-research`; they can answer *one thing, or many candidates?* —
@@ -191,7 +196,24 @@ The signals that a topic is a new shape:
 
 `examples/<name>.md` starts as a copy of `examples/_template.md` and is filled **from what actually happened**, step by step, as the session passes each one — not guessed up front. An unfilled section is not a reason to pause a step. Scrub it as you write: placeholders, no URLs, no vendor names, and none of the human's actual criteria or results. The repo is public. The file records the *shape*, never the search.
 
-**Still create nothing.** The folder appears in step 1 (`01-sources.md`), when there is a real `sources.md` to write. Not before.
+**Before the GATE 1 answer, still create nothing.** Once the human approves this
+new shape and slug, follow *After GATE 1* below exactly as for an existing shape.
+
+### After GATE 1 — record the approval
+
+The human confirmed the slug and the one-subject/many-candidates reading. Now,
+and not before, create the session and write its pointer:
+
+1. Create `sessions/<slug>/`.
+2. Start from `sessions/_template/MEMORY.md` and fill only:
+   `slug`, `shape`, `status: sources`, `last run: —`, and
+   `next: propose sources`.
+3. Copy no other skeleton file yet. `sources.md` is written only after GATE 2;
+   `criteria.md` only after GATE 3; result and filler files only when they run.
+
+This is the durable GATE 1 record. If the source search is interrupted, the next
+call sees `status: sources` and resumes the correct step instead of losing the
+approved slug and shape.
 
 ---
 

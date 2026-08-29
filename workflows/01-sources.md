@@ -4,7 +4,8 @@ Turn a vague direction line into a list of places worth checking, that the human
 
 Rules: `AGENTS.md`. Entry: `00-session.md`.
 
-In: a direction line. Out: `sessions/<slug>/sources.md`, `status: criteria`.
+In: an approved `MEMORY.md` at `status: sources` plus the direction line. Out:
+`sessions/<slug>/sources.md`, `status: criteria`.
 
 Worked example: `examples/<shape>.md` → *01 — sources*, for the shape named in this session's `shape:` field. No example yet for this shape? Run the step from here anyway, say so, and write that section afterwards from what happened.
 
@@ -33,13 +34,12 @@ Cast wider than the obvious. For any topic, sweep at least:
 python3 sessions/<slug>/tools/probe.py <url> [<url> ...]
 ```
 
-**This session may not have that script yet.** On a session's first pass it
-usually does not, and there is no shared copy to fall back on — `tools/` is per
+**This session will usually not have that script yet.** GATE 1 created only
+`MEMORY.md`, and there is no shared copy to fall back on — `tools/` is per
 session on purpose. Write it before you probe anything: spec in
 `sessions/_template/tools/README.md`, and a neighbouring session's copy is a
-starting point when one exists. Creating `sessions/<slug>/tools/` for it is
-fine — a script is something real to write, which is the test the no-empty-folder
-rule actually applies. The rest of the folder still waits for step 5.
+starting point when one exists. Create `sessions/<slug>/tools/` for it as needed;
+the session already exists because its approved Gate 1 state is in `MEMORY.md`.
 
 Tailor it to this topic. What a probe reports is not the same everywhere — one
 shape needs the deadline field named, another needs the price and the window
@@ -93,9 +93,9 @@ Ask plainly:
 Cut what is noise, add what I missed. Then I write the file.
 ```
 
-**Wait.** Do not write `sources.md` or copy the session skeleton before the
-answer. A tools-only folder may already exist because the probe is real work;
-that is the narrow exception described in section 2, not a created session.
+**Wait.** Do not write `sources.md` or copy any remaining session skeleton file
+before the answer. `MEMORY.md` and any probe scripts already exist because Gate 1
+was approved; they record the current step, not approval of this source list.
 
 Expect additions — the human knows sources you cannot search your way to. Add them with the same method check as everything else: verify before writing the row, do not take a URL on faith.
 
@@ -103,15 +103,14 @@ Expect additions — the human knows sources you cannot search your way to. Add 
 
 ## 5. Write
 
-Copy the skeleton contents into `sessions/<slug>/` now, and fill `sources.md`:
+Copy only the source skeleton into the existing session, then fill it:
 
 ```
-mkdir -p sessions/<slug>
-cp -R sessions/_template/. sessions/<slug>/
+cp sessions/_template/sources.md sessions/<slug>/sources.md
 ```
 
-The `/.` matters when a tools-only folder already exists: it merges the
-skeleton contents instead of creating `sessions/<slug>/_template/` inside it.
+Do not copy `MEMORY.md` again: it is the approved Gate 1 record. Do not copy
+future files early; each later workflow starts from its own skeleton when reached.
 
 - `type` is a **column** — whatever kinds this topic has. Not a folder, not separate files.
 - `status`: `ok` · `blocked` · `error` · `untested`. **`error` covers two things** —
@@ -128,7 +127,9 @@ skeleton contents instead of creating `sessions/<slug>/_template/` inside it.
   `status` from `blocked`.
 - `manual checked`: the date of that browser or hand check, or `—`.
 
-Delete the skeleton files this session has not reached yet, and `tools/` if it needs no scripts. Anything left in `tools/` is this session's own — copy from a neighbouring session and diverge, never import across sessions. Rules: `sessions/_template/tools/README.md`.
+Delete `tools/` if it ended up needing no scripts. Anything left in `tools/` is
+this session's own — copy from a neighbouring session and diverge, never import
+across sessions. Rules: `sessions/_template/tools/README.md`.
 
 Then update `MEMORY.md` → `status: criteria`, `next: write criteria`.
 

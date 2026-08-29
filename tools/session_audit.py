@@ -364,6 +364,21 @@ def selfcheck() -> int:
     with tempfile.TemporaryDirectory() as temp:
         repo = Path(temp)
         (repo / "AGENTS.md").write_text("# rules\n", encoding="utf-8")
+
+        # GATE 1 is a complete, resumable state with only the pointer on disk.
+        early = repo / "sessions" / "approved"
+        early.mkdir(parents=True)
+        (early / "MEMORY.md").write_text(
+            "---\nslug: approved\nshape: widgets\nstatus: sources\n"
+            "last run: —\n---\n\nnext: propose sources\n",
+            encoding="utf-8",
+        )
+        gate_one = audit_session(repo, "approved")
+        if gate_one.errors:
+            print_audit(gate_one)
+            print("selfcheck: a GATE 1 MEMORY-only session should pass", file=sys.stderr)
+            return 1
+
         session = repo / "sessions" / "demo"
         session.mkdir(parents=True)
         (session / "MEMORY.md").write_text(

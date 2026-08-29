@@ -168,6 +168,36 @@ def test_stages_come_from_the_shape():
     assert server.fillers_for("../../AGENTS") is None
 
 
+def test_gate_one_session_is_listed_and_probe_only_folder_is_not():
+    """GATE 1 is the first durable state; a directory without MEMORY is not a session."""
+    root = Path(tempfile.mkdtemp())
+    sessions = root / "sessions"
+    examples = root / "examples"
+    (sessions / "approved").mkdir(parents=True)
+    (sessions / "approved" / "MEMORY.md").write_text(
+        "---\nslug: approved\nshape: widgets\nstatus: sources\nlast run: —\n---\n\n"
+        "next: propose sources\n",
+        encoding="utf-8",
+    )
+    (sessions / "probe-only" / "tools").mkdir(parents=True)
+    examples.mkdir()
+    (examples / "widgets.md").write_text(
+        "---\nshape: widgets\nform: ledger\ncardinality: many\nfillers: []\n---\n",
+        encoding="utf-8",
+    )
+    old_sessions, old_examples = server.SESSIONS, server.EXAMPLES
+    server.SESSIONS, server.EXAMPLES = sessions, examples
+    try:
+        found = server.sessions()
+        assert [s["slug"] for s in found] == ["approved"], found
+        assert found[0]["status"] == "sources"
+        assert found[0]["shape"] == "widgets"
+        assert found[0]["next"] == "propose sources"
+        assert found[0]["files"] == {"MEMORY.md": (sessions / "approved" / "MEMORY.md").stat().st_mtime}
+    finally:
+        server.SESSIONS, server.EXAMPLES = old_sessions, old_examples
+
+
 if __name__ == "__main__":
     for name, fn in sorted(globals().items()):
         if name.startswith("test_"):

@@ -87,7 +87,7 @@ step; do not skip it for one session because this run looks thin.
 
 Three exceptions, all public and topic-neutral:
 
-- `sessions/_template/` — the **skeleton** of a session: empty files, no data. Not a session — never a slug, never listed as one. Copy its contents after GATE 2, as `workflows/01-sources.md` specifies.
+- `sessions/_template/` — the **skeleton** of a session: empty files, no data. Not a session — never a slug, never listed as one. Copy `MEMORY.md` after GATE 1, then copy each remaining file only when its workflow step reaches it. Never copy the skeleton over an existing `MEMORY.md`.
 - `examples/<shape>.md` — one worked walkthrough per **shape**, keyed by workflow step. **The frontmatter is procedure and is read as such; the body below it is illustration only.** So the three fields are written from what the shape does, and the prose never has to be parsed. No URLs and no vendor names, so the repo stays standalone. A new shape is a new file here, not an edit to a workflow. Skeleton: `examples/_template.md`.
 - `tools/session_audit.py` — a read-only structural validator. It may count,
   compare dates, read a shape's frontmatter, and check one file's claims against
@@ -127,7 +127,9 @@ search.
 - No global memory. No user-level memory. No project memory outside the session folder.
 - No cross-session notes. Two sessions never learn from each other.
 - Do not write to `AGENTS.md`, `CLAUDE.md`, or `workflows/` unless the human asks for a change to the procedure itself.
-- Do not create a session folder until step 1 has something real to write. No empty folders.
+- Do not create a session folder before GATE 1 is approved. Immediately after approval,
+  create it with the filled `MEMORY.md`; the approved slug, shape and current step are
+  real state, so this is not an empty folder. Nothing else is copied until its gate passes.
 
 This applies to every tool, not just the one you happen to be. If your tool has an automatic memory feature, it is off for this repo.
 

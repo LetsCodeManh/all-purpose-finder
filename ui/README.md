@@ -23,9 +23,11 @@ Renders the session files and lets you tick a shortlist row. That is all of v1.
 Anything you cannot click, you say in the terminal — *"drop NoFluffJobs"* — and the left
 pane updates as the agent writes the file.
 
-- **Session switcher** — `ls sessions/` minus `_template`, available from the header or
-  with `⌘K`. The active shape and its output form remain visible beside it; the form is
-  the `form:` in `examples/<shape>.md`, never a guess from which files exist.
+- **Session switcher** — session folders containing the `MEMORY.md` written after
+  GATE 1, minus `_template`, available from the header or with `⌘K`. A leftover
+  probe-only folder from an older run is not a session and is not listed. The active
+  shape and its output form remain visible beside it; the form is the `form:` in
+  `examples/<shape>.md`, never a guess from which files exist.
 - **Stage track** — `sources · criteria · run`, and then **the slot**. Step 4 is one
   chip, not one per filler: it reads `Step 4` and lists what the shape offers until the
   human picks at GATE 4, and takes the filler's name once `status` says which one. An
