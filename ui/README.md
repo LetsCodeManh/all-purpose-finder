@@ -65,7 +65,9 @@ is, and that is what the box at the top of the run screen shows.
   If the UI knew something the files did not, the terminal user would be running blind.
 - **Every rendered element knows its address in the source file.** `parse()` returns
   blocks carrying their line number; nothing is rendered to an HTML blob. That is what
-  makes deleting a source row later a new write function rather than a rewrite.
+  makes deleting a source row later a new write function rather than a rewrite. The
+  address is not trusted on its own — every write sends back the raw line it expects,
+  and a mismatch is refused rather than written, so a parser bug costs a reload.
 - **Row-ops, not a save button.** The page never holds its own copy of a file. It sends
   one instruction, the server reads → mutates one line → writes. A tick carries the line
   it expects to find; if the agent moved it, the write is refused and the pane reloads.
@@ -82,5 +84,4 @@ block, auto-rerun, locking, a framework.
 
 ```
 python3 ui/test_server.py    # both write paths, incl. refusing a moved line
-node ui/test_parse.mjs       # the addressing constraint, against the real sessions
 ```

@@ -114,16 +114,31 @@ def test_each_endpoint_has_its_own_writable_set():
 
 
 def test_path_traversal_is_refused():
-    w = server.WRITABLE.__contains__
-    assert server.safe("../../etc", "passwd", server.readable) is None
-    assert server.safe("eu-ai-jobs", "../../AGENTS.md", server.readable) is None
-    assert server.safe("eu-ai-jobs", "listings.md", server.readable) is None, "3718 rows are never served"
-    assert server.safe("eu-ai-jobs", "sources.md", w) is None, "the tick endpoint writes only the tick"
-    assert server.safe("eu-ai-jobs", "results.md", w) is None, "results.md is a step-3 artifact, never written by a later step"
-    assert server.safe("eu-ai-jobs", "shortlist.md", w) is not None, "the tick's own file, where it exists"
-    m = server.MANUAL_WRITABLE.__contains__
-    assert server.safe("eu-ai-jobs", "shortlist.md", m) is None, "the hand check writes only sources.md"
-    assert server.safe("eu-ai-jobs", "no-such-session", m) is None
+    """`safe()` ends in `p.exists()`, so this needs a session on disk.
+
+    It builds its own. Pointing at a real one made a test in the tracked half of the
+    repo depend on `sessions/`, which is gitignored: it passed here and could never
+    have passed in a fresh clone, and it broke outright the day that session was
+    deleted.
+    """
+    root = Path(tempfile.mkdtemp()) / "sessions"
+    (root / "demo").mkdir(parents=True)
+    for name in ("shortlist.md", "sources.md", "results.md", "listings.md"):
+        (root / "demo" / name).write_text("x\n", encoding="utf-8")
+    original, server.SESSIONS = server.SESSIONS, root
+    try:
+        w = server.WRITABLE.__contains__
+        assert server.safe("../../etc", "passwd", server.readable) is None
+        assert server.safe("demo", "../../AGENTS.md", server.readable) is None
+        assert server.safe("demo", "listings.md", server.readable) is None, "3718 rows are never served"
+        assert server.safe("demo", "sources.md", w) is None, "the tick endpoint writes only the tick"
+        assert server.safe("demo", "results.md", w) is None, "results.md is a step-3 artifact, never written by a later step"
+        assert server.safe("demo", "shortlist.md", w) is not None, "the tick's own file, where it exists"
+        m = server.MANUAL_WRITABLE.__contains__
+        assert server.safe("demo", "shortlist.md", m) is None, "the hand check writes only sources.md"
+        assert server.safe("demo", "no-such-session", m) is None
+    finally:
+        server.SESSIONS = original
 
 
 def test_readable_is_a_shape_not_a_list():

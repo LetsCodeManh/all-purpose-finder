@@ -5,9 +5,13 @@
  * url is X. Markdown is never rendered to an HTML blob — parse() returns blocks that
  * carry their line number, and render() puts that number on the DOM node.
  *
- * v1 uses that addressing for exactly one write (a tick). Deleting a source row or
- * adding a criterion is the same mechanism with a different write function, which is
- * the whole reason the addressing exists before anything needs it.
+ * Two writes use that addressing today — a tick, and a manual-check status on a
+ * source row. Deleting a source row or adding a criterion is the same mechanism with
+ * a different write function, which is why the addressing came first.
+ *
+ * A wrong line number cannot corrupt a file: every write carries the raw line it
+ * expects, and the server refuses and reloads when it does not match. The guarantee is
+ * enforced there, at the write, rather than by a test asserting the parser is right.
  */
 
 // The stage track is the server's: three fixed steps and then whatever the shape's
