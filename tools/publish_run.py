@@ -9,6 +9,7 @@ import re
 import sys
 from pathlib import Path
 
+from memory import frontmatter as read_frontmatter
 from session_audit import audit_session, find_repo_root
 from shape import owes_listings, shape
 
@@ -17,17 +18,11 @@ DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 def frontmatter(text: str) -> dict[str, str]:
-    values: dict[str, str] = {}
-    lines = text.splitlines()
-    if not lines or lines[0].strip() != "---":
-        raise ValueError("MEMORY.md has no frontmatter")
-    for line in lines[1:]:
-        if line.strip() == "---":
-            return values
-        if ":" in line and not line.lstrip().startswith("#"):
-            key, value = line.split(":", 1)
-            values[key.strip()] = value.strip().split("#", 1)[0].strip()
-    raise ValueError("MEMORY.md has no closing frontmatter delimiter")
+    """The repo's one reader (tools/memory.py); here a bad block is fatal."""
+    values, errors, _ = read_frontmatter(text)
+    if errors:
+        raise ValueError(errors[0])
+    return values
 
 
 def set_fields(text: str, updates: dict[str, str | None], next_line: str) -> str:

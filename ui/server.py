@@ -24,6 +24,7 @@ REPO = Path(__file__).resolve().parent.parent
 # used to keep a fourth copy of that parser and silently rendered an unwritten shape
 # as artifact selection, so a rows shape came up with nothing to tick and no error.
 sys.path.insert(0, str(REPO / "tools"))
+from memory import read as read_memory  # noqa: E402
 from shape import shape as shape_fields  # noqa: E402
 SESSIONS = REPO / "sessions"
 UI = REPO / "ui"
@@ -126,23 +127,14 @@ def sessions():
 
 
 def frontmatter(path):
-    """`--- key: value ---` at the top of a session MEMORY.md, plus the `next:` line."""
-    meta = {}
-    if not path.exists():
-        return meta
-    lines = path.read_text(encoding="utf-8").split("\n")
-    if lines and lines[0].strip() == "---":
-        for ln in lines[1:]:
-            if ln.strip() == "---":
-                break
-            if ln.lstrip().startswith("#") or ":" not in ln:
-                continue
-            k, _, v = ln.partition(":")
-            meta[k.strip()] = v.strip()
-    for ln in lines:
-        if ln.startswith("next:"):
-            meta["_next"] = ln[5:].strip()
-            break
+    """`--- key: value ---` at the top of a session MEMORY.md, plus the `next:` line.
+
+    The repo's one reader (tools/memory.py). A malformed block is not the page's
+    problem to report — session_audit says so, loudly; the dashboard just draws
+    what it could read.
+    """
+    meta, _, next_line = read_memory(path)
+    meta["_next"] = next_line
     return meta
 
 

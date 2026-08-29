@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from urllib.parse import urlparse
 
+from memory import frontmatter as read_frontmatter
 from shape import owes_listings, shape
 
 
@@ -72,20 +73,10 @@ def read_text(path: Path, audit: Audit, required: bool = True) -> str:
 
 
 def parse_frontmatter(text: str, audit: Audit) -> dict[str, str]:
-    lines = text.splitlines()
-    if not lines or lines[0].strip() != "---":
-        audit.error("MEMORY.md has no opening frontmatter delimiter")
-        return {}
-    values: dict[str, str] = {}
-    for line in lines[1:]:
-        if line.strip() == "---":
-            return values
-        if ":" not in line:
-            audit.error(f"malformed MEMORY.md frontmatter line: {line!r}")
-            continue
-        key, value = line.split(":", 1)
-        values[key.strip()] = value.strip()
-    audit.error("MEMORY.md has no closing frontmatter delimiter")
+    """The repo's one reader (tools/memory.py); here a bad block is an audit error."""
+    values, errors, _ = read_frontmatter(text)
+    for message in errors:
+        audit.error(message)
     return values
 
 
@@ -474,6 +465,20 @@ def selfcheck() -> int:
         if gate_one.errors:
             print_audit(gate_one)
             print("selfcheck: a GATE 1 MEMORY-only session should pass", file=sys.stderr)
+            return 1
+
+        # The skeleton documents its status values in a trailing comment, and
+        # workflows/00-session.md says to copy it exactly. It used to cost four errors.
+        (early / "MEMORY.md").write_text(
+            "---\nslug: approved\nshape: widgets\n"
+            "status: sources          # sources | criteria | run | next-steps | done | <output-name>\n"
+            "last run: —\n---\n\nnext: propose sources\n",
+            encoding="utf-8",
+        )
+        commented = audit_session(repo, "approved")
+        if commented.errors:
+            print_audit(commented)
+            print("selfcheck: a documented status comment must not fail", file=sys.stderr)
             return 1
 
         shortlist_audit = Audit("shortlist")
