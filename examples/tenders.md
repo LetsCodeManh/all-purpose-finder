@@ -232,15 +232,37 @@ The diff, this shape:
 ## gone             ← split it:
                        awarded    — and to whom, if the award notice says
                        withdrawn  — cancelled or pulled
+## dropped at scoring
 ```
 
 `changed` carries more weight here than in any other shape. An extended deadline
 turns a tender the human wrote off into one they can still bid.
 
+The shortlist line — the closing date belongs in it, because this shape's whole
+argument is that a date outranks a score:
+
+```
+- [ ] <authority> — <notice title> · closes <date> · 5/7 · 0 must misses
+```
+
+Dropped at scoring, this shape. **A closed tender is not a `must` miss and does not
+belong here** — it is `gone`, or it never entered. What drops a tender at scoring is
+the work not being the work, or a qualification the human cannot meet:
+
+```
+- **<authority> — <notice title>** · [notice](<url>) — must #<n> — <what the scope turned out to be>
+```
+
+⚠ **The classification code is the trap, and it is a `nice`, not a `must`** — see
+*02 — criteria* above. A row dropped here on a code rather than on the work is the
+alias bug wearing a different hat: authorities file neighbouring work under
+neighbouring codes as a matter of routine.
+
 Gap report, same as every shape:
 
 ```
 blocked, open by hand: <portals behind a registration wall>
+page not read:         <name> — <why>
 failed this run:       <name> (<error>)
 not checked since:     <name> — <date>
 ```

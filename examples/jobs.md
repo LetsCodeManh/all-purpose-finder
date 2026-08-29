@@ -173,10 +173,33 @@ open   ✓ somewhere I can learn — <what you read to decide>
 <one line on why this one is worth opening>
 ```
 
+The shortlist line for this shape — employer, role, score:
+
+```
+- [ ] <employer> — <role title> · 4/6 · 1 unknown · 0 must misses
+```
+
+Dropped at scoring. Jobs drop overwhelmingly on region and on role family, and the
+clause is what the posting said about it — a seat list, usually:
+
+```
+- **<employer> — <role title>** · <source> · [posting](<url>) — must #1 — <seats>, no <region> seat
+- **<employer> — <role title>** · <source> · [posting](<url>) — must #2 — <what the role actually is>
+```
+
+**Reading depth is this shape's honesty problem.** A jobs feed carries the title,
+the seat, the posted date and sometimes a salary band. Experience, degree demand
+and anything an `open` criterion judges on are in the posting body, which is one
+fetch per row — so a first run over hundreds of rows normally does not read them.
+Say so in the header and mark those criteria `?  not read`, never `⚠ not
+published`: the salary a board genuinely omits and the salary sitting unread in
+the body are not the same fact about the world.
+
 Gap report:
 
 ```
 blocked, open by hand: <names>
+page not read:         <name> — <why>
 failed this run:       <name> (429)
 not checked since:     <name> — <date>
 ```

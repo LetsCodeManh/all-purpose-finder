@@ -159,9 +159,14 @@ The human has to be able to tell what you did not do. Always surface:
 
 - blocked sources, with status
 - manual browser/hand checks, with status and date
+- **`page` sources you did not read this run** — the row still says `ok` and
+  `listings.md` just has no rows from it, so nothing else makes this visible
 - what is new since the last run
 - `gone` for hits that vanished
 - missing data — **flag it, never drop the row**
+- **what you did not read, kept apart from what was not published.** A value in a
+  body you chose not to fetch is your gap, not the source's; scoring them alike
+  hides a shortcut behind a flag that looks like honesty
 - range misses — **flag them, never drop the row**
 - `last checked` dates, so a silently skipped source shows up as stale
 
@@ -172,6 +177,10 @@ Never quietly improve a list by shortening it.
 ## Scoring
 
 - Only a **`must`** miss drops a row. Everything else flags.
+- **A row you drop is written down** — `results.md` → `## dropped at scoring`, one
+  line, naming the `must` that killed it. The pre-filter's drops are held in
+  `listings.md` for the same reason. A drop nobody can see is a drop nobody can
+  disagree with, and this is the only one that is a judgement rather than a regex.
 - No compensation math. Never decide one criterion makes up for another's shortfall — show both misses, the human weighs them.
 - Do not invent a number. No "78% match", no "chance of winning". Score what the criteria file defines and nothing more.
 - Dedupe key is **issuer + item** — who published it, and what it is. The same thing on three sites is one card with three sightings.

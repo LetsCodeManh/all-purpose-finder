@@ -51,6 +51,14 @@ Rules while converting:
 - **Any number the sources often do not publish is `range`.** Target plus limit. Never a `must` — a `must` on an unpublished field drops every row that simply stayed quiet.
 - **`open` is legitimate** — do not force a vague wish into a hard rule to make it measurable. Write it as `open` and say how you will judge it.
 - **Surface what you inferred.** If you turned an offhand line into a `must`, show it. If you dropped something because you could not make it checkable, say so under `not carried over`.
+- **Record what you deliberately did not filter on, under `## notes`.** It is a
+  different thing from `not carried over`: that section holds what could not be made
+  checkable, this one holds what *could* have been and should not be. A criterion the
+  human never asked for is invisible once it is absent — nothing on any card says "no
+  filter was applied here" — so the decision only exists if it is written down. This is
+  also where a fact that changes how a criterion reads lives when it is not a criterion
+  itself. Both kinds have the same tell: the next run, or the next agent, would
+  otherwise add the filter back as an obvious improvement and quietly shrink the list.
 
 ---
 

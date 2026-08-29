@@ -26,6 +26,28 @@ A jobs session tends to end up with three:
 | `regex.py` | read the `## prefilter` block out of `criteria.md` and hand back the patterns |
 | `prefilter.py` | fetch every `feed`+`ok` source, normalise, dedupe, apply the patterns, diff against `listings.prev.md`, write `listings.md` |
 
+**`probe.py` usually grows a second mode, and it is the one that finds the primary
+sources.** Many domains publish through a small set of hosted platforms rather than
+each site rolling its own: whoever originates the thing signs up with one of a
+handful of vendors, and that vendor exposes the same feed path for every customer.
+So the useful question is not *does this one URL have a feed* but *which of the
+known vendors is this subject on*, and the answer is one cheap request per vendor:
+
+```
+probe.py --<sweep> <subject-slug>     # try every known vendor pattern, report which answer
+```
+
+Where a domain works this way, the sweep is the difference between finding the
+primary source and settling for an aggregator that lags it — and step 1 names the
+primary source as the highest-value and most often missed. Two traps it must report
+rather than resolve: a vendor slug that answers with **a different subject's data**
+because the slug collides, and one subject answering on **two vendors at once**, where
+fetching both costs a request per run and changes nothing after the dedupe.
+
+Which vendors those are is this session's knowledge, not the engine's. The list is a
+constant in this session's `probe.py`; a session on another topic has a different list
+or none at all.
+
 Rules that hold whatever the script does:
 
 - **stdlib only.** No install step, ever.

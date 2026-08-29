@@ -72,10 +72,19 @@ and must not be one, and what it deletes if it is.*
 
 ## 03 — run
 
-*Row mapping, or the brief's sections. What is `unknown` rather than a miss.
-What the diff sections are called here, and which one the human actually acts on.*
+*Row mapping, or the brief's sections. What is `unknown` rather than a miss, and
+what is `not read` because the run did not fetch that deep.*
+
+*What the diff sections are called here, and which one the human actually acts on.*
 
 *One filled card, or one brief skeleton.*
+
+*The shortlist line — how `<issuer> — <item> · <score>` reads for this shape. A
+ledger shape writes one; a shape with nothing to make from its result writes none
+and says so.*
+
+*What a `## dropped at scoring` line looks like here — the `must` numbers this
+shape drops on most, and what a droppable row typically says.*
 
 *The gap report, which every shape has.*
 

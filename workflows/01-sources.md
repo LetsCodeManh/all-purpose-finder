@@ -114,7 +114,13 @@ The `/.` matters when a tools-only folder already exists: it merges the
 skeleton contents instead of creating `sessions/<slug>/_template/` inside it.
 
 - `type` is a **column** — whatever kinds this topic has. Not a folder, not separate files.
-- `status`: `ok` · `blocked` · `error` · `untested`
+- `status`: `ok` · `blocked` · `error` · `untested`. **`error` covers two things** —
+  a fetch that failed, and a source that answers cleanly with the wrong content. The
+  second is the dangerous one: an endpoint built from a guessed identifier can belong
+  to somebody else entirely and still return two hundred well-formed rows. It reads
+  `ok` on every check a script can make. Mark it `error`, keep the row, and put the
+  reason in `## notes` — otherwise the next run reprobes it, sees a healthy response,
+  and quietly promotes it back.
 - `last checked`: the date you actually fetched it. This is what catches a source silently skipped for a month.
 - Blocked rows **stay in the file**, with the URL to open by hand.
 - `manual status`: `checked` · `partial` · `unavailable` · `—`. Use it only to
