@@ -24,6 +24,12 @@ VALID_METHODS = {"feed", "page", "blocked"}
 VALID_MANUAL = {"checked", "partial", "unavailable", "—", "-", ""}
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 LINK_RE = re.compile(r"\[[^\]]+\]\((https?://[^)]+)\)")
+SHAPE_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+# A `page` source is read by hand, so nothing in the pipeline proves it happened: the
+# row still says `ok` and listings.md simply has no rows from it. The evidence is one
+# of two shapes, and this is what the check looks for (workflows/03-run.md -> 1).
+PAGE_MARKER = "## page sources"
+PAGE_NOT_READ = "page not read"
 
 # ponytail: filed, not built — tick counting.
 # A tick is `^- \[[ x]\] ` at the start of a line in shortlist.md (AGENTS.md -> Ticks),
@@ -145,6 +151,7 @@ def audit_sources(text: str, audit: Audit) -> tuple[int, int, set[str]]:
 
     seen_urls: set[str] = set()
     hosts: set[str] = set()
+    page_ok: list[str] = []
     blocked = 0
     for row_number, row in enumerate(rows, start=1):
         label = row.get("name") or f"row {row_number}"
@@ -161,6 +168,8 @@ def audit_sources(text: str, audit: Audit) -> tuple[int, int, set[str]]:
             blocked += 1
             if status != "blocked":
                 audit.error(f"{label}: blocked method must keep blocked status")
+        if method == "page" and status == "ok":
+            page_ok.append(label)
         if not date_or_dash(checked):
             audit.error(f"{label}: invalid last checked date {checked!r}")
         if urlparse(url).scheme not in {"http", "https"}:
@@ -187,15 +196,75 @@ def audit_sources(text: str, audit: Audit) -> tuple[int, int, set[str]]:
                 audit.warn(f"{label}: manual status is normally only used for blocked sources")
 
     audit.notes.append(f"{len(rows)} sources · {blocked} blocked")
-    return len(rows), blocked, hosts
+    return len(rows), blocked, hosts, page_ok
 
 
 def audit_result_links(text: str, source_hosts: set[str], audit: Audit) -> None:
+    """Only meaningful for a brief.
+
+    A brief attributes every claim to a source, so a domain it cites and the table
+    does not list is a real hole. A ledger's links are the *items'* urls, not the
+    sources' — a hosted board hands back its own apply domain, and an aggregated row
+    links wherever the employer wrote. Warning on those fired on every ledger run, and
+    a warning that always fires is one nobody reads.
+    """
     result_hosts = {normalized_host(url) for url in LINK_RE.findall(text)}
     result_hosts.discard("")
     uncovered = sorted(result_hosts - source_hosts)
     if uncovered:
         audit.warn("results.md cites domains absent from sources.md: " + ", ".join(uncovered))
+
+
+def shape_form(repo: Path, shape: str) -> str:
+    """`form:` out of examples/<shape>.md — the shape's own account of how it reads."""
+    if not SHAPE_RE.fullmatch(shape or ""):
+        return ""
+    path = repo / "examples" / (shape + ".md")
+    if not path.is_file():
+        return ""
+    for line in path.read_text(encoding="utf-8").splitlines()[1:]:
+        if line.strip() == "---":
+            break
+        if line.startswith("form:"):
+            return line.split(":", 1)[1].strip()
+    return ""
+
+
+def audit_page_coverage(
+    folder: Path, page_ok: list[str], results_text: str, audit: Audit
+) -> None:
+    """Every `page`+`ok` source was either read, or said out loud to be unread.
+
+    Ledger shapes only -- a brief has no listings.md and no pre-filter to sit beside,
+    and its own coverage check is audit_result_links.
+
+    This is the one step in a run with no artifact of its own. The script handles
+    feeds; a page source is read by hand and its survivors appended to listings.md
+    under PAGE_MARKER. Skip that and nothing anywhere changes -- which is how six of
+    them went unread in a run that otherwise passed every check here.
+    """
+    if not page_ok:
+        return
+    listings = folder / "listings.md"
+    block = ""
+    if listings.is_file():
+        text = listings.read_text(encoding="utf-8", errors="replace")
+        _, marker, tail = text.partition(PAGE_MARKER)
+        block = tail if marker else ""
+    excused = "\n".join(
+        line for line in results_text.splitlines() if PAGE_NOT_READ in line.lower()
+    )
+    if not block and not excused:
+        audit.error(
+            f"{len(page_ok)} page sources are ok and none was read: no {PAGE_MARKER!r} in "
+            f"listings.md and no {PAGE_NOT_READ!r} line in results.md — " + ", ".join(page_ok)
+        )
+        return
+    unaccounted = [n for n in page_ok if n not in block and n not in excused]
+    if unaccounted:
+        audit.error(
+            "page sources neither read nor declared unread: " + ", ".join(unaccounted)
+        )
 
 
 def audit_session(repo: Path, slug: str) -> Audit:
@@ -225,8 +294,9 @@ def audit_session(repo: Path, slug: str) -> Audit:
     sources_text = read_text(folder / "sources.md", audit, required=status != "sources")
     source_count = blocked_count = 0
     source_hosts: set[str] = set()
+    page_ok: list[str] = []
     if sources_text:
-        source_count, blocked_count, source_hosts = audit_sources(sources_text, audit)
+        source_count, blocked_count, source_hosts, page_ok = audit_sources(sources_text, audit)
         updated = re.search(r"^Last updated:\s*(\S+)", sources_text, re.MULTILINE)
         if not updated or not DATE_RE.fullmatch(updated.group(1)):
             audit.error("sources.md has no valid Last updated date")
@@ -262,7 +332,14 @@ def audit_session(repo: Path, slug: str) -> Audit:
                 f"results.md reports {blocked_match.group(1)} browser-dependent sources; "
                 f"sources.md has {blocked_count} blocked"
             )
-        audit_result_links(results_text, source_hosts, audit)
+        # One coverage check per form, and they are not interchangeable. A brief
+        # attributes every claim, so its check is the cited domains. A ledger's rows
+        # come from listings.md, so its check is that the hand-read sources reached it.
+        form = shape_form(repo, memory.get("shape", ""))
+        if form == "brief":
+            audit_result_links(results_text, source_hosts, audit)
+        elif form == "ledger":
+            audit_page_coverage(folder, page_ok, results_text, audit)
 
     if status == "output":
         audit.notes.append("step 4 is pending; the human has not picked what to make yet")
@@ -311,11 +388,71 @@ def selfcheck() -> int:
             encoding="utf-8",
         )
 
+        examples = repo / "examples"
+        examples.mkdir()
+        (examples / "company-research.md").write_text(
+            "---\nshape: company-research\nform: brief\ncardinality: one\nfillers: []\n---\n",
+            encoding="utf-8",
+        )
+        (examples / "widgets.md").write_text(
+            "---\nshape: widgets\nform: ledger\ncardinality: many\nfillers: []\n---\n",
+            encoding="utf-8",
+        )
+
         good = audit_session(repo, "demo")
         if good.errors:
             print_audit(good)
             print("selfcheck: expected valid fixture to pass", file=sys.stderr)
             return 1
+        results_path = session / "results.md"
+        clean_results = results_path.read_text(encoding="utf-8")
+        stray = clean_results + "\nAnother claim. ([Elsewhere](https://elsewhere.test/x))\n"
+        results_path.write_text(stray, encoding="utf-8")
+        brief = audit_session(repo, "demo")
+        if not any("absent from sources.md" in w for w in brief.warnings):
+            print_audit(brief)
+            print("selfcheck: a brief should warn on an uncited domain", file=sys.stderr)
+            return 1
+
+        # The same uncovered domain on a ledger is the item's url, not a missing source.
+        ledger_memory = original = (session / "MEMORY.md").read_text(encoding="utf-8")
+        ledger_memory = ledger_memory.replace("shape: company-research", "shape: widgets")
+        (session / "MEMORY.md").write_text(ledger_memory, encoding="utf-8")
+        ledger = audit_session(repo, "demo")
+        if any("absent from sources.md" in w for w in ledger.warnings):
+            print_audit(ledger)
+            print("selfcheck: a ledger must not warn on item urls", file=sys.stderr)
+            return 1
+        # ...but a ledger owes an account of its hand-read page sources.
+        if not any("page sources are ok and none was read" in e for e in ledger.errors):
+            print_audit(ledger)
+            print("selfcheck: an unread page source should fail", file=sys.stderr)
+            return 1
+
+        listings = session / "listings.md"
+        listings.write_text(
+            "# listings — demo\n\n## page sources\n\n| issuer | item |\n|---|---|\n"
+            "| Example | a thing |\n",
+            encoding="utf-8",
+        )
+        read_by_hand = audit_session(repo, "demo")
+        if read_by_hand.errors:
+            print_audit(read_by_hand)
+            print("selfcheck: a page source under the marker is accounted for", file=sys.stderr)
+            return 1
+        listings.unlink()
+
+        results_path.write_text(
+            stray + "\n## gaps this run\n\npage not read: Example — no time\n",
+            encoding="utf-8",
+        )
+        declared = audit_session(repo, "demo")
+        if declared.errors:
+            print_audit(declared)
+            print("selfcheck: a page source declared unread is accounted for", file=sys.stderr)
+            return 1
+        results_path.write_text(clean_results, encoding="utf-8")
+        (session / "MEMORY.md").write_text(original, encoding="utf-8")
 
         memory_path = session / "MEMORY.md"
         original_memory = memory_path.read_text(encoding="utf-8")

@@ -90,8 +90,10 @@ Three exceptions, all public and topic-neutral:
 - `sessions/_template/` — the **skeleton** of a session: empty files, no data. Not a session — never a slug, never listed as one. Copy its contents after GATE 2, as `workflows/01-sources.md` specifies.
 - `examples/<shape>.md` — one worked walkthrough per **shape**, keyed by workflow step. **The frontmatter is procedure and is read as such; the body below it is illustration only.** So the three fields are written from what the shape does, and the prose never has to be parsed. No URLs and no vendor names, so the repo stays standalone. A new shape is a new file here, not an edit to a workflow. Skeleton: `examples/_template.md`.
 - `tools/session_audit.py` — a read-only structural validator. It may count,
-  compare dates, and check that result-link domains appear in `sources.md`. It
-  never fetches, filters, scores, or knows a topic.
+  compare dates, read a shape's frontmatter, and check one file's claims against
+  another's — that result-link domains appear in `sources.md` for a brief, and that
+  a ledger's hand-read `page` sources reached `listings.md` or were declared unread.
+  It never fetches, filters, scores, or knows a topic.
 - `fillers/<name>.md` — one procedure per thing that can be made from a result,
   tool-neutral. **The first executable exception in this list**, and the only one
   guarded by a gate of its own, below.
