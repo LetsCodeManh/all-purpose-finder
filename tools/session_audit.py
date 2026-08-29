@@ -15,11 +15,11 @@ from memory import frontmatter as read_frontmatter
 from shape import owes_listings, shape
 
 
-# Status is `sources` · `criteria` · `run` · `output` · `done`, then
+# Status is `sources` · `criteria` · `run` · `next-steps` · `done`, then
 # the name of whatever next-step output ran. Output names are an open set by design,
 # so a post-run status is checked for shape rather than against a list.
 PRE_RUN_STATUSES = {"sources", "criteria"}
-FIXED_STATUSES = PRE_RUN_STATUSES | {"run", "output", "done"}
+FIXED_STATUSES = PRE_RUN_STATUSES | {"run", "next-steps", "done"}
 STATUS_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 VALID_SOURCE_STATUSES = {"ok", "blocked", "error", "untested"}
 VALID_METHODS = {"feed", "page", "blocked"}
@@ -320,8 +320,8 @@ def audit_session(repo: Path, slug: str) -> Audit:
     if not STATUS_RE.fullmatch(status):
         audit.error(f"unknown MEMORY.md status {status!r}")
     if status == "review":
-        audit.error("deprecated MEMORY.md status 'review'; published runs move directly to output")
-    post_run = status not in FIXED_STATUSES or status in {"output", "done"}
+        audit.error("deprecated MEMORY.md status 'review'; published runs move directly to next-steps")
+    post_run = status not in FIXED_STATUSES or status in {"next-steps", "done"}
     if not memory.get("shape"):
         audit.error("MEMORY.md has no shape")
     last_run = memory.get("last run", "")
@@ -427,7 +427,7 @@ def audit_session(repo: Path, slug: str) -> Audit:
                     f"shortlist.md run date is {shortlist_date or 'missing'}, MEMORY.md last run is {last_run}"
                 )
 
-    if status == "output":
+    if status == "next-steps":
         audit.notes.append("GATE 4 is pending; the human has not picked what to make yet")
     elif status == "done":
         audit.notes.append("GATE 4 was answered with nothing to make")
@@ -640,7 +640,7 @@ def selfcheck() -> int:
 
         memory_path = session / "MEMORY.md"
         original_memory = memory_path.read_text(encoding="utf-8")
-        for open_status in ("output", "done", "resume"):
+        for open_status in ("next-steps", "done", "resume"):
             memory_path.write_text(
                 original_memory.replace("status: run", f"status: {open_status}"),
                 encoding="utf-8",

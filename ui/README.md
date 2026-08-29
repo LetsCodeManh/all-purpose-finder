@@ -29,7 +29,7 @@ pane updates as the agent writes the file.
   shape and its output form remain visible beside it; the form is the `form:` in
   `examples/<shape>.md`, never a guess from which files exist.
 - **Stage track** — `sources · criteria · results`, and then **Next Steps** (GATE 4).
-  A validated run publishes directly to `status: output`: Results remains available
+  A validated run publishes directly to `status: next-steps`: Results remains available
   for inspection or correction, while Next Steps shows the generated shortlist with
   writable ticks, or says the whole artifact is selected. It shows a few lightweight examples appropriate to
   rows or an artifact; these are prompts, not a fixed menu or end goal. `✓` has output

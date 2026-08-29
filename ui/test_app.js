@@ -17,7 +17,7 @@ function testIdentityMarkersStayHidden() {
 }
 
 function testEveryShapeGetsGateFour() {
-  const track = stagesFor(session("output", undefined, { "results.md": 1, "shortlist.md": 1 }));
+  const track = stagesFor(session("next-steps", undefined, { "results.md": 1, "shortlist.md": 1 }));
   assert.strictEqual(track.length, 4);
   assert.strictEqual(track[2].stage, "run");
   assert.strictEqual(track[2].mark, "✓");
@@ -26,8 +26,8 @@ function testEveryShapeGetsGateFour() {
 }
 
 function testGateFourStates() {
-  const output = stagesFor(session("output"));
-  assert.strictEqual(output[3].mark, "●");
+  const nextSteps = stagesFor(session("next-steps"));
+  assert.strictEqual(nextSteps[3].mark, "●");
   const done = stagesFor(session("done"));
   assert.strictEqual(done[3].mark, "✓");
 }

@@ -149,7 +149,7 @@ def finish(repo: Path, slug: str, check_only: bool) -> int:
     text = memory_path.read_text(encoding="utf-8")
     updated = set_fields(
         text,
-        {"status": "output", "last run": pending, "pending run": None},
+        {"status": "next-steps", "last run": pending, "pending run": None},
         "decide what, if anything, to make",
     )
     atomic_write(memory_path, updated)

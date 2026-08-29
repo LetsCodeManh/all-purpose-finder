@@ -45,11 +45,11 @@ The current step is the `status` field in `sessions/<slug>/MEMORY.md`. Read it, 
 | `sources` | sources not approved yet | `workflows/01-sources.md` |
 | `criteria` | sources approved, criteria not | `workflows/02-criteria.md` |
 | `run` | criteria approved; the next action is a run | `workflows/03-run.md` |
-| `output` | the run is published; GATE 4 is waiting for selection and the next action | `workflows/04-output.md` |
-| `done` | GATE 4 was answered with nothing to make; the same result remains available | follow `next:`; rerun or reopen output only when asked |
-| an output name, e.g. `contacts` | that next step has run; the same shortlist is still there to make something else from | `workflows/04-output.md`, then use a reusable procedure if one exists |
+| `next-steps` | the run is published; GATE 4 is waiting for selection and the next action | `workflows/04-next-steps.md` |
+| `done` | GATE 4 was answered with nothing to make; the same result remains available | follow `next:`; rerun or reopen Next Steps only when asked |
+| an output name, e.g. `contacts` | that next step has run; the same shortlist is still there to make something else from | `workflows/04-next-steps.md`, then use a reusable procedure if one exists |
 
-`output` is the stop after the run. Publication moves there directly; Results is
+`next-steps` is the stop after the run. Publication moves there directly; Results is
 available for review or correction, but it is not a gate. GATE 4 moves the session
 to `done` or the output name. A finished run never leaves `status: run` behind: that reads as
 "step 3 is next" and re-runs a run that already happened.
@@ -62,9 +62,9 @@ to `done` or the output name. A finished run never leaves `status: run` behind: 
 previous results, and Next Steps is closed. After `listings.md`, `results.md`, and any
 `shortlist.md` have all been written for that same date, run `publish_run.py <slug>
 finish`. It validates the dates and the session audit, then—and only then—moves to
-`status: output`, advances `last run:`, and removes `pending run:`.
+`status: next-steps`, advances `last run:`, and removes `pending run:`.
 
-Never update `last run:` or publish `status: output` by hand. A partial run may remain
+Never update `last run:` or publish `status: next-steps` by hand. A partial run may remain
 at `status: run`; it must never look published. The UI and audit independently compare
 the semantic dates written inside the artifacts, never filesystem modification times.
 

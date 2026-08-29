@@ -9,8 +9,8 @@ In: `sources.md` + an approved `criteria.md`. Out: `results.md`, plus
 
 Worked example: `examples/<shape>.md` → *03 — run*, for the shape named in this session's `shape:` field. No example yet for this shape? Run the step from here anyway, say so, and write that section afterwards from what happened.
 
-If the run is already published (`status: output`, `done`, or a next-step output
-name), route to `workflows/04-output.md`; never refetch merely because the result
+If the run is already published (`status: next-steps`, `done`, or a next-step output
+name), route to `workflows/04-next-steps.md`; never refetch merely because the result
 is being viewed again.
 
 Before the first fetch of every initial run or rerun:
@@ -351,7 +351,7 @@ python3 tools/publish_run.py <slug> finish
 ```
 
 The command refuses date mismatches or audit errors, then atomically updates
-`MEMORY.md` → `last run: <date>`, `status: output`,
+`MEMORY.md` → `last run: <date>`, `status: next-steps`,
 `next: decide what, if anything, to make`. `results.md` and, for
 `selection: rows`, `shortlist.md` now exist together. Results stay available for
 review or correction, while GATE 4 (Next Steps) is immediately ready.
@@ -371,6 +371,6 @@ represent a real limitation rather than a malformed file.
 ## 8. Present the result and open Next Steps
 
 Present `results.md`, including its scoring drops and gap report, then route to
-`workflows/04-output.md`. Results are not an approval gate. If the human spots
+`workflows/04-next-steps.md`. Results are not an approval gate. If the human spots
 something wrong or missing, apply the source or criteria delta gates and rerun only
 the affected sections.

@@ -2,7 +2,7 @@
 
 Find a human to talk to, for the rows the human ticked. Nothing else.
 
-Rules: `AGENTS.md`. Reached from `workflows/04-output.md`, never on its own.
+Rules: `AGENTS.md`. Reached from `workflows/04-next-steps.md`, never on its own.
 Out: `sessions/<slug>/contacts.md`.
 
 ## Precondition

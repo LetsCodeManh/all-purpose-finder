@@ -227,9 +227,9 @@ approved slug and shape.
 | `sources` | sources not approved yet | `workflows/01-sources.md` |
 | `criteria` | sources approved, criteria not | `workflows/02-criteria.md` |
 | `run` | criteria approved; ready to run | `workflows/03-run.md` |
-| `output` | the run is published; Next Steps (GATE 4) is waiting | `workflows/04-output.md` |
-| `done` | GATE 4 was answered with nothing to make | follow `next:`; rerun or reopen output only when asked |
-| an output name, e.g. `contacts` | that next step has run; the shortlist is still there | `workflows/04-output.md`, then use a reusable procedure if one exists |
+| `next-steps` | the run is published; Next Steps (GATE 4) is waiting | `workflows/04-next-steps.md` |
+| `done` | GATE 4 was answered with nothing to make | follow `next:`; rerun or reopen Next Steps only when asked |
+| an output name, e.g. `contacts` | that next step has run; the shortlist is still there | `workflows/04-next-steps.md`, then use a reusable procedure if one exists |
 
 Never skip forward because a later step looks more useful. If the human explicitly asks for a different step, say which step the session is on, then do what they asked.
 

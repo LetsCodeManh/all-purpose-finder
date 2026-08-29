@@ -146,11 +146,11 @@ def shape_meta(shape):
 def stages_for(shape, status):
     """`sources · criteria · run`, then the output that actually ran, if any.
 
-    Output names are an open set. `output` and `done` are gate states, not artifact
+    Output names are an open set. `next-steps` and `done` are gate states, not artifact
     filenames, so neither becomes a stage of its own.
     """
     stages = list(FIXED_STAGES)
-    if status and status not in {"output", "done"} and status not in stages:
+    if status and status not in {"next-steps", "done"} and status not in stages:
         stages.append(status)
     return stages
 

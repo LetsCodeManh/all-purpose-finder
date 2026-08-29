@@ -946,7 +946,7 @@ function stagesFor(s) {
   } else {
     track.push({
       name: null, stage: null,
-      mark: s.status === "output" ? "●" : s.status === "done" ? "✓" : "○",
+      mark: s.status === "next-steps" ? "●" : s.status === "done" ? "✓" : "○",
       present: s.status === "done", locked: rerunInProgress(s),
     });
   }
@@ -1352,9 +1352,9 @@ function draw() {
   const chosen = chosenOutput(s);
   if (S.stage === SLOT_STAGE && chosen) S.stage = chosen;
   if (S.stage === SLOT_STAGE && rerunInProgress(s)) S.stage = "run";
-  // `output` and `done` belong to the GATE 4 slot; neither is an output filename.
+  // `next-steps` and `done` belong to the GATE 4 slot; neither is an output filename.
   if (!S.stage) S.stage = (s.stages || []).includes(s.status) ? s.status
-    : (s.status === "output" || s.status === "done") ? SLOT_STAGE : "sources";
+    : (s.status === "next-steps" || s.status === "done") ? SLOT_STAGE : "sources";
   document.body.classList.toggle("sources-page", S.stage === "sources");
   document.documentElement.classList.toggle("sources-page", S.stage === "sources");
   document.body.classList.toggle("criteria-page", S.stage === "criteria");

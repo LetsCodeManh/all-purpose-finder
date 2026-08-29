@@ -5,7 +5,7 @@ anything, happens next.
 
 Rules: `AGENTS.md`. Entry: `00-session.md`.
 
-In: `status: output`, an output name, or `done` with an explicit request to make
+In: `status: next-steps`, an output name, or `done` with an explicit request to make
 something after all. Out: nothing until the human answers GATE 4.
 
 **This step is a slot, not a predetermined task.** Sources, criteria and the run

@@ -156,7 +156,7 @@ def test_stages_follow_actual_status():
     assert server.stages_for("jobs", "run") == ["sources", "criteria", "run"]
     # Gate states are not filenames or output stages.
     assert server.stages_for("company-research", "run") == ["sources", "criteria", "run"]
-    assert server.stages_for("company-research", "output") == ["sources", "criteria", "run"]
+    assert server.stages_for("company-research", "next-steps") == ["sources", "criteria", "run"]
     assert server.stages_for("jobs", "done") == ["sources", "criteria", "run"]
     # an unknown shape is not a crash and is not a guess
     assert server.stages_for("no-such-shape", "criteria") == ["sources", "criteria", "run"]
