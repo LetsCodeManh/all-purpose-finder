@@ -1122,12 +1122,13 @@ function drawTabs() {
   const trigger = el("button", "session-trigger");
   trigger.type = "button";
   trigger.setAttribute("aria-expanded", "false");
-  trigger.innerHTML = '<span class="dot"></span><span>' + esc(current.slug) + '</span><span class="chev">▾</span>';
+  trigger.innerHTML = '<span class="dot"></span><span>' + esc(current.slug) + '</span><span class="chev">›</span>';
   const menu = el("div", "session-menu");
   S.sessions.forEach((s) => {
     const t = el("button", "session-option" + (s.slug === S.slug ? " on" : ""));
     t.type = "button";
-    t.innerHTML = '<span class="dot"></span><span>' + esc(s.slug) + '</span><span class="session-status">' + esc(s.status) + "</span>";
+    t.innerHTML = '<span class="dot"></span><span class="session-name">' + esc(s.slug) +
+      '</span><span class="session-status">' + esc(s.status) + "</span>";
     t.onclick = () => { S.slug = s.slug; S.stage = null; menu.classList.remove("open"); load(); };
     menu.appendChild(t);
   });

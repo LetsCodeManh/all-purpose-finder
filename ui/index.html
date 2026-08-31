@@ -86,21 +86,26 @@
         background: #fff;
       }
       .session-trigger .dot {
+        flex: none;
         width: 7px;
         height: 7px;
         border-radius: 50%;
         background: var(--green);
       }
       .session-trigger .chev {
-        font: 9px var(--mono);
+        font: 12px var(--mono);
         color: var(--dimmer);
         margin-left: 2px;
+        line-height: 1;
+      }
+      .session-trigger[aria-expanded="true"] .chev {
+        transform: rotate(90deg);
       }
       .session-menu {
         position: absolute;
         left: 0;
         top: 43px;
-        width: 260px;
+        width: 340px;
         background: #fff;
         border: 1px solid var(--line);
         border-radius: 10px;
@@ -125,11 +130,17 @@
         color: var(--ink2);
         cursor: pointer;
       }
+      .session-option .session-name {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
       .session-option:hover,
       .session-option.on {
         background: #f3f5f8;
       }
       .session-option .dot {
+        flex: none;
         width: 7px;
         height: 7px;
         border-radius: 50%;
@@ -142,6 +153,7 @@
         font: 10.5px var(--mono);
         color: var(--dimmer);
         margin-left: auto;
+        white-space: nowrap;
       }
       #session-meta {
         display: flex;
@@ -162,17 +174,20 @@
       }
       #new-session {
         margin-left: auto;
-        border: 0;
-        background: transparent;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--soft);
         color: var(--dim);
         cursor: pointer;
-        padding: 8px;
+        padding: 7px 10px;
         display: flex;
         gap: 9px;
         align-items: center;
       }
       #new-session:hover {
         color: var(--ink);
+        border-color: #c8cfd8;
+        background: #fff;
       }
       .shortcut {
         font: 10.5px var(--mono);
