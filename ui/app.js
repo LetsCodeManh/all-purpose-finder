@@ -1591,7 +1591,8 @@ function drawTerminal() {
     pane.innerHTML = '<div class="noterm"><p><b>No terminal in the page.</b></p>' +
       "<p>The UI is optional. Every session runs in a bare terminal exactly as it always has — " +
       "this pane is a convenience, not a dependency. To put one here:</p>" +
-      "<pre>brew install ttyd\nttyd -p " + S.ttydPort + " -W claude</pre></div>";
+      "<pre>brew install ttyd tmux\nttyd -p " + S.ttydPort +
+      " -W tmux new -A -s finder claude</pre></div>";
     copy.textContent = "detached — every session still runs from the files";
   }
 }

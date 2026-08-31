@@ -10,14 +10,18 @@ Two terminals, from the repo root. The dashboard is stdlib-only; ttyd is what pu
 live `claude` session in the drawer at the bottom of the page.
 
 ```
-brew install ttyd                # once
+brew install ttyd tmux           # once
 ```
 
 Terminal 1 — the terminal drawer (optional; the dashboard says "detached" without it):
 
 ```
-ttyd -p 7681 -W claude
+ttyd -p 7681 -W tmux new -A -s finder claude
 ```
+
+`tmux new -A` attaches to the session named `finder`, or creates it the first time.
+Without it, ttyd starts a fresh `claude` per browser connection, so reloading the tab —
+including the automatic reload after you edit `app.js` — throws the conversation away.
 
 Terminal 2 — the dashboard:
 

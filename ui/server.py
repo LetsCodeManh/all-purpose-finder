@@ -5,7 +5,7 @@ The UI is optional, permanently. Deleting ui/ changes nothing: no workflow, no A
 rule and no session file references it. Every write this server makes is a line edit a
 human could have typed by hand — a tick is `- [ ]` -> `- [x]`, nothing more.
 
-Run:  python3 ui/server.py        (then, separately:  ttyd -p 7681 -W claude)
+Run:  python3 ui/server.py        (then, separately:  ttyd -p 7681 -W tmux new -A -s finder claude)
 """
 
 import json
@@ -430,5 +430,6 @@ class Handler(BaseHTTPRequestHandler):
 if __name__ == "__main__":
     print("finder ui   http://localhost:%d" % PORT)
     print("terminal    %s" % ("ttyd is up on :%d" % TTYD_PORT if ttyd_up()
-                              else "ttyd is NOT running — `ttyd -p %d -W claude`" % TTYD_PORT))
+                              else "ttyd is NOT running — `ttyd -p %d -W tmux new -A -s finder claude`"
+                              % TTYD_PORT))
     ThreadingHTTPServer(("127.0.0.1", PORT), Handler).serve_forever()
