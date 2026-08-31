@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const assert = require("assert");
-const { inline, parse, stagesFor, fileFor, shortlistMatches, nextStepIdeas, resultCardCount,
+const { inline, parse, stagesFor, fileFor, outputsFor, shortlistMatches, nextStepIdeas, resultCardCount,
   activeResultRowCount, resultBadge, compactResultRow, rerunInProgress,
   runFreshness, organisationOf, organisationCount, selectionLabel } = require("./app.js");
 
@@ -32,29 +32,27 @@ function testGateFourStates() {
   assert.strictEqual(done[3].mark, "✓");
 }
 
-function testChosenOutputSitsBesideTheSlot() {
-  // The gate is not consumed by the thing made at it: the same result can have
-  // something else made from it tomorrow, so Next Steps stays on the track.
-  const track = stagesFor(session("letter", ["sources", "criteria", "run", "letter"], {
+function testChosenOutputLivesInsideNextSteps() {
+  const s = session("letter", ["sources", "criteria", "run"], {
     "results.md": 1,
     "outputs/letter/README.md": 1,
-  }));
-  assert.strictEqual(track.length, 5);
+  });
+  s.outputs = ["letter"];
+  const track = stagesFor(s);
+  assert.strictEqual(track.length, 4);
   assert.strictEqual(track[3].stage, null, "the Next Steps slot survives");
-  assert.strictEqual(track[3].mark, "✓", "answered, not pending");
-  assert.strictEqual(track[4].stage, "letter");
-  assert.strictEqual(track[4].mark, "●");
+  assert.strictEqual(track[3].mark, "●", "the current output keeps Next Steps active");
 }
 
-function testEarlierOutputsStayVisible() {
-  const track = stagesFor(session("letter", ["sources", "criteria", "run", "comparison", "letter"], {
+function testEarlierOutputsStayInTheTree() {
+  const s = session("letter", ["sources", "criteria", "run"], {
     "results.md": 1,
     "outputs/comparison/README.md": 1,
     "outputs/letter/README.md": 1,
-  }));
-  assert.deepStrictEqual(track.slice(4).map((item) => item.stage), ["comparison", "letter"]);
-  assert.strictEqual(track[4].mark, "✓");
-  assert.strictEqual(track[5].mark, "●");
+  });
+  s.outputs = ["comparison", "letter"];
+  assert.deepStrictEqual(outputsFor(s), ["comparison", "letter"]);
+  assert.strictEqual(stagesFor(s).length, 4);
 }
 
 function testGateStateNeverBecomesAChip() {
@@ -128,8 +126,8 @@ for (const [name, fn] of Object.entries({
   testIdentityMarkersStayHidden,
   testEveryShapeGetsGateFour,
   testGateFourStates,
-  testChosenOutputSitsBesideTheSlot,
-  testEarlierOutputsStayVisible,
+  testChosenOutputLivesInsideNextSteps,
+  testEarlierOutputsStayInTheTree,
   testGateStateNeverBecomesAChip,
   testSelectionLabelCountsOrganisations,
   testShortlistFiltering,

@@ -1,6 +1,9 @@
 # <output name> — <slug>
 
-<What was made, for whom, and why.>
+<One concise sentence: what was made, for whom, and why.>
+
+<Lead with the useful result. This README is rendered directly inside Next Steps
+and must make sense without opening a supporting file.>
 
 ## Input
 
@@ -8,7 +11,8 @@
 
 ## Output
 
-<The chosen deliverable. Supporting files, if any, live beside this README.>
+<The concise, readable deliverable. Put necessary detail or alternate formats in
+supporting files beside this README, and link them here.>
 
 ## Gaps
 

@@ -105,6 +105,6 @@ rows|artifact`. Anything unreadable falls back to `ledger`/`many`/`rows`.
 Every chosen output has one canonical Markdown entry at this path — A U. `<name>` must
 equal the output-name `status` in `MEMORY.md` when it is the current output and
 cannot be a reserved status name. The audit requires a README in every output
-folder and the UI renders each one as an output stage. Supporting files may sit in
-the same folder; they are not parsed by the engine. Do not create the folder before
-Gate 4 chooses it.
+folder and the UI renders each one under the Next Steps output tree. Supporting
+files may sit in the same folder; they are not parsed by the engine. Do not create
+the folder before Gate 4 chooses it.

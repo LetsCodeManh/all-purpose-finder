@@ -107,6 +107,10 @@ chosen output:
 | `tools/` | that session's own scripts, if it needs any |
 | `outputs/<name>/README.md` | the canonical entry for a chosen output; supporting files sit beside it |
 
+Outputs remain inside Next Steps rather than extending the four-stage progress
+track. Their canonical README is concise, user-facing Markdown and remains
+readable on its own; supporting files hold only the detail or formats it needs.
+
 Run `python3 tools/session_audit.py <slug>` before relying on a finished session.
 The validator is read-only and topic-neutral: it checks structure, source
 accounting, dates, and whether cited web domains are represented in the source

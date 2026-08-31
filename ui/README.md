@@ -32,8 +32,9 @@ pane updates as the agent writes the file.
   A validated run publishes directly to `status: next-steps`: Results remains available
   for inspection or correction, while Next Steps shows the generated shortlist with
   writable ticks, or says the whole artifact is selected. It shows a few lightweight examples appropriate to
-  rows or an artifact; these are prompts, not a fixed menu or end goal. `✓` has output
-  on disk · `●` where `status` says you are · `○` nothing written yet.
+  rows or an artifact; these are prompts, not a fixed menu or end goal. Outputs do
+  not become more stages: they appear as Markdown documents in the file tree inside
+  Next Steps. `✓` is complete · `●` where `status` says you are · `○` not reached.
 - **Results separates postings from cards.** Its badge shows the active posting count
   and, when grouped variants make it different, the number of visual cards. Tick counts
   appear only in Next Steps, where the selection can be changed.
@@ -67,8 +68,9 @@ pane updates as the agent writes the file.
   check may write `sources.md` and nothing else. Each endpoint carries its own writable
   set, so widening one never widens the other.
 - **Outputs have one address.** An output-name status resolves to
-  `outputs/<name>/README.md`. The UI renders that canonical entry; supporting files
-  beside it stay available on disk without becoming UI state.
+  `outputs/<name>/README.md`. The UI lists each canonical entry under the Next Steps
+  `outputs` tree and renders its Markdown in the same panel. Supporting files beside
+  it stay available on disk without becoming UI state.
 - **Live reload** — SSE. Edit a file in the terminal, the pane follows.
 - **Terminal drawer** — optional and detached at the bottom. Nothing in the dashboard
   approves a gate: each stage says what it is waiting for, and you confirm it in the

@@ -51,8 +51,8 @@ MANUAL_VALUES = {"checked", "partial", "unavailable", "\u2014"}
 SLUG = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 TICK = re.compile(r"^- \[[ x]\] ")
 
-# Three fixed steps and one open Next Steps slot. If an output runs, its status is added
-# to the track without pretending the shape prescribed it.
+# Three fixed steps and one open Next Steps slot. Outputs belong inside that slot;
+# they never extend the lifecycle track.
 FIXED_STAGES = ["sources", "criteria", "run"]
 
 
@@ -101,9 +101,9 @@ def artifact_run_dates(d):
 def sessions():
     """Every session on disk, with the facts the chips are derived from.
 
-    Never a hardcoded four: which stages exist comes from `shape`, read out of that
-    shape's frontmatter, plus which files are there. A session that never fetched has no
-    listings.md and says so.
+    The four-stage lifecycle is fixed. Shape frontmatter decides result form and
+    selection; canonical output files are listed separately under Next Steps. A
+    session that never fetched has no listings.md and says so.
     """
     out = []
     if not SESSIONS.is_dir():
@@ -133,6 +133,7 @@ def sessions():
             "pending_run": meta.get("pending run", ""),
             "run_dates": dates,
             "stages": stages_for(meta.get("shape", ""), meta.get("status", ""), outputs),
+            "outputs": outputs,
             # `form` is the shape's, not the session's: ledger or brief is decided when the
             # shape is written, and the page used to infer it from which files existed.
             "form": shape_meta(meta.get("shape", "")).get("form", ""),
@@ -161,20 +162,8 @@ def shape_meta(shape):
 
 
 def stages_for(shape, status, outputs=()):
-    """`sources · criteria · run`, then every output that actually exists.
-
-    Output names are an open set. `next-steps` and `done` are gate states, not artifact
-    filenames, so neither becomes a stage of its own.
-    """
-    stages = list(FIXED_STAGES)
-    output_names = [name for name in outputs if SLUG.fullmatch(name) and name not in stages]
-    if status in output_names:
-        output_names.remove(status)
-        output_names.append(status)
-    stages.extend(output_names)
-    if status and status not in {"next-steps", "done"} and status not in stages:
-        stages.append(status)
-    return stages
+    """The lifecycle is fixed; outputs are children of Next Steps, not stages."""
+    return list(FIXED_STAGES)
 
 
 def listings_stats(slug):

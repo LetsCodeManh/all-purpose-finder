@@ -14,8 +14,8 @@
  * enforced there, at the write, rather than by a test asserting the parser is right.
  */
 
-// The stage track is the server's: three fixed steps and every output that exists.
-// Next Steps itself is an open slot, not a shape-owned menu.
+// The stage track is always the three fixed steps plus the open Next Steps slot.
+// Outputs are documents inside Next Steps, not more lifecycle stages.
 const FILE_FOR = { sources: "sources.md", criteria: "criteria.md", run: "results.md" };
 const SLOT_STAGE = "**slot**";
 // Output names are open, but their canonical entry is fixed. Supporting files may sit
@@ -882,33 +882,32 @@ const FIXED = ["sources", "criteria", "run"];
 // name it finds there, so a track it disagrees with would invent an output path.
 // Duplicated on purpose: one wrong list should not invent a document.
 const GATE_STATES = new Set(["next-steps", "done"]);
+const outputsFor = (s) => {
+  if (Array.isArray(s.outputs)) return s.outputs.filter((name) => !GATE_STATES.has(name));
+  // Compatibility with an older server payload during a live reload.
+  return (s.stages || []).slice(FIXED.length).filter((name) => !GATE_STATES.has(name));
+};
 const chosenOutput = (s) => {
-  const made = (s.stages || []).slice(FIXED.length).filter((name) => !GATE_STATES.has(name));
+  const made = outputsFor(s);
   return made.includes(s.status) ? s.status : null;
 };
 const rerunInProgress = (s) => s.status === "run" && /^\d{4}-\d{2}-\d{2}$/.test(s.pending_run || "");
 
 function stagesFor(s) {
-  const stages = s.stages || [];
   const has = (n) => n in s.files;
   const track = FIXED.map((name) => {
     const present = name === "run" ? has("results.md") || has("listings.md") : has(fileFor(name));
     const active = name === s.status;
     return { name, stage: name, mark: active ? "●" : present ? "✓" : "○", present };
   });
-  // The slot is the gate, not the thing made at it. It used to be *replaced* by the
-  // output that ran, which left no way back to a shortlist AGENTS.md says is still
-  // there to make something else from. Next Steps stays; what was made sits beside it.
-  const outputs = stages.slice(FIXED.length).filter((name) => !GATE_STATES.has(name));
+  // The slot is both the gate and the home of anything made there. An output changes
+  // the document selected inside Next Steps; it never changes the lifecycle.
+  const outputs = outputsFor(s);
   const answered = outputs.length > 0 || s.status === "done";
   track.push({
     name: null, stage: null,
-    mark: s.status === "next-steps" ? "●" : answered ? "✓" : "○",
+    mark: s.status === "next-steps" || chosenOutput(s) ? "●" : answered ? "✓" : "○",
     present: answered, locked: rerunInProgress(s),
-  });
-  outputs.forEach((name) => {
-    const present = has(fileFor(name));
-    track.push({ name, stage: name, mark: s.status === name ? "●" : present ? "✓" : "○", present });
   });
   return track;
 }
@@ -1050,6 +1049,39 @@ function gateFiveRowList(shortlist, writable) {
   return wrap;
 }
 
+function nextStepsSidebar(s, outputs) {
+  const nav = el("nav", "next-steps-sidebar");
+  nav.setAttribute("aria-label", "Next Steps documents");
+
+  const home = el("button", "next-steps-nav-item root" + (S.stage === SLOT_STAGE ? " on" : ""));
+  home.type = "button";
+  home.innerHTML = '<span class="next-steps-nav-icon">◇</span><span>Next Steps</span>';
+  home.onclick = () => { S.stage = SLOT_STAGE; draw(); };
+  nav.appendChild(home);
+
+  const tree = el("div", "output-tree");
+  const folder = el("div", "output-folder");
+  folder.innerHTML = '<span class="next-steps-nav-icon">▾</span><span>outputs</span>' +
+    '<span class="output-count">' + outputs.length + '</span>';
+  tree.appendChild(folder);
+  if (!outputs.length) {
+    const empty = el("div", "output-tree-empty");
+    empty.textContent = "No output yet";
+    tree.appendChild(empty);
+  }
+  outputs.forEach((name) => {
+    const item = el("button", "next-steps-nav-item output" + (S.stage === name ? " on" : ""));
+    item.type = "button";
+    item.title = fileFor(name);
+    item.innerHTML = '<span class="tree-branch">└</span><span class="file-glyph">md</span><span>' +
+      esc(name + ".md") + '</span>';
+    item.onclick = () => { S.stage = name; draw(); };
+    tree.appendChild(item);
+  });
+  nav.appendChild(tree);
+  return nav;
+}
+
 // No approve button: every gate is confirmed in the terminal, where the approval and the
 // next step get written. This line says what the stage is waiting for, and nothing clicks.
 function actionFor(s) {
@@ -1062,6 +1094,7 @@ function actionFor(s) {
   if (S.stage === SLOT_STAGE) return selectionFor(s) === "rows"
     ? "Next Steps: tick rows, then choose what—if anything—to do"
     : "Next Steps: choose what—if anything—to do with the result";
+  if (outputsFor(s).includes(S.stage)) return "Next Steps: reviewing " + S.stage + ".md";
   return notes[S.stage] || "continue in the terminal";
 }
 
@@ -1102,7 +1135,7 @@ function drawChips(s) {
   bar.style.setProperty("--stage-count", stages.length);
   stages.forEach((st, i) => {
     const slot = !st.stage;
-    const selected = slot ? S.stage === SLOT_STAGE : st.stage === S.stage;
+    const selected = slot ? (S.stage === SLOT_STAGE || outputsFor(s).includes(S.stage)) : st.stage === S.stage;
     const c = el("button", "chip" + (selected ? " on" : "") +
       (st.mark === "✓" ? " done" : "") + (st.stage ? "" : " slot") +
       (st.mark === "●" ? " here" : ""));
@@ -1317,16 +1350,18 @@ function screenBadge(s, blocks) {
 function draw() {
   const s = S.sessions.find((x) => x.slug === S.slug);
   if (!s) return;
-  const chosen = chosenOutput(s);
-  if (S.stage === SLOT_STAGE && rerunInProgress(s)) S.stage = "run";
+  const outputs = outputsFor(s);
+  if ((S.stage === SLOT_STAGE || outputs.includes(S.stage)) && rerunInProgress(s)) S.stage = "run";
   // `next-steps` and `done` belong to the GATE 4 slot; neither is an output filename.
-  if (!S.stage) S.stage = (s.stages || []).includes(s.status) ? s.status
+  if (!S.stage) S.stage = FIXED.includes(s.status) ? s.status
+    : outputs.includes(s.status) ? s.status
     : (s.status === "next-steps" || s.status === "done") ? SLOT_STAGE : "sources";
+  const inNextSteps = S.stage === SLOT_STAGE || outputs.includes(S.stage);
   document.body.classList.toggle("sources-page", S.stage === "sources");
   document.documentElement.classList.toggle("sources-page", S.stage === "sources");
   document.body.classList.toggle("criteria-page", S.stage === "criteria");
   document.documentElement.classList.toggle("criteria-page", S.stage === "criteria");
-  const fullDocument = S.stage === "run" || S.stage === SLOT_STAGE;
+  const fullDocument = S.stage === "run" || inNextSteps;
   document.body.classList.toggle("full-page", fullDocument);
   document.documentElement.classList.toggle("full-page", fullDocument);
   const contentGrid = $("#content-grid");
@@ -1339,16 +1374,46 @@ function draw() {
 
   const doc = $("#doc");
   doc.innerHTML = "";
-  if (S.stage === SLOT_STAGE) {
+  if (inNextSteps) {
     const head = el("div", "dochead");
     const ticks = shortlistTicks();
-    const badge = selectionFor(s) === "rows" ? ticks.length + " rows · " +
-      ticks.filter((b) => b.checked).length + " selected" : "whole artifact";
+    const badge = S.stage === SLOT_STAGE
+      ? (selectionFor(s) === "rows" ? ticks.length + " rows · " +
+        ticks.filter((b) => b.checked).length + " selected" : "whole artifact")
+      : outputs.length + " output" + (outputs.length === 1 ? "" : "s");
+    const selectedFile = S.stage === SLOT_STAGE
+      ? (selectionFor(s) === "rows" ? "shortlist.md" : "results.md")
+      : fileFor(S.stage);
     head.innerHTML = '<span class="title">Next Steps</span><span class="count-badge" id="count">' +
       esc(badge) + '</span><span class="file-meta">' +
-      (selectionFor(s) === "rows" ? "shortlist.md" : "results.md") + "</span>";
+      esc(selectedFile) + "</span>";
     doc.appendChild(head);
-    const body = el("div", "docbody gate5-body");
+    const shell = el("div", "docbody next-steps-shell");
+    shell.appendChild(nextStepsSidebar(s, outputs));
+    const body = el("section", "next-steps-panel gate5-body");
+    if (S.stage !== SLOT_STAGE) {
+      const payload = S.files[fileFor(S.stage)];
+      if (!payload) {
+        const missing = el("div", "empty");
+        missing.textContent = fileFor(S.stage) + " does not exist in this session.";
+        body.appendChild(missing);
+      } else {
+        const filebar = el("div", "output-filebar");
+        filebar.innerHTML = '<span class="file-glyph">md</span><strong>' + esc(S.stage + ".md") +
+          '</strong><span>' + esc(fileFor(S.stage)) + ' · updated ' + esc(ago(s.files[fileFor(S.stage)])) + '</span>';
+        body.appendChild(filebar);
+        const markdown = el("div", "output-markdown");
+        markdown.appendChild(renderBlocks(parse(payload.text), {
+          file: fileFor(S.stage), cards: false, writable: false,
+        }));
+        body.appendChild(markdown);
+      }
+      shell.appendChild(body);
+      doc.appendChild(shell);
+      drawGaps([]);
+      countLine();
+      return;
+    }
     const content = el("section", "gate5-guide");
     const isRows = selectionFor(s) === "rows";
     const selectedTicks = ticks.filter((b) => b.checked);
@@ -1391,7 +1456,8 @@ function draw() {
       whole.textContent = "The result is the selection; there are no rows to tick.";
       body.appendChild(whole);
     }
-    doc.appendChild(body);
+    shell.appendChild(body);
+    doc.appendChild(shell);
     drawGaps([]);
     countLine();
     updateGateFiveRows();
@@ -1560,7 +1626,7 @@ async function load() {
   if (!s) return;
 
   S.files = {};
-  const wanted = new Set((s.stages || []).map(fileFor).concat([TICK_FILE]));
+  const wanted = new Set(FIXED.map(fileFor).concat(outputsFor(s).map(fileFor), [TICK_FILE]));
   await Promise.all([...wanted].map(async (f) => {
     if (!(f in s.files)) return;   // the server only lists files it has and will serve
     S.files[f] = await fetch("/api/file/" + s.slug + "/" + f).then((r) => r.json());
@@ -1591,7 +1657,7 @@ if (typeof document !== "undefined") {
 }   // importable for tests
 
 if (typeof module !== "undefined") {
-  module.exports = { inline, parse, stagesFor, fileFor, selectionFor, shortlistMatches, nextStepIdeas,
+  module.exports = { inline, parse, stagesFor, fileFor, outputsFor, selectionFor, shortlistMatches, nextStepIdeas,
     resultCardCount, activeResultCardCount, resultRunCounts, activeResultRowCount,
     resultBadge, compactResultRow, rerunInProgress, runFreshness, SLOT_STAGE,
     organisationOf, organisationCount, selectionLabel };

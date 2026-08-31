@@ -170,6 +170,27 @@ def test_session_files_include_only_canonical_output_entries():
     assert set(files) == {"MEMORY.md", "outputs/comparison/README.md"}, files
 
 
+def test_sessions_list_outputs_beneath_fixed_stages():
+    root = Path(tempfile.mkdtemp())
+    folder = root / "demo"
+    folder.mkdir()
+    (folder / "MEMORY.md").write_text(
+        "---\nslug: demo\nshape: jobs\nstatus: comparison\nlast run: —\n"
+        "pending run: —\n---\n\nnext: review comparison\n",
+        encoding="utf-8",
+    )
+    output = folder / "outputs" / "comparison" / "README.md"
+    output.parent.mkdir(parents=True)
+    output.write_text("# comparison\n", encoding="utf-8")
+    original, server.SESSIONS = server.SESSIONS, root
+    try:
+        session = server.sessions()[0]
+        assert session["stages"] == ["sources", "criteria", "run"]
+        assert session["outputs"] == ["comparison"]
+    finally:
+        server.SESSIONS = original
+
+
 def test_stages_follow_actual_status():
     assert server.stages_for("jobs", "run") == ["sources", "criteria", "run"]
     # Gate states are not filenames or output stages.
@@ -178,10 +199,11 @@ def test_stages_follow_actual_status():
     assert server.stages_for("jobs", "done") == ["sources", "criteria", "run"]
     # an unknown shape is not a crash and is not a guess
     assert server.stages_for("no-such-shape", "criteria") == ["sources", "criteria", "run"]
-    # Output names are open: a session sitting at one still shows where it is.
-    assert server.stages_for("jobs", "letter") == ["sources", "criteria", "run", "letter"]
+    # Outputs are open-ended, but they live under Next Steps rather than extending
+    # the lifecycle track.
+    assert server.stages_for("jobs", "letter") == ["sources", "criteria", "run"]
     assert server.stages_for("jobs", "letter", ["comparison", "letter"]) == [
-        "sources", "criteria", "run", "comparison", "letter"
+        "sources", "criteria", "run"
     ]
 
 

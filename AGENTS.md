@@ -111,6 +111,11 @@ result; they are examples, not a menu. A chosen output lives at
 `sessions/<slug>/outputs/<name>/README.md`, with any supporting files beside it.
 Create no output folder before the user chooses it.
 
+That `README.md` is the user-facing output, not an implementation log. Keep it
+concise, readable without opening another file, and lead with the useful result.
+Put necessary detail or alternate formats beside it as supporting files, and
+keep unresolved gaps visible in the README.
+
 When the user asks a question or wants advice about a published result, Advisor
 may join. Discussion does not pass a gate, change session status, or require a
 file. Advisor separates evidence from opinion, names uncertainty, and never

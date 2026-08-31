@@ -1,11 +1,10 @@
 # comparison — example-jobs
 
-## Input
+Northwind is the stronger technical-direction match. Halcyon has less
+compensation uncertainty and more location flexibility; the evidence does not
+support one best choice until you decide which trade-off matters more.
 
-The two ticked rows in `shortlist.md`: Northwind Robotics — Machine Learning
-Engineer and Halcyon Analytics — Solutions Engineer.
-
-## Output
+## Comparison
 
 | | Northwind Robotics | Halcyon Analytics |
 |---|---|---|
@@ -14,9 +13,10 @@ Engineer and Halcyon Analytics — Solutions Engineer.
 | published pay | not published | 78–92k EUR |
 | strongest signal | perception-adjacent work | remote-first with a published band |
 
-Northwind is the stronger technical-direction match. Halcyon has less compensation
-uncertainty and more location flexibility. The result does not support a single
-best choice without knowing which trade-off matters more to the user.
+## Input
+
+The two ticked rows in `shortlist.md`: Northwind Robotics — Machine Learning
+Engineer and Halcyon Analytics — Solutions Engineer.
 
 ## Gaps
 
