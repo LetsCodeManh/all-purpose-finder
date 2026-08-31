@@ -397,25 +397,6 @@
       body.sources-page #document-card.sources-collapsed + #source-sections {
         flex: 1;
         max-height: none;
-        overflow: hidden;
-      }
-      body.sources-page
-        #document-card.sources-collapsed
-        + #source-sections
-        .source-info-card[open] {
-        flex: 1;
-        min-height: 0;
-        display: flex;
-        flex-direction: column;
-      }
-      body.sources-page
-        #document-card.sources-collapsed
-        + #source-sections
-        .source-info-card[open]
-        .source-info-body {
-        flex: 1;
-        min-height: 0;
-        max-height: none;
       }
       html.criteria-page,
       body.criteria-page {
@@ -543,6 +524,10 @@
         font: 11.5px var(--mono);
         color: var(--dimmer);
         margin-left: auto;
+      }
+      .dochead.clickable-head {
+        cursor: pointer;
+        user-select: none;
       }
       .sources-collapse {
         width: 25px;
@@ -1113,7 +1098,8 @@
         padding: 2px 13px 12px;
         border-top: 1px solid var(--line2);
         background: var(--soft);
-        max-height: min(220px, 25vh);
+        /* ponytail: a plain max-height scrolls; making <details> a flex column did not */
+        max-height: min(420px, 46vh);
         overflow-y: auto;
         overscroll-behavior: contain;
         scrollbar-gutter: stable;

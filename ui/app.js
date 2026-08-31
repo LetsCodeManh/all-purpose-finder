@@ -1503,7 +1503,10 @@ function draw() {
     collapse.title = "Collapse Working sources";
     collapse.setAttribute("aria-label", collapse.title);
     collapse.setAttribute("aria-expanded", "true");
-    collapse.onclick = () => {
+    head.appendChild(collapse);
+    // The whole header is the hit target; the chevron is only the affordance for it.
+    head.classList.add("clickable-head");
+    head.onclick = () => {
       if ($("#document-card").classList.contains("sources-collapsed")) {
         setSourcesCollapsed(false);
         return;
@@ -1511,7 +1514,6 @@ function draw() {
       const firstSection = document.querySelector("#source-sections .source-info-card");
       if (firstSection) firstSection.open = true;
     };
-    head.appendChild(collapse);
   }
   doc.appendChild(head);
   const body = el("div", "docbody");
