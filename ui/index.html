@@ -816,6 +816,9 @@
       }
       .gate5-rows {
         border-top: 1px solid var(--line2);
+        /* pays back the search bar's negative top margin, so it only hugs the
+           panel top once it is actually stuck */
+        padding-top: 20px;
       }
       .gate5-tools {
         position: sticky;
