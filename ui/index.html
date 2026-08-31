@@ -819,12 +819,15 @@
       }
       .gate5-tools {
         position: sticky;
-        top: 0;
+        /* Bleed over the panel's 20px/22px padding, so rows scroll under the bar
+           instead of past it above and beside. */
+        top: -20px;
+        margin: -20px -22px 0;
+        padding: 20px 22px 12px;
         z-index: 2;
         display: flex;
         align-items: center;
         gap: 9px;
-        padding: 12px 0;
         background: #fff;
       }
       .gate5-search {
