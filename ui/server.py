@@ -103,7 +103,9 @@ def sessions():
 
     The four-stage lifecycle is fixed. Shape frontmatter decides result form and
     selection; canonical output files are listed separately under Next Steps. A
-    session that never fetched has no listings.md and says so.
+    session that never fetched has no listings.md and says so. The bundled
+    `example-*` sessions are a tutorial: they are listed only while there is
+    nothing real to list.
     """
     out = []
     if not SESSIONS.is_dir():
@@ -141,7 +143,9 @@ def sessions():
             "next": meta.get("_next", ""),
             "files": files,
         })
-    return out
+    # Placeholders step aside once there is real work. The folders stay on disk —
+    # this hides them from the switcher, it does not delete anything.
+    return [s for s in out if not s["slug"].startswith("example-")] or out
 
 
 def frontmatter(path):

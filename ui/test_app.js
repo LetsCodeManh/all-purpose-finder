@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const assert = require("assert");
-const { inline, parse, stagesFor, fileFor, outputsFor, shortlistMatches, nextStepIdeas, resultCardCount,
+const { parseRoute, inline, parse, stagesFor, fileFor, outputsFor, shortlistMatches, nextStepIdeas, resultCardCount,
   activeResultRowCount, resultBadge, compactResultRow, rerunInProgress,
   runFreshness, organisationOf, organisationCount, selectionLabel } = require("./app.js");
 
@@ -122,7 +122,19 @@ function testUnchangedRowBecomesCompactCardData() {
   );
 }
 
+function testRouteSurvivesAReload() {
+  assert.deepStrictEqual(parseRoute("#jobs-eu/sources"), { slug: "jobs-eu", stage: "sources" });
+  // the GATE 4 slot is a stage name with characters a URL has to carry
+  assert.deepStrictEqual(parseRoute("#jobs-eu/" + encodeURIComponent("**slot**")),
+    { slug: "jobs-eu", stage: "**slot**" });
+  // a bare slug, an empty hash and a trailing slash all mean "pick the default stage"
+  assert.deepStrictEqual(parseRoute("#jobs-eu"), { slug: "jobs-eu", stage: null });
+  assert.deepStrictEqual(parseRoute("#jobs-eu/"), { slug: "jobs-eu", stage: null });
+  assert.deepStrictEqual(parseRoute(""), { slug: null, stage: null });
+}
+
 for (const [name, fn] of Object.entries({
+  testRouteSurvivesAReload,
   testIdentityMarkersStayHidden,
   testEveryShapeGetsGateFour,
   testGateFourStates,

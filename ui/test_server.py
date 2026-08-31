@@ -251,6 +251,29 @@ def test_gate_one_session_is_listed_and_probe_only_folder_is_not():
         server.SESSIONS, server.REPO = old_sessions, old_repo
 
 
+def test_examples_step_aside_once_a_real_session_exists():
+    """The bundled examples teach the shape of a session; they are not the user's work."""
+    root = Path(tempfile.mkdtemp())
+    sessions = root / "sessions"
+    (root / "examples").mkdir(parents=True)
+    for slug in ("example-jobs", "real-work"):
+        (sessions / slug).mkdir(parents=True)
+        (sessions / slug / "MEMORY.md").write_text(
+            "---\nslug: %s\nshape: widgets\nstatus: sources\n---\n\nnext: go\n" % slug,
+            encoding="utf-8",
+        )
+
+    old_sessions, old_repo = server.SESSIONS, server.REPO
+    server.SESSIONS, server.REPO = sessions, root
+    try:
+        assert [s["slug"] for s in server.sessions()] == ["real-work"]
+        # ...but a fresh clone has only examples, and an empty switcher teaches nothing.
+        (sessions / "real-work" / "MEMORY.md").unlink()
+        assert [s["slug"] for s in server.sessions()] == ["example-jobs"]
+    finally:
+        server.SESSIONS, server.REPO = old_sessions, old_repo
+
+
 if __name__ == "__main__":
     for name, fn in sorted(globals().items()):
         if name.startswith("test_"):

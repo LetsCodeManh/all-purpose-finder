@@ -29,12 +29,20 @@ const S = { sessions: [], slug: null, stage: null, ttyd: false, ttydPort: 7681, 
 
 // The address bar is the whole router: #<slug>/<stage>. A reload rereads it, so it lands
 // where the user was rather than on the newest session's newest stage.
+function parseRoute(hash) {
+  const text = decodeURIComponent(hash.replace(/^#/, ""));
+  if (!text) return { slug: null, stage: null };
+  const cut = text.indexOf("/");   // a slug never contains "/", a stage may
+  return {
+    slug: (cut < 0 ? text : text.slice(0, cut)) || null,
+    stage: (cut < 0 ? "" : text.slice(cut + 1)) || null,
+  };
+}
+
 function readRoute() {
-  const hash = decodeURIComponent(location.hash.slice(1));
-  if (!hash) return;
-  const cut = hash.indexOf("/");
-  S.slug = (cut < 0 ? hash : hash.slice(0, cut)) || null;
-  S.stage = cut < 0 ? null : hash.slice(cut + 1) || null;
+  const route = parseRoute(location.hash);
+  if (route.slug) S.slug = route.slug;
+  if (route.stage) S.stage = route.stage;
 }
 
 function writeRoute() {
@@ -1682,7 +1690,7 @@ if (typeof document !== "undefined") {
 }   // importable for tests
 
 if (typeof module !== "undefined") {
-  module.exports = { inline, parse, stagesFor, fileFor, outputsFor, selectionFor, shortlistMatches, nextStepIdeas,
+  module.exports = { parseRoute, inline, parse, stagesFor, fileFor, outputsFor, selectionFor, shortlistMatches, nextStepIdeas,
     resultCardCount, activeResultCardCount, resultRunCounts, activeResultRowCount,
     resultBadge, compactResultRow, rerunInProgress, runFreshness, SLOT_STAGE,
     organisationOf, organisationCount, selectionLabel };
