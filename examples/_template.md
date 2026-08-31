@@ -93,5 +93,6 @@ shape drops on most, and what a droppable row typically says.*
 
 ## 04 — Next Steps
 
-*Per organisation, or skipped. If skipped, say what `next:` points at instead —
-a rerun, a date, a decision.*
+*How Advisor helps the user discuss this result. If an output is chosen, show its
+`outputs/<name>/README.md` path. If nothing is made, say what `next:` points at —
+a rerun, date, decision, or occasion.*

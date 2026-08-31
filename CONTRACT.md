@@ -21,7 +21,7 @@ allowed. After the block, one `next: <line>`.
 |-----|-------|---------|
 | `slug` | must equal the folder name | A U |
 | `shape` | a name; `examples/<shape>.md` supplies its four fields, and a missing file is fine | A P U |
-| `status` | `sources` · `criteria` · `run` · `next-steps` · `done`, or an output name matching `^[a-z0-9][a-z0-9-]*$` | A P U |
+| `status` | `sources` · `criteria` · `run` · `next-steps` · `done`, or a non-reserved output name matching `^[a-z0-9][a-z0-9-]*$`; an output name requires `outputs/<name>/README.md` | A P U |
 | `last run` | `YYYY-MM-DD` or `—` | A P U |
 | `pending run` | `YYYY-MM-DD` or `—`; a date is only valid while `status: run` | A P U |
 
@@ -99,8 +99,11 @@ rows|artifact`. Anything unreadable falls back to `ledger`/`many`/`rows`.
 - the only file the UI may write, and it may only flip `[ ]` ↔ `[x]`
 - the ticked count is deliberately not in the header — count the boxes
 
-## contacts.md
+## outputs/&lt;name&gt;/README.md
 
-A pipe table with `org`, `who`, `role`, `how`, `source`, `found` — U. A
-`Looked up YYYY-MM-DD` line supplies the date. `not found` in `role` renders as
-a gap rather than a contact.
+Every chosen output has one canonical Markdown entry at this path — A U. `<name>` must
+equal the output-name `status` in `MEMORY.md` when it is the current output and
+cannot be a reserved status name. The audit requires a README in every output
+folder and the UI renders each one as an output stage. Supporting files may sit in
+the same folder; they are not parsed by the engine. Do not create the folder before
+Gate 4 chooses it.

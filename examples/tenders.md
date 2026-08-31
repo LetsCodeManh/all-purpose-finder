@@ -22,8 +22,8 @@ standalone — no live links to rot, and no real session's content.
   date is what sorts the file. The diff that matters is *new* and *closing soon*.
 - **Selection:** rows — GATE 4 uses the compact shortlist beside the detailed
   notices.
-- **Next steps:** propose possibilities from the selected notices. Contact lookup
-  is often useful because a notice commonly publishes a contact point.
+- **Next steps:** open-ended. Advisor can help compare deadlines, uncertainty,
+  and effort before the user chooses an output.
 
 Closest shape is `jobs` — same rows, same cards, same scoring. Three things
 differ, and all three come from the same fact, that a tender is a legal process
@@ -275,24 +275,24 @@ not checked since:     <name> — <date>
 ## 04 — Next Steps
 
 GATE 4 uses the generated shortlist beside the detailed cards.
-Propose relevant possibilities without fixing the user's end goal. If the human
-chooses contacts, look up **once per authority**, not once per notice — three
-ticked tenders from one authority is one lookup.
-
-Lookup order is the same as everywhere, but step 1 pays off far more often here:
-a notice names a contact point by law in most jurisdictions. Read the notice
-before searching anything.
+Propose relevant possibilities without fixing the user's end goal. Advisor can
+help weigh deadline pressure, missing documents, and bid effort before anything is
+made.
 
 ```markdown
-| org | who | role | how | source | found |
-|-----|-----|------|-----|--------|-------|
-| <authority A> | <name> | <procurement role> | <published address> | notice contact section | <date> |
-| <authority B> | — | not found | — | notice names a department, no person | <date> |
+sessions/<slug>/outputs/bid-comparison/README.md
+
+# bid comparison — <slug>
+
+## Input
+<the ticked notices>
+
+## Output
+<deadline, fit, effort, and uncertainty compared side by side>
+
+## Gaps
+<documents or requirements not available>
 ```
 
-A notice that names a department and no person is `not found`, written as what
-it is. Do not guess a person from the department name.
-
-**Questions to an authority are formal, and often published to every bidder.**
-Drafting one is a different thing to make, and the human asks for it by name.
-`contacts` hands back the contact and stops.
+Each additional chosen output gets its own folder. Never overwrite the comparison
+to make a proposal or clarification draft.

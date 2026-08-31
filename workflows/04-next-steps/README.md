@@ -12,7 +12,7 @@ with it.
 - the user wants fresh results instead: use `workflows/03-run/README.md`.
 - the user corrects sources or criteria: use `workflows/00-session/revise.md`.
 
-Use the shape's `selection` field and its `04 — Next Steps` example. Reusable
-procedures in root `next-steps/` are shortcuts, never the user's menu.
+Use the shape's `selection` field and its `04 — Next Steps` example. Choices come
+from the actual result and conversation, never from a stored menu.
 
 Rules: `AGENTS.md`.

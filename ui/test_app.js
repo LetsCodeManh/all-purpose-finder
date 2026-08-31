@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const assert = require("assert");
-const { inline, parse, stagesFor, shortlistMatches, nextStepIdeas, resultCardCount,
+const { inline, parse, stagesFor, fileFor, shortlistMatches, nextStepIdeas, resultCardCount,
   activeResultRowCount, resultBadge, compactResultRow, rerunInProgress,
   runFreshness, organisationOf, organisationCount, selectionLabel } = require("./app.js");
 
@@ -35,15 +35,26 @@ function testGateFourStates() {
 function testChosenOutputSitsBesideTheSlot() {
   // The gate is not consumed by the thing made at it: the same result can have
   // something else made from it tomorrow, so Next Steps stays on the track.
-  const track = stagesFor(session("letter", ["sources", "criteria", "run", "contacts", "letter"], {
+  const track = stagesFor(session("letter", ["sources", "criteria", "run", "letter"], {
     "results.md": 1,
-    "letter.md": 1,
+    "outputs/letter/README.md": 1,
   }));
   assert.strictEqual(track.length, 5);
   assert.strictEqual(track[3].stage, null, "the Next Steps slot survives");
   assert.strictEqual(track[3].mark, "✓", "answered, not pending");
   assert.strictEqual(track[4].stage, "letter");
   assert.strictEqual(track[4].mark, "●");
+}
+
+function testEarlierOutputsStayVisible() {
+  const track = stagesFor(session("letter", ["sources", "criteria", "run", "comparison", "letter"], {
+    "results.md": 1,
+    "outputs/comparison/README.md": 1,
+    "outputs/letter/README.md": 1,
+  }));
+  assert.deepStrictEqual(track.slice(4).map((item) => item.stage), ["comparison", "letter"]);
+  assert.strictEqual(track[4].mark, "✓");
+  assert.strictEqual(track[5].mark, "●");
 }
 
 function testGateStateNeverBecomesAChip() {
@@ -62,7 +73,7 @@ function testGateStateNeverBecomesAChip() {
 function testSelectionLabelCountsOrganisations() {
   assert.strictEqual(organisationOf("- [x] Example Co — Engineer · 2/2"), "Example Co");
   assert.strictEqual(organisationOf("Example Co — Engineer · 2/2"), "Example Co");
-  // Two roles at one employer are one contact lookup, not two.
+  // Two roles at one employer remain visible as one organisation grouping.
   assert.strictEqual(organisationCount(["A Co — One", "A Co — Two", "B Co — Three"]), 2);
   assert.strictEqual(selectionLabel(3, ["A Co — One", "A Co — Two", "B Co — Three"]),
     "3 selected · 2 organisations");
@@ -78,9 +89,14 @@ function testShortlistFiltering() {
 }
 
 function testNextStepIdeasAreExamplesNotShapeMenu() {
-  assert(nextStepIdeas("rows").includes("Find contacts"));
+  assert(nextStepIdeas("rows").includes("Discuss with Advisor"));
   assert(nextStepIdeas("artifact").includes("Create a summary"));
   assert(nextStepIdeas("artifact").includes("Draft a proposal"));
+}
+
+function testOutputStagesResolveInsideTheirOwnFolder() {
+  assert.strictEqual(fileFor("run"), "results.md");
+  assert.strictEqual(fileFor("letter"), "outputs/letter/README.md");
 }
 
 function testResultsSeparatePostingsFromCards() {
@@ -113,10 +129,12 @@ for (const [name, fn] of Object.entries({
   testEveryShapeGetsGateFour,
   testGateFourStates,
   testChosenOutputSitsBesideTheSlot,
+  testEarlierOutputsStayVisible,
   testGateStateNeverBecomesAChip,
   testSelectionLabelCountsOrganisations,
   testShortlistFiltering,
   testNextStepIdeasAreExamplesNotShapeMenu,
+  testOutputStagesResolveInsideTheirOwnFolder,
   testResultsSeparatePostingsFromCards,
   testPendingRerunLocksNextStepsAndExposesStaleDates,
   testUnchangedRowBecomesCompactCardData,

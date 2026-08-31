@@ -19,7 +19,8 @@ standalone — no live links to rot, and **no real session's content**. Read
 - **Recurs?** Yes. New-since-last-run is the point.
 - **Selection:** rows — `shortlist.py` writes the compact tick list beside the
   detailed result.
-- **Next steps?** `contacts` — someone to talk to per organisation.
+- **Next steps?** Open-ended. Advisor can help compare the selected roles before
+  the user chooses whether to make anything.
 
 ---
 
@@ -212,19 +213,24 @@ not checked since:     <name> — <date>
 ## 04 — Next Steps
 
 GATE 4 uses the generated shortlist beside the detailed cards.
-Propose a few relevant possibilities from what is selected—contacts, comparison,
-application preparation, official links—without fixing the user's end goal. If the
-human chooses contacts, look up **once per employer**, not once per row.
-
-Lookup order: the posting itself (a named person, or a linked team page) → the
-employer's own site → a public search for whoever owns that team.
+Propose a few relevant possibilities from what is selected—comparison,
+application preparation, official links, or a conversation with Advisor—without
+fixing the user's end goal.
 
 ```markdown
-| org | who | role | how | source | found |
-|-----|-----|------|-----|--------|-------|
-| <employer A> | <name> | <their role> | <published address> | posting footer | <date> |
-| <employer B> | — | not found | — | checked site + posting | <date> |
+sessions/<slug>/outputs/comparison/README.md
+
+# comparison — <slug>
+
+## Input
+<the ticked roles>
+
+## Output
+<a side-by-side comparison grounded in their result cards>
+
+## Gaps
+<posting bodies or facts still not read>
 ```
 
-Never guess an address from a name and a domain pattern. `not found` is a result
-and it stays in the file.
+Advisor may help the user think before or after an output is made. Discussion does
+not create an output folder or close Gate 4.

@@ -32,8 +32,8 @@ Four gates. At each one the agent stops and waits for you:
 
 Before gate 3, candidate sources are searched and lightly probed only to
 establish whether and how they can be read. Full retrieval, filtering, scoring,
-and brief-writing begin after criteria approval. Nobody is looked up for contact
-purposes before gate 4.
+and brief-writing begin after criteria approval. Output-specific research and
+production begin only after gate 4.
 
 ---
 
@@ -87,7 +87,8 @@ holds the status, and it is the only thing the next session needs to resume.
 
 ## What it writes
 
-Each session is one folder, one file per thing:
+Each session is one folder, with one file per search artifact and one folder per
+chosen output:
 
 | file | holds |
 |------|-------|
@@ -97,8 +98,8 @@ Each session is one folder, one file per thing:
 | `results.md` | this run, diffed against the last one |
 | `shortlist.md` | compact scripted projection beside a row-based result, and the only file you tick |
 | `listings.md` | the raw fetch cache |
-| `contacts.md` | who to talk to, cached so it is never looked up twice |
 | `tools/` | that session's own scripts, if it needs any |
+| `outputs/<name>/README.md` | the canonical entry for a chosen output; supporting files sit beside it |
 
 Run `python3 tools/session_audit.py <slug>` before relying on a finished session.
 The validator is read-only and topic-neutral: it checks structure, source
@@ -149,7 +150,6 @@ By design, not by omission:
 - **it will not write a per-site scraper.** A site that needs one is marked
   `blocked` and stays in the file with a link you open by hand
 - **it will not guess an email** from a name and a domain pattern
-- **it will not write your outreach.** Contacts is the last step. The message is yours
 - **it will not collect private information about people.** Only what is
   published for the purpose you are reading it for, and it says what it excluded
 
@@ -164,11 +164,10 @@ CLAUDE.md              one line, pointing at AGENTS.md
                        everything still works, you just type the sentence
 tools/session_audit.py read-only, topic-neutral session consistency check
 workflows/             routers and small procedures; only the current path is read
-next-steps/            optional reusable procedures for common next steps. They
-                       are implementation shortcuts, not the user's menu
 examples/              one worked walkthrough per shape. Public, placeholders only
 sessions/_template/    the skeleton of a session
-sessions/<slug>/       your sessions. Gitignored
+sessions/<slug>/       your sessions and their outputs. Gitignored
+  outputs/<name>/      one chosen output, with README.md as its entry
 ```
 
 Changing how it behaves means editing `AGENTS.md` or `workflows/`. Adding a new

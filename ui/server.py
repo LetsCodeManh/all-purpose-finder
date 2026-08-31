@@ -31,9 +31,11 @@ UI = REPO / "ui"
 PORT = int(os.environ.get("FINDER_UI_PORT", "8420"))
 TTYD_PORT = int(os.environ.get("FINDER_TTYD_PORT", "7681"))
 
-# What may be read is a shape, not a list. Next-step artifact names are an open set, so
-# a whitelist here would have to learn every new thing a user might ask to make.
-NAME_RE = re.compile(r"^(MEMORY|[a-z0-9][a-z0-9-]*)\.md$")
+# Fixed artifacts live at the session root. Chosen outputs have one canonical entry
+# under outputs/<name>/README.md; supporting files stay local but are not rendered.
+ROOT_NAME_RE = re.compile(r"^(MEMORY|sources|criteria|results|shortlist|listings)\.md$")
+OUTPUT_ENTRY_RE = re.compile(r"^outputs/[a-z0-9][a-z0-9-]*/README\.md$")
+RESERVED_OUTPUT_NAMES = {"sources", "criteria", "run", "next-steps", "done"}
 # listings.md is watched but never served whole: 3718 rows nobody reads. Its stat line goes
 # out through /api/listings instead, which reads only the file's head.
 NEVER_SERVED = {"listings.md"}
@@ -54,18 +56,28 @@ TICK = re.compile(r"^- \[[ x]\] ")
 FIXED_STAGES = ["sources", "criteria", "run"]
 
 
+def output_entry(name):
+    return bool(OUTPUT_ENTRY_RE.fullmatch(name or "")) and name.split("/")[1] not in RESERVED_OUTPUT_NAMES
+
+
 def readable(name):
-    """Any session markdown file, except the one that is never served whole."""
-    return bool(NAME_RE.fullmatch(name or "")) and name not in NEVER_SERVED
+    """A root artifact or canonical output README, except a full listings cache."""
+    return bool(ROOT_NAME_RE.fullmatch(name or "") or output_entry(name)) \
+        and name not in NEVER_SERVED
 
 
 def session_files(d):
-    """The markdown in a session folder, by name and mtime — the page picks what it wants.
-
-    Globbed rather than listed for the same reason `readable` is a shape: a next step
-    may write `<name>.md` and the server must not need teaching that the name exists.
-    """
-    return {f.name: f.stat().st_mtime for f in d.glob("*.md") if NAME_RE.fullmatch(f.name)}
+    """Root artifacts and canonical output entries, keyed by session-relative path."""
+    files = {
+        f.name: f.stat().st_mtime
+        for f in d.glob("*.md")
+        if ROOT_NAME_RE.fullmatch(f.name)
+    }
+    for f in d.glob("outputs/*/README.md"):
+        name = f.relative_to(d).as_posix()
+        if output_entry(name):
+            files[name] = f.stat().st_mtime
+    return files
 
 
 def artifact_run_dates(d):
@@ -107,6 +119,11 @@ def sessions():
             continue
         meta = frontmatter(memory)
         files = session_files(d)
+        outputs = sorted(
+            name.split("/")[1]
+            for name in files
+            if output_entry(name)
+        )
         dates = artifact_run_dates(d)
         out.append({
             "slug": d.name,
@@ -115,7 +132,7 @@ def sessions():
             "last_run": meta.get("last run", ""),
             "pending_run": meta.get("pending run", ""),
             "run_dates": dates,
-            "stages": stages_for(meta.get("shape", ""), meta.get("status", "")),
+            "stages": stages_for(meta.get("shape", ""), meta.get("status", ""), outputs),
             # `form` is the shape's, not the session's: ledger or brief is decided when the
             # shape is written, and the page used to infer it from which files existed.
             "form": shape_meta(meta.get("shape", "")).get("form", ""),
@@ -143,13 +160,18 @@ def shape_meta(shape):
     return shape_fields(REPO, shape)
 
 
-def stages_for(shape, status):
-    """`sources · criteria · run`, then the output that actually ran, if any.
+def stages_for(shape, status, outputs=()):
+    """`sources · criteria · run`, then every output that actually exists.
 
     Output names are an open set. `next-steps` and `done` are gate states, not artifact
     filenames, so neither becomes a stage of its own.
     """
     stages = list(FIXED_STAGES)
+    output_names = [name for name in outputs if SLUG.fullmatch(name) and name not in stages]
+    if status in output_names:
+        output_names.remove(status)
+        output_names.append(status)
+    stages.extend(output_names)
     if status and status not in {"next-steps", "done"} and status not in stages:
         stages.append(status)
     return stages
@@ -327,10 +349,9 @@ class Handler(BaseHTTPRequestHandler):
         if p == "/api/sessions":
             return self.send_json({"sessions": sessions(), "ttyd": ttyd_up(), "ttyd_port": TTYD_PORT})
 
-        # /api/file/<slug>/<name> — the raw markdown. The client parses it, so every
-        # rendered element keeps its line number in the source file.
-        if len(parts) == 4 and parts[:2] == ["api", "file"]:
-            f = safe(parts[2], parts[3], readable)
+        # /api/file/<slug>/<relative-path> — root artifacts and canonical output READMEs.
+        if len(parts) >= 4 and parts[:2] == ["api", "file"]:
+            f = safe(parts[2], "/".join(parts[3:]), readable)
             if not f:
                 return self.send_json({"error": "no such file"}, 404)
             return self.send_json({"text": f.read_text(encoding="utf-8"), "mtime": f.stat().st_mtime})

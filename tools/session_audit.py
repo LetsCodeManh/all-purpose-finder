@@ -16,8 +16,8 @@ from shape import owes_listings, shape
 
 
 # Status is `sources` · `criteria` · `run` · `next-steps` · `done`, then
-# the name of whatever next-step output ran. Output names are an open set by design,
-# so a post-run status is checked for shape rather than against a list.
+# the name of whatever output ran. Output names are an open set by design, so a
+# post-run status is checked for shape and its canonical outputs/<name>/README.md.
 PRE_RUN_STATUSES = {"sources", "criteria"}
 FIXED_STATUSES = PRE_RUN_STATUSES | {"run", "next-steps", "done"}
 STATUS_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
@@ -336,6 +336,23 @@ def audit_session(repo: Path, slug: str) -> Audit:
     if status == "run" and pending_active:
         audit.notes.append(f"run {pending_run} is in progress; existing results are previous")
 
+    output_names: set[str] = set()
+    outputs = folder / "outputs"
+    if outputs.exists():
+        if not outputs.is_dir():
+            audit.error("outputs must be a directory")
+        else:
+            for item in outputs.iterdir():
+                if not item.is_dir():
+                    audit.error(f"outputs contains a file outside an output folder: {item.name}")
+                    continue
+                if not STATUS_RE.fullmatch(item.name) or item.name in FIXED_STATUSES:
+                    audit.error(f"invalid or reserved output name {item.name!r}")
+                    continue
+                output_names.add(item.name)
+                if not (item / "README.md").is_file():
+                    audit.error(f"output {item.name!r} has no canonical README.md")
+
     sources_text = read_text(folder / "sources.md", audit, required=status != "sources")
     source_count = blocked_count = 0
     source_hosts: set[str] = set()
@@ -431,8 +448,11 @@ def audit_session(repo: Path, slug: str) -> Audit:
         audit.notes.append("GATE 4 is pending; the human has not picked what to make yet")
     elif status == "done":
         audit.notes.append("GATE 4 was answered with nothing to make")
-    elif status == "contacts" and not (folder / "contacts.md").is_file():
-        audit.notes.append("contacts output is pending; contacts.md does not exist yet")
+    elif STATUS_RE.fullmatch(status) and status not in FIXED_STATUSES:
+        if status not in output_names:
+            audit.error(f"output status {status!r} requires outputs/{status}/README.md")
+        else:
+            audit.notes.append(f"output {status!r} is published at outputs/{status}/README.md")
 
     return audit
 
@@ -632,6 +652,10 @@ def selfcheck() -> int:
             print_audit(empty_output)
             print("selfcheck: a row next step with no ticks should fail", file=sys.stderr)
             return 1
+        if not any("outputs/resume/README.md" in error for error in empty_output.errors):
+            print_audit(empty_output)
+            print("selfcheck: an output status without its canonical README should fail", file=sys.stderr)
+            return 1
         results_path.write_text(clean_results, encoding="utf-8")
         (session / "MEMORY.md").write_text(original, encoding="utf-8")
         (session / "shortlist.md").unlink()
@@ -640,6 +664,9 @@ def selfcheck() -> int:
 
         memory_path = session / "MEMORY.md"
         original_memory = memory_path.read_text(encoding="utf-8")
+        output_entry = session / "outputs" / "resume" / "README.md"
+        output_entry.parent.mkdir(parents=True)
+        output_entry.write_text("# resume\n", encoding="utf-8")
         for open_status in ("next-steps", "done", "resume"):
             memory_path.write_text(
                 original_memory.replace("status: run", f"status: {open_status}"),

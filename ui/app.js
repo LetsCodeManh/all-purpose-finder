@@ -14,14 +14,13 @@
  * enforced there, at the write, rather than by a test asserting the parser is right.
  */
 
-// The stage track is the server's: three fixed steps and the output that actually ran.
+// The stage track is the server's: three fixed steps and every output that exists.
 // Next Steps itself is an open slot, not a shape-owned menu.
 const FILE_FOR = { sources: "sources.md", criteria: "criteria.md", run: "results.md" };
 const SLOT_STAGE = "**slot**";
-// A next step may produce <name>.md, and output names are an open set, so this cannot be
-// an exhaustive map. A stage whose file is not there is still a stage: the chip renders
-// and the screen says the document does not exist yet.
-const fileFor = (stage) => FILE_FOR[stage] || stage + ".md";
+// Output names are open, but their canonical entry is fixed. Supporting files may sit
+// beside the README without teaching the UI their formats.
+const fileFor = (stage) => FILE_FOR[stage] || "outputs/" + stage + "/README.md";
 // The one file the page writes. Ticks live here and nowhere else (AGENTS.md -> Ticks);
 // results.md is a step-3 artifact that no later step edits.
 const TICK_FILE = "shortlist.md";
@@ -672,56 +671,6 @@ function renderLedgerResults(blocks, ctx) {
   return frag;
 }
 
-function contactTable(blocks) {
-  return blocks.find((b) => b.type === "table" && b.header &&
-    ["org", "who", "role", "how", "source", "found"].every((name) =>
-      b.header.cells.map((c) => c.toLowerCase()).includes(name)));
-}
-
-function renderContacts(blocks) {
-  const frag = document.createDocumentFragment();
-  const table = contactTable(blocks);
-  if (!table) return renderBlocks(blocks, { cards: false, writable: false });
-  const head = table.header.cells.map((c) => c.toLowerCase());
-  const cell = (r, name) => r.cells[head.indexOf(name)] || "";
-  const paras = blocks.filter((b) => b.type === "para");
-  const allText = paras.map((b) => b.text).join("\n");
-  const date = (allText.match(/Looked up\s+(\d{4}-\d{2}-\d{2})/i) || [])[1] || "";
-
-  const intro = el("div", "contacts-intro", paras.length ? paras[0].line : table.line);
-  intro.innerHTML = '<p>One lookup per organisation' + (date ? ", " + esc(date) : "") +
-    '. Order: the posting → the org\'s own site → a public search. <strong>No address is guessed from a name and a domain.</strong> ' +
-    '<code>not found</code> means looked and nothing published.</p>' +
-    '<p>Excluded on purpose: RocketReach, ZoomInfo and ContactOut hits for named recruiters. ' +
-    'Broker-assembled personal contact data is not published for this purpose. The gap is real and stays visible.</p>';
-  frag.appendChild(intro);
-
-  const list = el("div", "contact-list", table.line);
-  table.rows.forEach((r) => {
-    const missing = /^not found$/i.test(cell(r, "role"));
-    const row = el("div", "contact-row" + (missing ? " missing" : ""), r.line);
-    row.dataset.org = cell(r, "org");
-    const identity = el("div", "contact-identity", r.line);
-    identity.innerHTML = '<strong>' + esc(cell(r, "org")) + '</strong><span>' + esc(cell(r, "found")) + "</span>";
-    const detail = el("div", "contact-detail", r.line);
-    let lead = "";
-    if (missing) {
-      lead = '<span class="missing-badge">not found</span>';
-    } else {
-      const who = cell(r, "who");
-      const role = cell(r, "role");
-      lead = (who && who !== "—" ? '<strong class="contact-who">' + esc(who) + "</strong>" : "") +
-        (role ? '<span class="contact-role">' + esc(role) + "</span>" : "");
-    }
-    detail.innerHTML = '<div class="contact-lead">' + lead + '</div><div class="contact-how">' +
-      inline(cell(r, "how")) + '</div><div class="contact-source">' + inline(cell(r, "source")) + "</div>";
-    row.append(identity, detail);
-    list.appendChild(row);
-  });
-  frag.appendChild(list);
-  return frag;
-}
-
 function criteriaGuidance(name, form) {
   const key = name.toLowerCase();
   if (key === "must") return form === "brief" ? "a miss is a gap, never a silent drop" : "only a must drops a row";
@@ -926,13 +875,12 @@ async function tick(b, box, ctx) {
 /* ---------- chrome ---------- */
 
 const FIXED = ["sources", "criteria", "run"];
-// GATE 4 is a slot, not a stage called Contacts. Until the human picks a next step,
+// GATE 4 is a slot, not an output stage. Until the user picks a next step,
 // the track shows a selectable slot whose panel explains the choice stays open.
 // Gate states are not artifact names. The server already refuses to put them on the
 // track (ui/server.py -> stages_for), but the client derives a *filename* from every
-// name it finds there, so a track it disagrees with renders a chip for `next-steps.md`
-// — a file that never exists. Duplicated on purpose: one wrong list should not be able
-// to invent a document.
+// name it finds there, so a track it disagrees with would invent an output path.
+// Duplicated on purpose: one wrong list should not invent a document.
 const GATE_STATES = new Set(["next-steps", "done"]);
 const chosenOutput = (s) => {
   const made = (s.stages || []).slice(FIXED.length).filter((name) => !GATE_STATES.has(name));
@@ -951,17 +899,17 @@ function stagesFor(s) {
   // The slot is the gate, not the thing made at it. It used to be *replaced* by the
   // output that ran, which left no way back to a shortlist AGENTS.md says is still
   // there to make something else from. Next Steps stays; what was made sits beside it.
-  const chosen = chosenOutput(s);
-  const answered = Boolean(chosen) || s.status === "done";
+  const outputs = stages.slice(FIXED.length).filter((name) => !GATE_STATES.has(name));
+  const answered = outputs.length > 0 || s.status === "done";
   track.push({
     name: null, stage: null,
     mark: s.status === "next-steps" ? "●" : answered ? "✓" : "○",
     present: answered, locked: rerunInProgress(s),
   });
-  if (chosen) {
-    const present = has(fileFor(chosen));
-    track.push({ name: chosen, stage: chosen, mark: s.status === chosen ? "●" : present ? "✓" : "○", present });
-  }
+  outputs.forEach((name) => {
+    const present = has(fileFor(name));
+    track.push({ name, stage: name, mark: s.status === name ? "●" : present ? "✓" : "○", present });
+  });
   return track;
 }
 
@@ -1018,7 +966,6 @@ function stageStatus(s, stage) {
     if (formFor(s) === "brief") return "whole artifact";
     return resultBadge(S.files["results.md"].text);
   }
-  if (stage === "contacts") return S.files["contacts.md"] ? "lookup complete" : "not started";
   return fileFor(stage) in S.files ? "written" : "not started";
 }
 
@@ -1035,13 +982,12 @@ function shortlistMatches(label, checked, query, mode) {
 
 function nextStepIdeas(selection) {
   return selection === "rows"
-    ? ["Find contacts", "Compare selected", "Prepare an application or proposal", "Collect official links"]
-    : ["Create a summary", "Draft a proposal", "Prepare a briefing", "Extract action items"];
+    ? ["Discuss with Advisor", "Compare selected", "Prepare an application or proposal", "Collect official links"]
+    : ["Discuss with Advisor", "Create a summary", "Draft a proposal", "Extract action items"];
 }
 
 // `- [x] <issuer> — <item> · <score>`: the issuer is everything before the first em
-// dash. Contact lookup runs once per organisation (AGENTS.md -> Cost), so the selected
-// organisation count — not the row count — is what a row-based next step costs.
+// dash. Showing both row and organisation counts helps explain grouped selections.
 function organisationOf(label) {
   return String(label).replace(/^-\s*\[[ x]\]\s*/, "").split(" — ")[0].trim();
 }
@@ -1112,7 +1058,6 @@ function actionFor(s) {
     criteria: "the run waits for your approval",
     run: rerunInProgress(s) ? "finish and publish the rerun before Next Steps" :
       (s.status === "run" ? "run the approved criteria" : "review or correct the published result"),
-    contacts: "append only, never rewritten",
   };
   if (S.stage === SLOT_STAGE) return selectionFor(s) === "rows"
     ? "Next Steps: tick rows, then choose what—if anything—to do"
@@ -1366,15 +1311,7 @@ function screenBadge(s, blocks) {
     if (formFor(s) === "brief") return "whole artifact";
     return resultBadge(S.files["results.md"].text);
   }
-  const table = contactTable(blocks);
-  if (!table) return "";
-  const head = table.header.cells.map((c) => c.toLowerCase());
-  const role = head.indexOf("role");
-  const how = head.indexOf("how");
-  // This badge counts published addresses, not every useful contact route. A row with
-  // only a booking link remains visible but does not pretend an address was found.
-  const found = table.rows.filter((r) => !/^not found$/i.test(r.cells[role] || "") && /@/.test(r.cells[how] || "")).length;
-  return found + " of " + table.rows.length;
+  return "";
 }
 
 function draw() {
@@ -1491,8 +1428,7 @@ function draw() {
     : (S.stage === "criteria" ? "" : (s.files[file] ? " · updated " + ago(s.files[file]) : ""));
   head.innerHTML = '<span class="title">' + esc(screenTitle(s)) + '</span>' +
     (badge ? '<span class="count-badge" id="count">' + esc(badge) + '</span>' : '<span id="count"></span>') +
-    '<span class="file-meta">' + esc(file) + (S.stage === "contacts" ? " · append only" :
-      fileFreshnessMeta) + "</span>";
+    '<span class="file-meta">' + esc(file) + fileFreshnessMeta + "</span>";
   if (S.stage === "sources") {
     const collapse = el("button", "sources-collapse");
     collapse.id = "sources-collapse";
@@ -1536,7 +1472,6 @@ function draw() {
   // ticks moved out.
   const cards = S.stage === "run" && formFor(s) === "ledger";
   if (S.stage === "sources") body.appendChild(renderSourceBlocks(blocks));
-  else if (S.stage === "contacts") body.appendChild(renderContacts(blocks));
   else if (S.stage === "criteria") body.appendChild(renderCriteria(blocks, formFor(s)));
   else body.appendChild(renderBlocks(blocks, {
     file, cards, writable: false,
@@ -1656,7 +1591,7 @@ if (typeof document !== "undefined") {
 }   // importable for tests
 
 if (typeof module !== "undefined") {
-  module.exports = { inline, parse, stagesFor, selectionFor, shortlistMatches, nextStepIdeas,
+  module.exports = { inline, parse, stagesFor, fileFor, selectionFor, shortlistMatches, nextStepIdeas,
     resultCardCount, activeResultCardCount, resultRunCounts, activeResultRowCount,
     resultBadge, compactResultRow, rerunInProgress, runFreshness, SLOT_STAGE,
     organisationOf, organisationCount, selectionLabel };

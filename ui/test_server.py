@@ -125,6 +125,9 @@ def test_path_traversal_is_refused():
     (root / "demo").mkdir(parents=True)
     for name in ("shortlist.md", "sources.md", "results.md", "listings.md"):
         (root / "demo" / name).write_text("x\n", encoding="utf-8")
+    output = root / "demo" / "outputs" / "letter" / "README.md"
+    output.parent.mkdir(parents=True)
+    output.write_text("# letter\n", encoding="utf-8")
     original, server.SESSIONS = server.SESSIONS, root
     try:
         w = server.WRITABLE.__contains__
@@ -134,6 +137,8 @@ def test_path_traversal_is_refused():
         assert server.safe("demo", "sources.md", w) is None, "the tick endpoint writes only the tick"
         assert server.safe("demo", "results.md", w) is None, "results.md is a step-3 artifact, never written by a later step"
         assert server.safe("demo", "shortlist.md", w) is not None, "the tick's own file, where it exists"
+        assert server.safe("demo", "outputs/letter/README.md", server.readable) is not None
+        assert server.safe("demo", "outputs/../results.md", server.readable) is None
         m = server.MANUAL_WRITABLE.__contains__
         assert server.safe("demo", "shortlist.md", m) is None, "the hand check writes only sources.md"
         assert server.safe("demo", "no-such-session", m) is None
@@ -142,14 +147,27 @@ def test_path_traversal_is_refused():
 
 
 def test_readable_is_a_shape_not_a_list():
-    """An output nobody has written before still gets its file served."""
-    assert server.readable("letter.md") and server.readable("bid.md"), "output names are an open set"
+    """Output names are open, but every rendered entry has one canonical path."""
+    assert server.readable("outputs/letter/README.md") and server.readable("outputs/bid/README.md")
+    assert not server.readable("letter.md") and not server.readable("outputs/letter/draft.md")
+    assert not server.readable("outputs/run/README.md"), "fixed statuses are not output names"
     assert server.readable("MEMORY.md") and server.readable("shortlist.md")
     assert not server.readable("listings.md"), "never served whole"
     assert not server.readable("../AGENTS.md") and not server.readable("results.md.tmp")
     assert not server.readable("Results.md") and not server.readable("") and not server.readable(None)
     # widening reads never widens writes
     assert server.WRITABLE == {"shortlist.md"}
+
+
+def test_session_files_include_only_canonical_output_entries():
+    folder = Path(tempfile.mkdtemp())
+    (folder / "MEMORY.md").write_text("x\n", encoding="utf-8")
+    output = folder / "outputs" / "comparison"
+    output.mkdir(parents=True)
+    (output / "README.md").write_text("# comparison\n", encoding="utf-8")
+    (output / "notes.md").write_text("supporting\n", encoding="utf-8")
+    files = server.session_files(folder)
+    assert set(files) == {"MEMORY.md", "outputs/comparison/README.md"}, files
 
 
 def test_stages_follow_actual_status():
@@ -162,6 +180,9 @@ def test_stages_follow_actual_status():
     assert server.stages_for("no-such-shape", "criteria") == ["sources", "criteria", "run"]
     # Output names are open: a session sitting at one still shows where it is.
     assert server.stages_for("jobs", "letter") == ["sources", "criteria", "run", "letter"]
+    assert server.stages_for("jobs", "letter", ["comparison", "letter"]) == [
+        "sources", "criteria", "run", "comparison", "letter"
+    ]
 
 
 def test_artifact_dates_are_semantic_not_mtime():

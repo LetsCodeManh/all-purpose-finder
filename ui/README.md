@@ -66,6 +66,9 @@ pane updates as the agent writes the file.
 - **Two writes, two files.** A tick may write `shortlist.md` and nothing else; a hand
   check may write `sources.md` and nothing else. Each endpoint carries its own writable
   set, so widening one never widens the other.
+- **Outputs have one address.** An output-name status resolves to
+  `outputs/<name>/README.md`. The UI renders that canonical entry; supporting files
+  beside it stay available on disk without becoming UI state.
 - **Live reload** — SSE. Edit a file in the terminal, the pane follows.
 - **Terminal drawer** — optional and detached at the bottom. Nothing in the dashboard
   approves a gate: each stage says what it is waiting for, and you confirm it in the

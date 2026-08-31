@@ -76,8 +76,8 @@ procedure, update `MEMORY.md` exactly as it directs.
 - No global, user-level, project, or cross-session memory.
 - Do not edit `AGENTS.md`, `CLAUDE.md`, or `workflows/` unless the user asks to
   change the method itself.
-- `examples/` and `next-steps/` are public: use placeholders, never session data,
-  personal details, real URLs, or vendor names.
+- `examples/` is public: use placeholders, never session data, personal details,
+  real URLs, or vendor names.
 - Use only public information for the purpose it was published. Never assemble a
   personal dossier or cross a privacy setting.
 - Never write a per-site scraper. Record such a source as `blocked` with its URL.
@@ -94,14 +94,12 @@ vanished results, and every dropped row with its reason. Keep “not read” sep
 from “not published.” Only an approved `must` may drop a row. Never invent a score,
 probability, email address, or compensation between criteria.
 
-## Reusable next steps
+## Outputs and advice
 
 Gate 4 is open-ended. Offer two to four small possibilities grounded in the actual
-result; they are examples, not a menu. Run the option the user chooses, even when
-no reusable procedure exists.
-
-After a new option works, ask before publishing it as `next-steps/<name>.md`.
-That rare publication check is not a fifth session gate.
+result; they are examples, not a menu. A chosen output lives at
+`sessions/<slug>/outputs/<name>/README.md`, with any supporting files beside it.
+Create no output folder before the user chooses it.
 
 When the user asks a question or wants advice about a published result, Advisor
 may join. Discussion does not pass a gate, change session status, or require a
