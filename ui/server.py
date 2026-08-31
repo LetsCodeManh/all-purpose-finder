@@ -307,6 +307,13 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         pass
 
+    def handle_one_request(self):
+        # ponytail: browser closing a keep-alive socket is normal, not an error worth a traceback
+        try:
+            super().handle_one_request()
+        except (ConnectionResetError, BrokenPipeError):
+            self.close_connection = True
+
     def send_json(self, obj, code=200):
         body = json.dumps(obj).encode("utf-8")
         self.send_response(code)
