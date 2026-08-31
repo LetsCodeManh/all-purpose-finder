@@ -6,14 +6,31 @@ has; this is a second way in, never the way in.
 
 ## Run
 
+Two terminals, from the repo root. The dashboard is stdlib-only; ttyd is what puts a
+live `claude` session in the drawer at the bottom of the page.
+
 ```
 brew install ttyd                # once
-ttyd -p 7681 -W claude           # optional terminal drawer
-python3 ui/server.py             # dashboard, stdlib only
-open http://localhost:8420
 ```
 
-Two processes, no npm, no build step, no database. Files are the contract between the
+Terminal 1 — the terminal drawer (optional; the dashboard says "detached" without it):
+
+```
+ttyd -p 7681 -W claude
+```
+
+Terminal 2 — the dashboard:
+
+```
+python3 ui/server.py
+```
+
+Then open <http://localhost:8420>. Stop either one with `Ctrl-C` in its terminal.
+
+Ports come from the environment when you need them elsewhere: `FINDER_UI_PORT` (8420)
+and `FINDER_TTYD_PORT` (7681). Both processes must agree on the ttyd port.
+
+No npm, no build step, no database. Files are the contract between the
 dashboard and terminal: the dashboard listens to `sessions/`, not to terminal output.
 
 ## What it does
