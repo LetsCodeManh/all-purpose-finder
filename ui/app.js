@@ -1677,6 +1677,9 @@ function live() {
   src.onmessage = (e) => {
     const changed = JSON.parse(e.data).changed || [];
     if (!changed.length) return;
+    // The page cannot redraw its own source. The route lives in the URL, so a reload
+    // comes back to the same screen.
+    if (changed.some((f) => f.startsWith("ui:"))) return location.reload();
     note("changed: " + changed.join(", "));
     load();
   };

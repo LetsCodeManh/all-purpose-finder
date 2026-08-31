@@ -273,6 +273,12 @@ def snapshot():
             continue
         for n, mtime in session_files(d).items():
             out[f"{d.name}/{n}"] = mtime
+    # The dashboard's own source, under a "ui:" key no `slug/file` can collide with.
+    # Editing the page reloads the tab; editing a session only redraws it.
+    for name in ("app.js", "index.html"):
+        f = UI / name
+        if f.is_file():
+            out["ui:" + name] = f.stat().st_mtime
     return out
 
 

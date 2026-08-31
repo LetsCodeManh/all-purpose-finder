@@ -32,6 +32,8 @@ and `FINDER_TTYD_PORT` (7681). Both processes must agree on the ttyd port.
 
 No npm, no build step, no database. Files are the contract between the
 dashboard and terminal: the dashboard listens to `sessions/`, not to terminal output.
+It also watches its own `app.js` and `index.html`: editing a session file redraws the
+page, editing the page reloads the tab. No refresh either way.
 
 ## What it does
 
