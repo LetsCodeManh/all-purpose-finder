@@ -3,6 +3,10 @@
 A procedure for finding things that get posted and expire — jobs, discounts,
 tenders, grants — and for reading up on a company before you deal with it.
 
+Finder has two assistants. **Scout** searches and organises the evidence.
+**Advisor** helps you discuss it, understand trade-offs, and decide what you think.
+Scout brings the map; Advisor helps you choose the path. You remain in control.
+
 It is not an app. There is nothing to install and nothing running. It is a set
 of instructions an AI coding agent reads and follows, plus the files it writes
 while following them. You supply the agent; this repo supplies the method.
@@ -57,10 +61,10 @@ what already exists and asks which one.
 The included `.claude/skills/session/` shortcut is for agents that discover
 Claude-style repository skills. Other agents need no installation: use the
 natural-language command above, and they follow `AGENTS.md` plus
-`workflows/00-session.md`.
+`workflows/00-session/README.md`.
 
-The agent proposes a slug and a shape, then waits. Approve, and it walks the
-remaining gates in order:
+The agent proposes a slug and a shape, then waits. Approve, and Scout follows the
+default path:
 
 ```
 sources → criteria → run → [ what the result is for ]
@@ -71,6 +75,10 @@ validated run and remain available for review or correction. The fourth gate ask
 what the result is for — someone to talk to, a report, a resume, links to apply
 with, or nothing. Row shapes use the compact shortlist; artifact shapes use the
 whole result. You can always name something the agent did not offer.
+
+The path is revisable, not one-way. You can add a source, change a criterion, or
+refresh the data after seeing a result. Scout approves only the changed part,
+keeps the last valid result, and reruns what the change affects.
 
 You can stop after any step and come back days later. `sessions/<slug>/MEMORY.md`
 holds the status, and it is the only thing the next session needs to resume.
@@ -152,10 +160,10 @@ By design, not by omission:
 ```
 AGENTS.md              the rules. The only rules file
 CLAUDE.md              one line, pointing at AGENTS.md
-.claude/skills/        the /session and /contacts shortcuts. Hold no logic — delete
-                       them and everything still works, you just type the sentence
+.claude/skills/        the /session shortcut. It holds no logic — delete it and
+                       everything still works, you just type the sentence
 tools/session_audit.py read-only, topic-neutral session consistency check
-workflows/             one file per step, procedure only, no topic
+workflows/             routers and small procedures; only the current path is read
 next-steps/            optional reusable procedures for common next steps. They
                        are implementation shortcuts, not the user's menu
 examples/              one worked walkthrough per shape. Public, placeholders only

@@ -29,7 +29,7 @@ LINK_RE = re.compile(r"\[[^\]]+\]\((https?://[^)]+)\)")
 TICK_RE = re.compile(r"^- \[([ x])\] .+<!--\s*identity:\s*(.+?)\s*-->\s*$")
 # A `page` source is read by hand, so nothing in the pipeline proves it happened: the
 # row still says `ok` and listings.md simply has no rows from it. The evidence is one
-# of two shapes, and this is what the check looks for (workflows/03-run.md -> 1).
+# of two shapes, and this is what the check looks for (workflows/03-run/many.md).
 PAGE_MARKER = "## page sources"
 PAGE_NOT_READ = "page not read"
 
@@ -240,7 +240,7 @@ def audit_shortlist_covers_results(results_text: str, shortlist_text: str, audit
 
     Section-blind on purpose. This replaced a check that compared the Run header's
     `N new · N changed · …` against cards counted per section, which hardcoded four
-    section names — while workflows/03-run.md explicitly lets a shape rename or drop
+    section names — while workflows/03-run/many.md lets a shape rename or drop
     any of them. `tenders` leads with `## closing soon` and `prices` uses `## new
     this week`, so both were told their own header was a lie and neither could
     publish. What that check bought was a stale number in a header; what it cost was
@@ -468,7 +468,7 @@ def selfcheck() -> int:
             return 1
 
         # The skeleton documents its status values in a trailing comment, and
-        # workflows/00-session.md says to copy it exactly. It used to cost four errors.
+        # workflows/00-session/new.md says to copy it exactly. It used to cost four errors.
         (early / "MEMORY.md").write_text(
             "---\nslug: approved\nshape: widgets\n"
             "status: sources          # sources | criteria | run | next-steps | done | <output-name>\n"

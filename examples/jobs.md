@@ -27,7 +27,7 @@ standalone — no live links to rot, and **no real session's content**. Read
 
 Slug, topic and the plan, said back before anything is created. Short form here —
 the shape exists and the human has run one before; a first session gets the long
-form, `workflows/00-session.md` → *GATE 1 — print the plan*.
+form, `workflows/00-session/new.md` → *Prepare Gate 1*.
 
 ```
 Slug:  <topic>-<region>

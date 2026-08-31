@@ -5,7 +5,7 @@ There used to be three: `publish_run.frontmatter`, `session_audit.parse_frontmat
 and `ui/server.frontmatter`. They read the same block and disagreed about comments —
 publish_run stripped a trailing `# ...`, the UI skipped whole comment lines, and the
 audit did neither. `sessions/_template/MEMORY.md` documents the status values in a
-trailing comment, so a session copied exactly as `workflows/00-session.md` instructs
+trailing comment, so a session copied exactly as `workflows/00-session/new.md` instructs
 published fine and then failed its first audit with four errors.
 
 One rule now, and it lives here:
