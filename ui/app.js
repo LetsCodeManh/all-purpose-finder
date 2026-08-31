@@ -27,6 +27,22 @@ const TICK_FILE = "shortlist.md";
 
 const S = { sessions: [], slug: null, stage: null, ttyd: false, ttydPort: 7681, files: {}, listings: null };
 
+// The address bar is the whole router: #<slug>/<stage>. A reload rereads it, so it lands
+// where the user was rather than on the newest session's newest stage.
+function readRoute() {
+  const hash = decodeURIComponent(location.hash.slice(1));
+  if (!hash) return;
+  const cut = hash.indexOf("/");
+  S.slug = (cut < 0 ? hash : hash.slice(0, cut)) || null;
+  S.stage = cut < 0 ? null : hash.slice(cut + 1) || null;
+}
+
+function writeRoute() {
+  const want = "#" + encodeURIComponent(S.slug) + "/" + encodeURIComponent(S.stage);
+  // replace, not push: the tabs are not history, and Back should still leave the app.
+  if (location.hash !== want) history.replaceState(null, "", want);
+}
+
 const $ = (sel) => document.querySelector(sel);
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const escAttr = (s) => esc(s).replace(/"/g, "&quot;");
@@ -1276,7 +1292,6 @@ function setSourcesCollapsed(collapsed) {
       section.open = false;
     });
   }
-  button.textContent = collapsed ? "›" : "⌄";
   button.title = collapsed ? "Expand Working sources" : "Collapse Working sources";
   button.setAttribute("aria-label", button.title);
   button.setAttribute("aria-expanded", String(!collapsed));
@@ -1353,9 +1368,12 @@ function draw() {
   const outputs = outputsFor(s);
   if ((S.stage === SLOT_STAGE || outputs.includes(S.stage)) && rerunInProgress(s)) S.stage = "run";
   // `next-steps` and `done` belong to the GATE 4 slot; neither is an output filename.
+  // A stage from the URL may name something this session does not have.
+  if (!FIXED.includes(S.stage) && S.stage !== SLOT_STAGE && !outputs.includes(S.stage)) S.stage = null;
   if (!S.stage) S.stage = FIXED.includes(s.status) ? s.status
     : outputs.includes(s.status) ? s.status
     : (s.status === "next-steps" || s.status === "done") ? SLOT_STAGE : "sources";
+  writeRoute();
   const inNextSteps = S.stage === SLOT_STAGE || outputs.includes(S.stage);
   document.body.classList.toggle("sources-page", S.stage === "sources");
   document.documentElement.classList.toggle("sources-page", S.stage === "sources");
@@ -1499,7 +1517,7 @@ function draw() {
     const collapse = el("button", "sources-collapse");
     collapse.id = "sources-collapse";
     collapse.type = "button";
-    collapse.textContent = "⌄";
+    collapse.textContent = "›";   // rotated by CSS when expanded, like the section chevrons
     collapse.title = "Collapse Working sources";
     collapse.setAttribute("aria-label", collapse.title);
     collapse.setAttribute("aria-expanded", "true");
@@ -1623,7 +1641,10 @@ async function load() {
   S.sessions = idx.sessions;
   S.ttyd = idx.ttyd;
   S.ttydPort = idx.ttyd_port;
-  if (!S.slug && S.sessions.length) S.slug = S.sessions[0].slug;
+  if (S.sessions.length && !S.sessions.some((x) => x.slug === S.slug)) {
+    S.slug = S.sessions[0].slug;
+    S.stage = null;
+  }
   const s = S.sessions.find((x) => x.slug === S.slug);
   if (!s) return;
 
@@ -1654,6 +1675,7 @@ function live() {
 }
 
 if (typeof document !== "undefined") {
+  readRoute();
   bindUI();
   load().then(live);
 }   // importable for tests

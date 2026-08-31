@@ -398,6 +398,30 @@
         flex: 1;
         max-height: none;
       }
+      /* The open section fills the rail. ::details-content is the real flex item —
+         flexing <details> and its body alone leaves the body at content height. */
+      body.sources-page
+        #document-card.sources-collapsed
+        + #source-sections
+        .source-info-card[open],
+      body.sources-page
+        #document-card.sources-collapsed
+        + #source-sections
+        .source-info-card[open]::details-content {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      body.sources-page
+        #document-card.sources-collapsed
+        + #source-sections
+        .source-info-card[open]
+        .source-info-body {
+        flex: 1;
+        min-height: 0;
+        max-height: none;
+      }
       html.criteria-page,
       body.criteria-page {
         height: 100vh;
@@ -530,21 +554,19 @@
         user-select: none;
       }
       .sources-collapse {
-        width: 25px;
-        height: 25px;
-        border: 1px solid var(--line);
-        border-radius: 6px;
-        background: var(--soft);
-        color: var(--dim);
+        border: 0;
+        background: none;
+        padding: 0 2px;
+        color: var(--dimmer);
         cursor: pointer;
-        display: grid;
-        place-items: center;
-        padding: 0;
-        font: 600 14px var(--mono);
+        font: 14px var(--mono);
+        line-height: 1;
+      }
+      .sources-collapse[aria-expanded="true"] {
+        transform: rotate(90deg);
       }
       .sources-collapse:hover {
-        background: #fff;
-        border-color: #c8cfd8;
+        color: var(--dim);
       }
       .docbody {
         padding: 20px 22px 26px;
