@@ -1122,7 +1122,7 @@ function drawTabs() {
   const trigger = el("button", "session-trigger");
   trigger.type = "button";
   trigger.setAttribute("aria-expanded", "false");
-  trigger.innerHTML = '<span class="dot"></span><span>' + esc(current.slug) + '</span><span class="chev">›</span>';
+  trigger.innerHTML = '<span class="dot"></span><span class="session-name">' + esc(current.slug) + '</span><span class="chev">›</span>';
   const menu = el("div", "session-menu");
   S.sessions.forEach((s) => {
     const t = el("button", "session-option" + (s.slug === S.slug ? " on" : ""));

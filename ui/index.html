@@ -70,6 +70,7 @@
       .session-trigger {
         display: flex;
         align-items: center;
+        width: 260px;
         gap: 9px;
         padding: 7px 10px 7px 8px;
         border: 1px solid var(--line);
@@ -92,10 +93,15 @@
         border-radius: 50%;
         background: var(--green);
       }
+      .session-trigger .session-name {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
       .session-trigger .chev {
         font: 12px var(--mono);
         color: var(--dimmer);
-        margin-left: 2px;
+        margin-left: auto;
         line-height: 1;
       }
       .session-trigger[aria-expanded="true"] .chev {
@@ -2116,9 +2122,6 @@
           display: none;
         }
         #new-session {
-          font-size: 0;
-        }
-        #new-session span:first-child {
           font-size: 12.5px;
         }
         #workspace {
@@ -2273,9 +2276,8 @@
     <header id="topbar">
       <nav id="tabs" aria-label="Sessions"></nav>
       <div id="session-meta"></div>
-      <button id="new-session" type="button">
-        <span>New session</span><span class="shortcut">⌘K to switch</span>
-      </button>
+      <button id="new-session" type="button">New session</button>
+      <span class="shortcut">⌘K to switch</span>
     </header>
     <main id="workspace">
       <section id="stage-card" aria-label="Session progress">
