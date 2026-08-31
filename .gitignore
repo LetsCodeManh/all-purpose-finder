@@ -14,6 +14,9 @@ __pycache__/
 # _template is the shape of a session, not a session. Keep it tracked.
 !sessions/_template/
 
-# example-jobs is invented data, not somebody's hunt. It is the one session a
-# fresh clone can audit and open in the UI. Keep it tracked.
+# example-* folders are invented data, not somebody's hunt. A fresh clone can
+# audit every built-in shape. Keep these exact fixtures tracked.
 !sessions/example-jobs/
+!sessions/example-tenders/
+!sessions/example-prices/
+!sessions/example-company-research/

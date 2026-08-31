@@ -6,7 +6,8 @@ the screen goes blank. **Everything not listed here is prose and is never
 parsed** — headings a shape renamed, the sentence on a card, the reason a source
 is blocked. Do not add validation for those.
 
-`sessions/example-jobs/` is a worked, valid instance of all of it.
+The tracked `sessions/example-*/` folders are worked, valid instances made from
+dummy data. Together they exercise all four built-in shapes.
 
 Readers: `A` = `tools/session_audit.py` · `P` = `tools/publish_run.py` ·
 `U` = `ui/server.py` + `ui/app.js` · `S` = the session's `tools/shortlist.py`.

@@ -3,9 +3,15 @@
 A procedure for finding things that get posted and expire — jobs, discounts,
 tenders, grants — and for reading up on a company before you deal with it.
 
-Finder has two assistants. **Scout** searches and organises the evidence.
-**Advisor** helps you discuss it, understand trade-offs, and decide what you think.
-Scout brings the map; Advisor helps you choose the path. You remain in control.
+Finder has three named roles. Two work inside sessions: **Scout** searches and
+organises the evidence, while **Advisor** helps you discuss it, understand
+trade-offs, and decide what you think. Scout brings the map; Advisor helps you
+choose the path. You remain in control.
+
+**Builder** is the maintenance role. When you explicitly ask to repair or improve
+this repository, Builder inspects the affected code, method, documentation, and
+tests; makes the scoped change; and verifies it. Builder never joins a finding
+session or bypasses one of its four gates.
 
 It is not an app. There is nothing to install and nothing running. It is a set
 of instructions an AI coding agent reads and follows, plus the files it writes
@@ -115,6 +121,26 @@ Next Steps remains closed. A successful finish opens Next Steps immediately.
 hunt, your shopping list and your meeting prep never leave your machine, and
 nothing in the tracked part of this repo says what you were looking for.
 
+### Complete dummy sessions
+
+The repository includes one complete, invented session for every built-in shape.
+All names, facts, dates, and `.example` URLs are dummy data:
+
+| session | demonstrates | final state |
+|---------|--------------|-------------|
+| `sessions/example-jobs/` | recurring scored rows, shortlist selection, chosen comparison output | `comparison` |
+| `sessions/example-tenders/` | deadline-led rows, changed notices, shortlist awaiting a choice | `next-steps` |
+| `sessions/example-prices/` | seller-grouped weekly rows with whole-artifact selection | `done` |
+| `sessions/example-company-research/` | a sourced one-subject brief with no listings or shortlist | `done` |
+
+Each is valid against the same contract as a real session. Check them with:
+
+```sh
+for slug in example-jobs example-tenders example-prices example-company-research; do
+  python3 tools/session_audit.py "$slug"
+done
+```
+
 ---
 
 ## Shapes
@@ -164,8 +190,9 @@ CLAUDE.md              one line, pointing at AGENTS.md
                        everything still works, you just type the sentence
 tools/session_audit.py read-only, topic-neutral session consistency check
 workflows/             routers and small procedures; only the current path is read
-examples/              one worked walkthrough per shape. Public, placeholders only
+examples/              one method walkthrough per shape. Public, placeholders only
 sessions/_template/    the skeleton of a session
+sessions/example-*/    complete audit-valid sessions made only from dummy data
 sessions/<slug>/       your sessions and their outputs. Gitignored
   outputs/<name>/      one chosen output, with README.md as its entry
 ```

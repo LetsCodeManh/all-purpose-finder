@@ -4,7 +4,7 @@
 
 When the user gives no slug or topic:
 
-1. Say in one line what Finder's two assistants do.
+1. Say in one line what Finder's two session assistants do.
 2. List real session folders with their shape, status, and last run. Skip names
    beginning with `_`.
 3. Ask which one to continue, or ask for a new topic in one line.
