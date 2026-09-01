@@ -56,6 +56,20 @@ Every row dropped during judgement goes under `## dropped at scoring`, naming th
 specific `must` and what the row said. Prefilter drops remain visible separately
 in `listings.md`.
 
+Write each dropped row in exactly this form, the one `CONTRACT.md` gives the UI:
+
+```
+- **<issuer> — <item>** · <source> · [<label>](<url>) — must #<n> — <text>
+```
+
+`<source>` is the source-table name the row came from, and `#<n>` is the position
+of that `must` in `criteria.md`. Do not put the criterion in backticks and do not
+replace the second `—` with a colon. The reader groups these rows by criterion and
+falls back to a plain list for the whole section if a single row does not match, so
+one stray row costs every row its card. Anything the form cannot carry — why a `?`
+was treated as a drop, for instance — goes in prose above the list, not inside a
+row.
+
 If the diff is mostly matching `new` and `gone`, inspect `identity`; a changing
 date probably entered the key. Correct it through Gate 3 rather than publishing a
 noisy diff.

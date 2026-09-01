@@ -27,11 +27,16 @@ VALID_MANUAL = {"checked", "partial", "unavailable", "—", "-", ""}
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 LINK_RE = re.compile(r"\[[^\]]+\]\((https?://[^)]+)\)")
 TICK_RE = re.compile(r"^- \[([ x])\] .+<!--\s*identity:\s*(.+?)\s*-->\s*$")
+DROPPED_ROW_RE = re.compile(
+    r"^- \*\*(?P<title>.+?)\*\*\s*·\s*(?P<source>.+?)\s*·\s*"
+    r"\[(?P<label>[^\]]+)\]\((?P<url>[^)]+)\)\s*—\s*must\s*#(?P<must>\d+)\s*—\s*(?P<text>.+)$"
+)
 # A `page` source is read by hand, so nothing in the pipeline proves it happened: the
 # row still says `ok` and listings.md simply has no rows from it. The evidence is one
 # of two shapes, and this is what the check looks for (workflows/03-run/many.md).
 PAGE_MARKER = "## page sources"
 PAGE_NOT_READ = "page not read"
+DROPPED_MARKER = "## dropped at scoring"
 
 # Tick accounting is deterministic here: validate the hidden identities, compare
 # the header counts with the actual task-list rows, and refuse a row-based next step
@@ -208,6 +213,32 @@ def audit_result_links(text: str, source_hosts: set[str], audit: Audit) -> None:
     uncovered = sorted(result_hosts - source_hosts)
     if uncovered:
         audit.warn("results.md cites domains absent from sources.md: " + ", ".join(uncovered))
+
+
+def audit_dropped_rows(text: str, audit: Audit) -> None:
+    """The one shape in results.md that a reader parses instead of renders.
+
+    CONTRACT.md gives the UI a single dropped-row form, and the UI groups the section
+    by criterion. It is all-or-nothing: one row it cannot read and the whole section
+    falls back to a plain list, so every other row silently loses its card. That is a
+    quiet failure — the page still renders, just worse — which is exactly the kind the
+    audit exists to make loud. Prose around the list is untouched; only `- ` lines
+    inside the section are rows.
+    """
+    if DROPPED_MARKER not in text:
+        return
+    section = text.split(DROPPED_MARKER, 1)[1].split("\n## ", 1)[0]
+    bad = [
+        line.strip()
+        for line in section.splitlines()
+        if line.startswith("- ") and not DROPPED_ROW_RE.match(line.strip())
+    ]
+    for line in bad:
+        audit.error(
+            "dropped row does not match the CONTRACT.md form "
+            "`- **<issuer> — <item>** · <source> · [<label>](<url>) — must #<n> — <text>`: "
+            + (line[:80] + "…" if len(line) > 80 else line)
+        )
 
 
 def audit_shortlist(text: str, audit: Audit) -> tuple[int, int]:
@@ -406,6 +437,9 @@ def audit_session(repo: Path, slug: str) -> Audit:
             audit_result_links(results_text, source_hosts, audit)
         elif form == "ledger":
             audit_page_coverage(folder, page_ok, results_text, audit)
+        # Not form-gated: any results.md may carry a dropped section, and the reader
+        # that parses it does not ask what shape wrote it.
+        audit_dropped_rows(results_text, audit)
 
         selection = fields["selection"]
         shortlist_path = folder / "shortlist.md"
@@ -720,6 +754,30 @@ def selfcheck() -> int:
             print_audit(bad)
             print("selfcheck: expected slug mismatch to fail", file=sys.stderr)
             return 1
+
+        # The dropped-row form is parsed, not rendered, and the reader is
+        # all-or-nothing: one bad row and every row in the section loses its card.
+        # A section with no rows at all, or with only prose, is not a failure.
+        good = ("## dropped at scoring\n\nprose above the list stays prose.\n\n"
+                "- **Acme — Widget** \u00b7 a board \u00b7 [posting](https://e.example/1)"
+                " \u2014 must #2 \u2014 said no\n")
+        clean = Audit("rows")
+        audit_dropped_rows(good, clean)
+        if clean.errors:
+            print_audit(clean)
+            print("selfcheck: a contract-shaped dropped row should pass", file=sys.stderr)
+            return 1
+
+        for broken in (
+            good.replace(" \u2014 must #2 \u2014 ", " \u2014 must #2 role family \u2014 "),
+            good.replace(" \u2014 must #2 \u2014 ", ": new `must` #2: "),
+            good.replace(" \u00b7 a board", ""),
+        ):
+            flagged = Audit("rows")
+            audit_dropped_rows(broken, flagged)
+            if not flagged.errors:
+                print("selfcheck: expected a malformed dropped row to fail", file=sys.stderr)
+                return 1
 
     print("selfcheck: ok")
     return 0

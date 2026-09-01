@@ -87,7 +87,7 @@ rows|artifact`. Anything unreadable falls back to `ledger`/`many`/`rows`.
 - a criterion line renders as a chip only in the form
   `(must|range|nice|open|note) <✓|⚠|✗|?> <text>` — U
 - a dropped row renders only as
-  `- **<issuer> — <item>** · <source> · [<label>](<url>) — must #<n> — <text>` — U
+  `- **<issuer> — <item>** · <source> · [<label>](<url>) — must #<n> — <text>` — A U
 
 ## shortlist.md — `selection: rows` only
 
