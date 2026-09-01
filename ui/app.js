@@ -1592,7 +1592,9 @@ function drawTerminal() {
       "<p>The UI is optional. Every session runs in a bare terminal exactly as it always has — " +
       "this pane is a convenience, not a dependency. To put one here:</p>" +
       "<pre>brew install ttyd tmux\nttyd -p " + S.ttydPort +
-      " -W tmux new -A -s finder claude</pre></div>";
+      " -W tmux new -A -s finder claude</pre>" +
+      "<p>The last word is your agent — <code>claude</code>, <code>codex</code>, " +
+      "or any other that runs in a terminal.</p></div>";
     copy.textContent = "detached — every session still runs from the files";
   }
 }

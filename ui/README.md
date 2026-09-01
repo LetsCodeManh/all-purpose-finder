@@ -9,18 +9,26 @@ has; this is a second way in, never the way in.
 Two terminals, from the repo root. The dashboard is stdlib-only; ttyd is what puts a
 live `claude` session in the drawer at the bottom of the page.
 
+**The dashboard alone needs nothing installed.** Skip straight to Terminal 2 if you
+just want to see your sessions — the drawer then reads "detached", which is a normal
+state, not an error.
+
+Terminal 1 — the terminal drawer, optional:
+
 ```
-brew install ttyd tmux           # once
+brew install ttyd tmux                      # macOS, once
+# Debian/Ubuntu: sudo apt install ttyd tmux
 ```
 
-Terminal 1 — the terminal drawer (optional; the dashboard says "detached" without it):
+```
+ttyd -p 7681 -W tmux new -A -s finder claude    # or: ... -s finder codex
+```
 
-```
-ttyd -p 7681 -W tmux new -A -s finder claude
-```
+The last word is whichever agent you use — `claude`, `codex`, or anything else that
+runs in a terminal. Nothing in the dashboard depends on which one it is.
 
 `tmux new -A` attaches to the session named `finder`, or creates it the first time.
-Without it, ttyd starts a fresh `claude` per browser connection, so reloading the tab —
+Without it, ttyd starts a fresh agent per browser connection, so reloading the tab —
 including the automatic reload after you edit `app.js` — throws the conversation away.
 
 Terminal 2 — the dashboard:

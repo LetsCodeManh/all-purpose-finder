@@ -45,8 +45,10 @@ production begin only after gate 4.
 
 ## Requirements
 
-- an AI coding agent that reads `AGENTS.md` or `CLAUDE.md` — this repo was
-  built with one, and any equivalent works
+- an AI coding agent that reads `AGENTS.md` or `CLAUDE.md`. `AGENTS.md` is the
+  only rules file, so **Codex reads this repo natively** and Claude Code is
+  pointed at the same file by a one-line `CLAUDE.md`. Any equivalent agent works
+  — nothing here is specific to one vendor
 - `python3`, for the small scripts a session writes for itself and the shared,
   topic-neutral run publisher. Standard library only, no install step. Fetching and
   parsing stay per session; `tools/publish_run.py` only guards lifecycle state.
@@ -69,6 +71,9 @@ Claude-style repository skills. Other agents need no installation: use the
 natural-language command above, and they follow `AGENTS.md` plus
 `workflows/00-session/README.md`.
 
+**Codex** needs nothing installed. Open the repo and say the sentence — it reads
+`AGENTS.md` on its own, which is the file every rule already lives in.
+
 The agent proposes a slug and a shape, then waits. Approve, and Scout follows the
 default path:
 
@@ -88,6 +93,25 @@ keeps the last valid result, and reruns what the change affects.
 
 You can stop after any step and come back days later. `sessions/<slug>/MEMORY.md`
 holds the status, and it is the only thing the next session needs to resume.
+
+---
+
+## Optional: the dashboard
+
+Everything above runs in a bare terminal, and that is the supported way in. There
+is also a small read-mostly web dashboard that renders the session files, shows
+which gate you are at, and lets you tick a shortlist row:
+
+```sh
+python3 ui/server.py     # then open http://localhost:8420
+```
+
+Standard library only, no npm and no build step. **It is optional and permanently
+so — delete `ui/` and nothing about the method changes.** No workflow, rule or
+session file references it. Approving a gate still happens in the terminal.
+
+`ui/README.md` covers the rest, including the optional terminal drawer that puts a
+live agent session at the bottom of the page.
 
 ---
 
@@ -192,7 +216,10 @@ AGENTS.md              the rules. The only rules file
 CLAUDE.md              one line, pointing at AGENTS.md
 .claude/skills/        the /session shortcut. It holds no logic — delete it and
                        everything still works, you just type the sentence
-tools/session_audit.py read-only, topic-neutral session consistency check
+tools/                 topic-neutral shared scripts: session_audit.py (read-only
+                       consistency check), publish_run.py (run lifecycle),
+                       memory.py, shape.py
+ui/                    optional web dashboard. Delete it and nothing changes
 workflows/             routers and small procedures; only the current path is read
 examples/              one method walkthrough per shape. Public, placeholders only
 sessions/_template/    the skeleton of a session
