@@ -151,8 +151,8 @@ nothing in the tracked part of this repo says what you were looking for.
 
 ### Complete dummy sessions
 
-The repository includes one complete, invented session for every built-in shape.
-All names, facts, dates, and `.example` URLs are dummy data:
+The repository includes one complete, invented session for each of the four
+built-in shapes. All names, facts, dates, and `.example` URLs are dummy data:
 
 | session | demonstrates | final state |
 |---------|--------------|-------------|
@@ -169,6 +169,9 @@ for slug in example-jobs example-tenders example-prices example-company-research
 done
 ```
 
+`site-review` is the one shape without a dummy session: it was written from a
+real run, so it exists as `examples/site-review.md` only.
+
 ---
 
 ## Shapes
@@ -181,6 +184,7 @@ The procedure is one procedure. A **shape** is what a kind of topic makes of it:
 | `tenders` | scored rows, each with a closing date that sorts them | yes | selected shortlist rows |
 | `prices` | rows per seller, each with a from–to window | weekly | the whole result |
 | `company-research` | a written brief, sourced | one-shot, before a meeting | the whole brief |
+| `site-review` | reference designs scored against the site being redesigned | one-shot, per redesign | selected shortlist rows |
 
 `selection:` decides rows versus the whole artifact. At Next Steps the agent
 proposes a few possibilities grounded in the actual result and your goal. They
