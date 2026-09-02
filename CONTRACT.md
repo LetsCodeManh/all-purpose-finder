@@ -7,7 +7,7 @@ parsed** — headings a shape renamed, the sentence on a card, the reason a sour
 is blocked. Do not add validation for those.
 
 The tracked `sessions/example-*/` folders are worked, valid instances made from
-dummy data. Together they exercise all four built-in shapes.
+dummy data. Together they exercise every built-in shape.
 
 Readers: `A` = `tools/session_audit.py` · `P` = `tools/publish_run.py` ·
 `U` = `ui/server.py` + `ui/app.js` · `S` = the session's `tools/shortlist.py`.

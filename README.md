@@ -151,8 +151,8 @@ nothing in the tracked part of this repo says what you were looking for.
 
 ### Complete dummy sessions
 
-The repository includes one complete, invented session for each of the four
-built-in shapes. All names, facts, dates, and `.example` URLs are dummy data:
+The repository includes one complete, invented session for every shape. All
+names, facts, dates, and `.example` URLs are dummy data:
 
 | session | demonstrates | final state |
 |---------|--------------|-------------|
@@ -160,17 +160,15 @@ built-in shapes. All names, facts, dates, and `.example` URLs are dummy data:
 | `sessions/example-tenders/` | deadline-led rows, changed notices, shortlist awaiting a choice | `next-steps` |
 | `sessions/example-prices/` | seller-grouped weekly rows with whole-artifact selection | `done` |
 | `sessions/example-company-research/` | a sourced one-subject brief with no listings or shortlist | `done` |
+| `sessions/example-site-review/` | a one-shot ledger whose pre-filter drops nothing, closed with no output | `done` |
 
 Each is valid against the same contract as a real session. Check them with:
 
 ```sh
-for slug in example-jobs example-tenders example-prices example-company-research; do
+for slug in example-jobs example-tenders example-prices example-company-research example-site-review; do
   python3 tools/session_audit.py "$slug"
 done
 ```
-
-`site-review` is the one shape without a dummy session: it was written from a
-real run, so it exists as `examples/site-review.md` only.
 
 ---
 
