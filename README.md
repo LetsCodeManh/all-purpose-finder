@@ -218,6 +218,8 @@ By design, not by omission:
 ```
 AGENTS.md              the rules. The only rules file
 CLAUDE.md              one line, pointing at AGENTS.md
+CONTRACT.md            the machine-read lines: every line a script, the audit
+                       or the UI parses. Everything else is prose
 .claude/skills/        the /session shortcut. It holds no logic — delete it and
                        everything still works, you just type the sentence
 tools/                 topic-neutral shared scripts: session_audit.py (read-only
